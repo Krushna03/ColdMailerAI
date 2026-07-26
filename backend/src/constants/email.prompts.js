@@ -47,10 +47,10 @@ export const EMAIL_GENERATION_PROMPT = `
   Requirements:
   - Write a complete email.
   - Adapt the tone and style to the user's use case.
-  - Keep the email concise, engaging, and professional.
+  - Keep the email concise (prefer under 180 words), engaging, and professional.
   - Include a clear call to action whenever appropriate.
 
-  After the email, include a separator line containing only "---", followed by concise optimization suggestions following the system prompt formatting rules.
+  After the email, include a separator line containing only "---", followed by 3-5 concise optimization suggestions using "•" bullets.
 `;
 
 

@@ -4,19 +4,31 @@ import { login } from "../context/authSlice";
 import { api } from "../utils";
 import { queryKeys } from "./queryKeys";
 
-// Hydrates Redux + localStorage and refreshes session-scoped queries after auth.
-function useSessionInvalidation() {
+
+// After login/register/Google the user is already in the response.
+
+
+function useHydrateSession() {
   const queryClient = useQueryClient();
-  return () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
+
+  return (user) => {
+    if (user) {
+      queryClient.setQueryData(queryKeys.currentUser, user);
+    }
     queryClient.invalidateQueries({ queryKey: queryKeys.planUsage });
   };
+}
+
+function sanitizeUser(user) {
+  if (!user || typeof user !== "object") return user;
+  const { password, refreshToken, ...safeUser } = user;
+  return safeUser;
 }
 
 // POST /api/v1/user/login
 export function useLogin() {
   const dispatch = useDispatch();
-  const invalidateSession = useSessionInvalidation();
+  const hydrateSession = useHydrateSession();
 
   return useMutation({
     mutationFn: async (credentials) => {
@@ -24,9 +36,10 @@ export function useLogin() {
       return res.data;
     },
     onSuccess: (data) => {
-      dispatch(login(data?.data?.user));
+      const user = sanitizeUser(data?.data?.user);
+      dispatch(login(user));
       localStorage.setItem("token", JSON.stringify(data?.data?.accessToken));
-      invalidateSession();
+      hydrateSession(user);
     },
   });
 }
@@ -34,7 +47,7 @@ export function useLogin() {
 // POST /api/v1/user/register
 export function useRegister() {
   const dispatch = useDispatch();
-  const invalidateSession = useSessionInvalidation();
+  const hydrateSession = useHydrateSession();
 
   return useMutation({
     mutationFn: async (payload) => {
@@ -42,9 +55,10 @@ export function useRegister() {
       return res.data;
     },
     onSuccess: (data) => {
-      dispatch(login(data?.data?.user));
+      const user = sanitizeUser(data?.data?.user);
+      dispatch(login(user));
       localStorage.setItem("token", JSON.stringify(data?.data?.accessToken));
-      invalidateSession();
+      hydrateSession(user);
     },
   });
 }
@@ -52,7 +66,7 @@ export function useRegister() {
 // GET /api/v1/user/google/callback
 export function useGoogleLogin() {
   const dispatch = useDispatch();
-  const invalidateSession = useSessionInvalidation();
+  const hydrateSession = useHydrateSession();
 
   return useMutation({
     mutationFn: async (credential) => {
@@ -63,9 +77,10 @@ export function useGoogleLogin() {
     },
     onSuccess: (data) => {
       if (data?.success) {
-        dispatch(login(data?.data?.user));
+        const user = sanitizeUser(data?.data?.user);
+        dispatch(login(user));
         localStorage.setItem("token", JSON.stringify(data.token));
-        invalidateSession();
+        hydrateSession(user);
       }
     },
   });

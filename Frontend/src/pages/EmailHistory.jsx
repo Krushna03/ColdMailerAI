@@ -17,6 +17,7 @@ import { usePlanUsage } from "../hooks/usePlanUsage"
 import Seo from "../components/Seo"
 import IterationLimitModal from "../components/IterationLimitModal"
 import { useVoiceInput } from "../hooks/useVoiceInput"
+import EmailHistorySkeleton from "../loaders/EmailHistorySkeleton"
 
 export default function EmailHistory() {
   const { id } = useParams()
@@ -28,7 +29,11 @@ export default function EmailHistory() {
   const showErrorToast = useErrorToast()
 
   const emailHistoryFromState = location.state?.email
-  const initialData = emailHistoryFromState?._id === id ? emailHistoryFromState : undefined
+
+  const initialData =
+    emailHistoryFromState?._id === id && emailHistoryFromState?.generatedEmail
+      ? emailHistoryFromState
+      : undefined
 
   const { data: emailDetails, isLoading: fetchLoading } = useEmail(id, { initialData })
   const { mutate: iterateEmail, isPending: isGenerating } = useUpdateEmailIteration()
@@ -160,10 +165,7 @@ export default function EmailHistory() {
 
       <div className="relative z-10 container mx-auto px-3 sm:px-8 lg:px-14 py-6 flex-1 overflow-y-auto custom-scroll transform-gpu [contain:paint]">
         {fetchLoading ? (
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-260px)]">
-            <Loader2 className="h-12 w-12 animate-spin text-brand mb-4" />
-            <p className="text-gray-200 text-lg font-medium">Loading history...</p>
-          </div>
+          <EmailHistorySkeleton />
         ) : !emailDetails ? (
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-260px)]">
             <p className="text-red-400 text-lg font-medium">History not found or access denied.</p>

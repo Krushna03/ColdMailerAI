@@ -96,6 +96,9 @@ describe("email history", () => {
     expect(res.status).toBe(200);
     expect(res.body.emails).toHaveLength(1);
     expect(res.body.emails[0].prompt).toBe("first email");
+    expect(res.body.emails[0].generatedEmail).toBeUndefined();
+    expect(res.body.emails[0].chatEmails).toBeUndefined();
+    expect(res.body.emails[0]._id).toBeDefined();
   });
 
   it("deletes a generated email", async () => {

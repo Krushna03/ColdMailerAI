@@ -175,9 +175,11 @@ export const updateEmailHistoryService = async ({
 
 export const getUserEmailHistoryService = async ({ userId, limit, page }) => {
   const emails = await Email.find({ userId })
+    .select("_id prompt createdAt updatedAt")
     .sort({ createdAt: -1 })
     .limit(limit)
-    .skip(page * limit);
+    .skip(page * limit)
+    .lean();
 
   return {
     emails: emails || [],

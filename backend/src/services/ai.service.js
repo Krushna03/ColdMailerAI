@@ -46,6 +46,7 @@ const executeWithFallback = async (executeFn) => {
         throw new Error('Empty or invalid response from AI model');
       }
 
+      console.log(`AI generation succeeded with model: ${modelInfo.name}`);
       return {
         success: true,
         data: generatedText

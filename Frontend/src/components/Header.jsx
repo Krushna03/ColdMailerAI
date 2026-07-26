@@ -66,7 +66,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <User className="h-8 w-8 sm:h-9 sm:w-9 mr-2 sm:mr-0 rounded-full bg-[#4a465bd3] text-white p-2 cursor-pointer"/>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[298px] bg-[#24232bf3] text-white border-none mr-5 mt-2">
+                <DropdownMenuContent className="w-[298px] bg-[#24232b] text-white border-none mr-5 mt-2">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>

@@ -22,7 +22,11 @@ export default function EmailOutputPage() {
   const showErrorToast = useErrorToast()
 
   const emailHistoryFromState = location.state?.email
-  const initialData = emailHistoryFromState?._id === id ? emailHistoryFromState : undefined
+ 
+  const initialData =
+    emailHistoryFromState?._id === id && emailHistoryFromState?.generatedEmail
+      ? emailHistoryFromState
+      : undefined
 
   const [newModification, setNewModification] = useState("")
   const [error, setError] = useState(null)

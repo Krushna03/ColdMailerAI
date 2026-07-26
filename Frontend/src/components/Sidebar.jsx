@@ -95,7 +95,7 @@ export default function Sidebar() {
 
   const handleMailNavigation = (email) => () => {
     closeSidebar();
-    navigate(`/email/history/${email._id}`, { state: { email } });
+    navigate(`/email/history/${email._id}`);
   };
 
 

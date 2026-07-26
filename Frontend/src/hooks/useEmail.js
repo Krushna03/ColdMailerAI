@@ -33,6 +33,7 @@ export function useEmailHistory(userId) {
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.page + 1 : undefined,
     enabled: !!userId,
+    staleTime: 60_000,
   });
 }
 
