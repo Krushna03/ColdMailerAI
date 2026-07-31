@@ -100,6 +100,11 @@ export default function Footer() {
                     Generate Email
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink to="/community" className="text-gray-400 hover:text-white transition-colors">
+                    Community
+                  </NavLink>
+                </li>
                 {/* <li>
                   <NavLink to="/404" className="text-gray-400 hover:text-white transition-colors">
                     404

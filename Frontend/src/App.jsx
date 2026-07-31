@@ -11,6 +11,7 @@ const GenerateEmail = lazy(() => import('./pages/GenerateEmail'))
 const EmailOutputPage = lazy(() => import('./pages/EmailOutputPage'))
 const EmailHistory = lazy(() => import('./pages/EmailHistory'))
 const PaymentComponent = lazy(() => import('./components/Payment'))
+const Community = lazy(() => import('./pages/Community'))
 
 const withSuspense = (element) => (
   <Suspense fallback={<PageLoader />}>{element}</Suspense>
@@ -30,6 +31,10 @@ function App() {
     {
       path: "/sign-up",
       element: withSuspense(<RegisterPage />)
+    },
+    {
+      path: "/community",
+      element: withSuspense(<Community />)
     },
     {
       path: "*",

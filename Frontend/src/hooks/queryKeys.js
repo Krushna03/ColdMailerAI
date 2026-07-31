@@ -7,4 +7,5 @@ export const queryKeys = {
   emailHistory: (userId) => ["emailHistory", userId],
   paymentPlans: ["paymentPlans"],
   paymentHistory: ["paymentHistory"],
+  communityTemplates: ["communityTemplates"],
 };

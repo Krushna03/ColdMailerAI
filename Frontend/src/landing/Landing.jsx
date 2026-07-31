@@ -63,6 +63,12 @@ const LandingPage = () => {
             </div>
             
             <div className="flex items-center gap-6">
+              <NavLink
+                to="/community"
+                className="text-sm text-gray-200 transition-colors hover:text-brand-300"
+              >
+                Community
+              </NavLink>
               {
                 navigationLinks.map((item) => (
                   <ScrollLink
@@ -94,14 +100,20 @@ const LandingPage = () => {
 
         {/* Navigation */}
         <header className="relative z-10 flex items-center justify-between px-4 py-6 md:py-5 md:px-16 lg:gap-20">
-        <div className="flex items-center cursor-pointer">
-          <img src="/white-logo.png" alt="logo" className="h-9 w-9 md:h-11 md:w-11 p-1 rounded" />
+          <div className="flex items-center cursor-pointer">
+            <img src="/white-logo.png" alt="logo" className="h-8 w-8 md:h-10 md:w-10 p-1 rounded" />
               <span className="font-medium text-gray-100 text-xl md:text-2xl">
                 𝐂𝐨𝐥𝐝𝐌𝐚𝐢𝐥𝐞𝐫𝐀𝐈
               </span>
           </div>
 
           <nav className="hidden lg:flex items-center gap-7 bg-[rgba(63,62,62,0.3)] px-5 lg:mt-1 py-3 rounded-2xl lg:ml-14">
+            <NavLink
+              to="/community"
+              className="cursor-pointer transition-colors hover:text-brand-300"
+            >
+              Community
+            </NavLink>
             {
               navigationLinks.map((item) => (
                 <ScrollLink

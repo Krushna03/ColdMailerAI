@@ -61,11 +61,13 @@ import ContactRoute from './routes/contact.routes.js'
 import UserRoute from './routes/user.routes.js'
 import EmailRoute from './routes/email.routes.js'
 import PaymentRoute from './routes/payment.routes.js'
+import CommunityRoute from './routes/community.routes.js'
 
 app.use('/api/v1/payment', PaymentRoute)
 app.use('/api/v1/contact', ContactRoute)
 app.use('/api/v1/user', UserRoute)
 app.use('/api/v1/email', EmailRoute)
+app.use('/api/v1/community', CommunityRoute)
 
 app.use(errorHandler);
 

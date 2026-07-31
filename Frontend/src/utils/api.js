@@ -9,6 +9,7 @@ const AUTH_FREE_PATHS = [
   "/api/v1/user/logout",
   "/api/v1/user/google",
   "/api/v1/contact",
+  "/api/v1/community",
 ];
 
 export const api = axios.create({
