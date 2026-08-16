@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "../components/ui/input"
-import { MovingDots } from "@/components/MovingDots"
+import { MovingDots } from "@/components/common/MovingDots"
 import { useForm } from "react-hook-form"
 import { useToast } from "@/hooks/use-toast"
 import { NavLink, useNavigate } from "react-router-dom"
@@ -10,7 +10,7 @@ import { Toaster } from "../components/ui/toaster"
 import Googlelogin from "./GoogleLogin"
 import { useErrorToast } from "@/hooks/useErrorToast"
 import { useRegister } from "../hooks/useAuth"
-import Seo from "../components/Seo"
+import Seo from "../components/common/Seo"
 
 export default function RegisterPage() {
   
@@ -22,7 +22,10 @@ export default function RegisterPage() {
   const { mutate: registerUser, isPending: loading } = useRegister()
 
   const onSubmit = (data) => {
-    registerUser(data, {
+    registerUser({
+      ...data,
+      email: data.email.trim().toLowerCase(),
+    }, {
       onSuccess: () => {
         toast({
           title: "Registration Successful !",
@@ -30,7 +33,7 @@ export default function RegisterPage() {
         });
 
         setTimeout(() => {
-          navigate("/generate-email")
+          navigate("/dashboard")
         }, 1300)
 
         reset()

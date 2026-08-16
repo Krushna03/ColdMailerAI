@@ -92,25 +92,43 @@ const executeWithFallback = async (executeFn) => {
   };
 };
 
-export const generateAIContent = async (prompt) => {
+const buildParts = (text, images) => {
+  const parts = [{ text }];
+  if (images) {
+    const imgArray = Array.isArray(images) ? images : [images];
+    imgArray.forEach((img) => {
+      if (img && img.mimeType && img.data) {
+        parts.push({
+          inlineData: {
+            mimeType: img.mimeType,
+            data: img.data,
+          },
+        });
+      }
+    });
+  }
+  return parts;
+};
+
+export const generateAIContent = async (prompt, images = null) => {
   return executeWithFallback((modelInstance) =>
     modelInstance.generateContent({
       contents: [
         {
-          parts: [{ text: prompt }]
+          parts: buildParts(prompt, images),
         },
       ],
     })
   );
 };
 
-export const generateAIContentWithRole = async (prompt, role = 'user') => {
+export const generateAIContentWithRole = async (prompt, role = 'user', images = null) => {
   return executeWithFallback((modelInstance) =>
     modelInstance.generateContent({
       contents: [
         {
           role,
-          parts: [{ text: prompt }]
+          parts: buildParts(prompt, images),
         },
       ],
     })

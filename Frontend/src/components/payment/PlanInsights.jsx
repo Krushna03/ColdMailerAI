@@ -7,7 +7,8 @@ const PlanInsights = ({
   planActivatedAt,
   planExpiresAt,
   daysUntilExpiry,
-  reminderWindowDays
+  reminderWindowDays,
+  usageResetLabel,
 }) => (
   <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
     <div className="flex items-start justify-between gap-4">
@@ -23,8 +24,8 @@ const PlanInsights = ({
     <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <InsightCard
         label="Emails / month"
-        value={user?.isPaidUser ? '500+' : '50'}
-        helper="Based on your current plan"
+        value={user?.isPaidUser ? '100' : '10'}
+        helper={usageResetLabel || 'Based on your current plan'}
       />
       <InsightCard
         label="Plan activated"

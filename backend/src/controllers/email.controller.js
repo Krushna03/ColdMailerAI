@@ -1,12 +1,18 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   generateEmailService,
+  generateBatchEmailsService,
   updateEmailService,
   updateEmailHistoryService,
   getUserEmailHistoryService,
   getUsageSummaryService,
   deleteEmailService,
-  getEmailByIdService
+  getEmailByIdService,
+  markEmailSentService,
+  unmarkEmailSentService,
+  createBatchJobService,
+  getBatchJobStatusService,
+  getBatchJobsService
 } from "../services/email.service.js";
 import {
   validateUserAuth,
@@ -16,6 +22,7 @@ import {
   validateEmailDeletion,
   validatePagination
 } from "../validators/email.validators.js";
+import { validateBatchGeneration } from "../validators/lead.validators.js";
 
 /**
  * Generate a new email
@@ -23,13 +30,15 @@ import {
  */
 const generateEmail = asyncHandler(async (req, res) => {
   const { prompt } = req.body;
+  const images = req.files || (req.file ? [req.file] : []);
 
   if (!validateUserAuth(req.user, res)) return;
   if (!validateEmailPrompt(prompt, res)) return;
 
   const result = await generateEmailService({
     prompt,
-    user: req.user
+    user: req.user,
+    images
   });
 
   return res.status(200).json({
@@ -41,10 +50,41 @@ const generateEmail = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Generate one personalized email per lead in a single request
+ * POST /api/v1/email/generate-batch
+ */
+const generateBatchEmails = asyncHandler(async (req, res) => {
+  if (!validateUserAuth(req.user, res)) return;
+
+  const validated = validateBatchGeneration(req.body, res);
+  if (!validated) return;
+
+  const { leadIds, instructions, purpose, tone } = validated;
+
+  const result = await generateBatchEmailsService({
+    leadIds,
+    instructions,
+    purpose,
+    tone,
+    user: req.user
+  });
+
+  return res.status(200).json({
+    success: true,
+    results: result.results,
+    successCount: result.successCount,
+    failureCount: result.failureCount,
+    usage: result.usage,
+    message: `Generated ${result.successCount} of ${result.results.length} emails`
+  });
+});
+
+/**
  * Update an existing email
  */
 const updateEmail = asyncHandler(async (req, res) => {
   const { baseEmail, modifications, emailId } = req.body;
+  const images = req.files || (req.file ? [req.file] : []);
 
   if (!validateUserAuth(req.user, res)) return;
   if (!validateEmailUpdate({ emailId, baseEmail, modifications }, res)) return;
@@ -53,7 +93,8 @@ const updateEmail = asyncHandler(async (req, res) => {
     emailId,
     baseEmail,
     modifications,
-    user: req.user
+    user: req.user,
+    images
   });
 
   return res.status(200).json({
@@ -107,6 +148,7 @@ const getUserEmailHistory = asyncHandler(async (req, res) => {
  */
 const updateEmailHistory = asyncHandler(async (req, res) => {
   const { emailId, modification } = req.body;
+  const images = req.files || (req.file ? [req.file] : []);
 
   if (!validateUserAuth(req.user, res)) return;
   if (!validateEmailHistoryUpdate({ emailId, modification }, res)) return;
@@ -114,7 +156,8 @@ const updateEmailHistory = asyncHandler(async (req, res) => {
   const updatedEmail = await updateEmailHistoryService({
     emailId,
     modification,
-    user: req.user
+    user: req.user,
+    images
   });
 
   return res.status(200).json({
@@ -183,12 +226,131 @@ const getEmailById = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Manually mark an email as sent
+ * PATCH /api/v1/email/:id/mark-sent
+ */
+const markEmailSent = asyncHandler(async (req, res) => {
+  const { id: emailId } = req.params;
+
+  if (!validateUserAuth(req.user, res)) return;
+  if (!validateEmailDeletion(emailId, res)) return;
+
+  const email = await markEmailSentService({
+    emailId,
+    userId: req.user._id
+  });
+
+  return res.status(200).json({
+    success: true,
+    email,
+    message: "Email marked as sent"
+  });
+});
+
+/**
+ * Undo manual mark-as-sent
+ * PATCH /api/v1/email/:id/unmark-sent
+ */
+const unmarkEmailSent = asyncHandler(async (req, res) => {
+  const { id: emailId } = req.params;
+
+  if (!validateUserAuth(req.user, res)) return;
+  if (!validateEmailDeletion(emailId, res)) return;
+
+  const email = await unmarkEmailSentService({
+    emailId,
+    userId: req.user._id
+  });
+
+  return res.status(200).json({
+    success: true,
+    email,
+    message: "Email unmarked as sent"
+  });
+});
+
+/**
+ * Start a batch email generation job
+ * POST /api/v1/email/batch-jobs
+ */
+const startBatchJob = asyncHandler(async (req, res) => {
+  if (!validateUserAuth(req.user, res)) return;
+
+  const validated = validateBatchGeneration(req.body, res);
+  if (!validated) return;
+
+  const { leadIds, instructions, purpose, tone } = validated;
+
+  const job = await createBatchJobService({
+    leadIds,
+    instructions,
+    purpose,
+    tone,
+    user: req.user
+  });
+
+  return res.status(201).json({
+    success: true,
+    jobId: job._id,
+    totalLeads: job.totalLeads,
+    message: "Batch generation started"
+  });
+});
+
+/**
+ * Get status of a batch email generation job
+ * GET /api/v1/email/batch-jobs/:jobId
+ */
+const getBatchJobStatus = asyncHandler(async (req, res) => {
+  if (!validateUserAuth(req.user, res)) return;
+
+  const { jobId } = req.params;
+  if (!jobId) {
+    return res.status(400).json({
+      success: false,
+      message: "Job ID is required"
+    });
+  }
+
+  const job = await getBatchJobStatusService({
+    jobId,
+    userId: req.user._id
+  });
+
+  return res.status(200).json({
+    success: true,
+    job
+  });
+});
+
+/**
+ * Get all batch email generation jobs for user
+ * GET /api/v1/email/batch-jobs
+ */
+const getBatchJobs = asyncHandler(async (req, res) => {
+  if (!validateUserAuth(req.user, res)) return;
+
+  const jobs = await getBatchJobsService({ userId: req.user._id });
+
+  return res.status(200).json({
+    success: true,
+    jobs
+  });
+});
+
 export {
   generateEmail,
+  generateBatchEmails,
   updateEmail,
   getUserEmailHistory,
   updateEmailHistory,
   deleteEmail,
   getUsageSummary,
-  getEmailById
+  getEmailById,
+  markEmailSent,
+  unmarkEmailSent,
+  startBatchJob,
+  getBatchJobStatus,
+  getBatchJobs
 };

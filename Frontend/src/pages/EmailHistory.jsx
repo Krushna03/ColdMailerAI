@@ -1,21 +1,21 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowUp, Loader2, Lock, Mic, MicOff } from "lucide-react"
+import { ArrowUp, Loader2, Lock, Mic, MicOff, Image, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Header } from "../components/Header"
+import { Header } from "../components/layout/Header"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { useSelector } from "react-redux"
-import Sidebar from "../components/Sidebar"
+import Sidebar from "../components/layout/Sidebar"
 import { TiArrowBack } from "react-icons/ti"
 import { ensureAuthenticated, useLogout } from "../helpers/tokenValidation"
 import { useErrorToast } from "../hooks/useErrorToast"
-import { useCopyToClipboard, parseEmail, getToken, capitalizeFirstLetter, openGmailCompose, getUserInitial, getUserData } from "../utils"
+import { useCopyToClipboard, parseEmail, getToken, capitalizeFirstLetter, openGmailCompose, getUserInitial, getUserData, processImageFiles } from "../utils"
 import { useKeyboardOffset } from "../hooks/useKeyboardOffset"
-import { EmailHistoryCard } from "../components/EmailHistoryCard"
+import { EmailHistoryCard } from "../components/email/EmailHistoryCard"
 import { useEmail, useUpdateEmailIteration } from "../hooks/useEmail"
 import { usePlanUsage } from "../hooks/usePlanUsage"
-import Seo from "../components/Seo"
-import IterationLimitModal from "../components/IterationLimitModal"
+import Seo from "../components/common/Seo"
+import IterationLimitModal from "../components/email/IterationLimitModal"
 import { useVoiceInput } from "../hooks/useVoiceInput"
 import EmailHistorySkeleton from "../loaders/EmailHistorySkeleton"
 
@@ -44,16 +44,91 @@ export default function EmailHistory() {
   const [copiedId, setCopiedId] = useState(null)
   const keyboardOffset = useKeyboardOffset()
   const mobileTextareaRef = useRef(null)
+  const desktopTextareaRef = useRef(null)
+  const mobileFileInputRef = useRef(null)
+  const desktopFileInputRef = useRef(null)
+  const [images, setImages] = useState([])
+  const [imagePreviews, setImagePreviews] = useState([])
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    processImageFiles(
+      files,
+      images.length,
+      (newFile) => setImages((prev) => [...prev, newFile]),
+      (newPreview) => setImagePreviews((prev) => [...prev, newPreview]),
+      (err) => toast({ title: "Upload Error", description: err, variant: "destructive" }),
+      1
+    );
+  };
+
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const files = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          files.push(file);
+        }
+      }
+    }
+
+    if (files.length > 0) {
+      processImageFiles(
+        files,
+        images.length,
+        (newFile) => setImages((prev) => [...prev, newFile]),
+        (newPreview) => setImagePreviews((prev) => [...prev, newPreview]),
+        (err) => toast({ title: "Upload Error", description: err, variant: "destructive" }),
+        1
+      );
+      e.preventDefault();
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    if (isGenerating) return;
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    if (mobileFileInputRef.current) {
+      mobileFileInputRef.current.value = "";
+    }
+    if (desktopFileInputRef.current) {
+      desktopFileInputRef.current.value = "";
+    }
+  };
+
+  useEffect(() => {
+    if (images.length === 0) {
+      setImagePreviews([]);
+      if (mobileFileInputRef.current) {
+        mobileFileInputRef.current.value = "";
+      }
+      if (desktopFileInputRef.current) {
+        desktopFileInputRef.current.value = "";
+      }
+    }
+  }, [images]);
 
   const handleClipboardCopy = useCopyToClipboard(setCopiedId)
   const isGenerateDisabled = !newModification.trim() || isGenerating
 
-  // Auto-resize the sticky mobile textarea
+  // Auto-resize the textareas
   useLayoutEffect(() => {
-    const el = mobileTextareaRef.current
-    if (!el) return
-    el.style.height = "auto"
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+    const mobileEl = mobileTextareaRef.current
+    if (mobileEl) {
+      mobileEl.style.height = "auto"
+      mobileEl.style.height = `${Math.min(mobileEl.scrollHeight, 160)}px`
+    }
+    const desktopEl = desktopTextareaRef.current
+    if (desktopEl) {
+      desktopEl.style.height = "auto"
+      desktopEl.style.height = `${Math.min(desktopEl.scrollHeight, 320)}px`
+    }
   }, [newModification])
 
   const user = useSelector((state) => state.auth.userData)
@@ -70,15 +145,15 @@ export default function EmailHistory() {
   const updatesCount = emailDetails?.chatEmails?.length || 0
 
   const regenLimit = useMemo(() => {
-    const currentUser = user || getUserData()
-    if (currentUser?.isPaidUser) return Infinity
     const maxRegen = planUsage?.capabilities?.maxRegenerationsPerEmail
     if (planUsage) return maxRegen == null ? Infinity : maxRegen
-    return 2 // free-tier fallback while plan usage is still loading
+    const currentUser = user || getUserData()
+    // Fallbacks while plan usage is still loading
+    return currentUser?.isPaidUser ? 3 : 1
   }, [user, planUsage])
 
   const limitReached = updatesCount >= regenLimit
-  const maxVersions = Number.isFinite(regenLimit) ? regenLimit + 1 : 3
+  const maxVersions = Number.isFinite(regenLimit) ? regenLimit + 1 : null
 
   const [showLimitModal, setShowLimitModal] = useState(false)
 
@@ -89,7 +164,7 @@ export default function EmailHistory() {
 
   const handleUpgrade = useCallback(() => {
     setShowLimitModal(false)
-    navigate("/payment")
+    navigate("/dashboard/pricing")
   }, [navigate])
 
   const [iterations, setIterations] = useState([])
@@ -127,7 +202,7 @@ export default function EmailHistory() {
     if (!ensureAuthenticated(token, logoutUser)) return;
 
     iterateEmail(
-      { emailId: id, modification: newModification },
+      { emailId: id, modification: newModification, images },
       {
         onSuccess: () => {
           toast({
@@ -135,6 +210,7 @@ export default function EmailHistory() {
             description: "New email iteration generated successfully",
             variant: "success",
           });
+          setImages([]);
           
           if (updatesCount + 1 >= regenLimit) {
             setShowLimitModal(true);
@@ -240,10 +316,10 @@ export default function EmailHistory() {
                   <div className="flex flex-col bg-surface-850 border border-amber-500/30 rounded-2xl p-4 shadow-lg">
                     <div className="flex items-center gap-2 text-amber-300 mb-2">
                       <Lock className="h-4 w-4" />
-                      <span className="text-sm font-medium">Free limit reached</span>
+                      <span className="text-sm font-medium">Revision limit reached</span>
                     </div>
                     <p className="text-sm text-gray-300 mb-3">
-                      You&apos;ve used all {maxVersions} versions for this email. Upgrade for unlimited revisions or start a new email.
+                      You&apos;ve used all {maxVersions ?? "available"} versions for this email. Upgrade for more revisions or start a new email.
                     </p>
                     <div className="flex gap-2">
                       <Button
@@ -267,8 +343,35 @@ export default function EmailHistory() {
                       generateNewEmailIteration(e)
                     }}
                   >
+
+
                     <div className="flex flex-col bg-surface-850 border border-gray-700 rounded-2xl p-2 shadow-lg focus-within:border-gray-500 transition-colors">
+                      {imagePreviews.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-1 mb-1 ml-2">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative group">
+                              <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-gray-700 shadow-md">
+                                <img
+                                  src={preview}
+                                  alt="Preview"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                disabled={isGenerating}
+                                className={`absolute -top-1.5 -right-1.5 bg-gray-900/90 hover:bg-red-500 text-gray-300 hover:text-white rounded-full p-0.5 border border-gray-700 transition-colors shadow-sm ${isGenerating ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                aria-label="Remove image"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <textarea
+                        ref={desktopTextareaRef}
                         placeholder={
                           listening
                             ? "Listening… speak your email goal"
@@ -277,33 +380,54 @@ export default function EmailHistory() {
                         value={newModification}
                         onChange={handleValueChange}
                         disabled={isGenerating}
-                        className="w-full min-h-[150px] resize-none bg-transparent text-gray-200 text-sm px-2 pt-1 placeholder:text-gray-500 focus:outline-none custom-scroll disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full h-auto min-h-[80px] resize-none bg-transparent text-gray-200 text-sm px-2 pt-1 placeholder:text-gray-500 focus:outline-none custom-scroll disabled:opacity-60 disabled:cursor-not-allowed"
+                        onPaste={handlePaste}
                       />
-                      <div className="flex justify-end items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleMicClick}
-                          aria-label={listening ? "Stop voice input" : "Start voice input"}
-                          aria-pressed={listening}
-                          title={
-                            browserSupportsSpeechRecognition
-                              ? listening
-                                ? "Stop listening"
-                                : "Speak your prompt"
-                              : "Voice input not supported"
-                          }
-                          className={`shrink-0 h-9 w-9 flex items-center justify-center rounded-full transition-colors active:scale-95 ${listening ? "bg-red-500/90 hover:bg-red-500 text-white animate-pulse" : "bg-surface-700 hover:bg-surface-600 text-gray-300 border border-gray-600"}`}
-                        >
-                          {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isGenerateDisabled}
-                          aria-label="Generate email"
-                          className={`shrink-0 h-9 w-9 flex items-center justify-center rounded-full transition-colors active:scale-95 ${isGenerateDisabled ? 'bg-brand-800 text-gray-400 cursor-not-allowed' : 'bg-brand-700 hover:bg-brand-600 text-white cursor-pointer'}`}
-                        >
-                          {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
-                        </button>
+                      <div className="flex justify-between items-center gap-2 mt-2 px-2">
+                        <div className="flex items-center gap-2">
+                          <label
+                            htmlFor="image-upload-desktop"
+                            className={`shrink-0 h-8 w-8 flex items-center justify-center rounded-full transition-colors active:scale-95 ${images.length >= 1 || isGenerating || listening ? 'bg-surface-800 text-gray-600 border border-gray-800 cursor-not-allowed' : 'bg-surface-700 hover:bg-surface-600 text-gray-300 border border-gray-600 cursor-pointer'}`}
+                            title="Add image"
+                          >
+                            <Image className="h-4 w-4" />
+                            <input
+                              ref={desktopFileInputRef}
+                              id="image-upload-desktop"
+                              type="file"
+                              accept="image/png,image/jpeg,image/jpg,image/webp"
+                              onChange={handleImageSelect}
+                              className="hidden"
+                              disabled={isGenerating || listening || images.length >= 1}
+                            />
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleMicClick}
+                            aria-label={listening ? "Stop voice input" : "Start voice input"}
+                            aria-pressed={listening}
+                            title={
+                              browserSupportsSpeechRecognition
+                                ? listening
+                                  ? "Stop listening"
+                                  : "Speak your prompt"
+                                : "Voice input not supported"
+                            }
+                            className={`shrink-0 h-8 w-8 flex items-center justify-center rounded-full transition-colors active:scale-95 ${listening ? "bg-red-500/90 hover:bg-red-500 text-white animate-pulse" : "bg-surface-700 hover:bg-surface-600 text-gray-300"}`}
+                          >
+                            {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isGenerateDisabled}
+                            aria-label="Generate email"
+                            className={`shrink-0 h-9 w-9 flex items-center justify-center rounded-full transition-colors active:scale-95 ${isGenerateDisabled ? 'bg-brand-800 text-gray-400 cursor-not-allowed' : 'bg-brand-700 hover:bg-brand-600 text-white cursor-pointer'}`}
+                          >
+                            {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </form>
@@ -324,6 +448,8 @@ export default function EmailHistory() {
           style={{ bottom: keyboardOffset, paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
           className="lg:hidden fixed inset-x-0 z-30 px-3 pt-3 bg-gradient-to-t from-surface-900 via-surface-900 to-transparent transition-[bottom] duration-10"
         >
+
+
           {limitReached ? (
             <div className="flex items-center justify-between gap-2 bg-surface-800 border border-amber-500/30 rounded-[26px] px-4 py-3">
               <div className="flex items-center gap-2 text-amber-300 text-sm">
@@ -340,15 +466,60 @@ export default function EmailHistory() {
             </div>
           ) : (
             <div className="flex items-end gap-2 bg-surface-800 border border-gray-700 rounded-[26px] px-2 py-2 focus-within:border-gray-500 transition-colors">
-              <textarea
-                ref={mobileTextareaRef}
-                rows={1}
-                placeholder={listening ? "Listening…" : "Generate more cold mail..."}
-                className="flex-1 resize-none bg-transparent text-gray-200 text-base placeholder:text-gray-500 px-2 py-2 max-h-36 overflow-y-auto focus:outline-none custom-scroll disabled:opacity-60"
-                value={newModification}
-                onChange={handleValueChange}
-                disabled={isGenerating}
-              />
+              <div className="flex-1 flex flex-col min-w-0">
+                {imagePreviews.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-1 mb-1 ml-2">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-gray-700">
+                          <img
+                            src={preview}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          disabled={isGenerating}
+                          className={`absolute -top-1.5 -right-1.5 bg-gray-900/90 hover:bg-red-500 text-gray-300 hover:text-white rounded-full p-0.5 border border-gray-700 transition-colors ${isGenerating ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                          aria-label="Remove image"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  ref={mobileTextareaRef}
+                  rows={imagePreviews.length > 0 ? 3 : 1}
+                  placeholder={listening ? "Listening…" : "Generate more cold mail..."}
+                  className="w-full flex-1 resize-none bg-transparent text-gray-200 text-base placeholder:text-gray-500 px-2 py-2 max-h-36 overflow-y-auto focus:outline-none custom-scroll disabled:opacity-60"
+                  value={newModification}
+                  onChange={handleValueChange}
+                  disabled={isGenerating}
+                  onPaste={handlePaste}
+                />
+                <div className="flex items-center gap-2 px-2 pb-2">
+                  <label
+                    htmlFor="image-upload-mobile"
+                    className={`shrink-0 h-7 w-7 flex items-center justify-center rounded-full transition-colors active:scale-95 ${images.length >= 1 || isGenerating || listening ? 'bg-surface-800 text-gray-600 border border-gray-800 cursor-not-allowed' : 'bg-surface-700 hover:bg-surface-600 text-gray-300 border border-gray-600 cursor-pointer'}`}
+                    title="Add image"
+                  >
+                    <Image className="h-4 w-4" />
+                    <input
+                      ref={mobileFileInputRef}
+                      id="image-upload-mobile"
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                      disabled={isGenerating || listening || images.length >= 1}
+                    />
+                  </label>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={handleMicClick}
@@ -361,17 +532,17 @@ export default function EmailHistory() {
                       : "Speak your prompt"
                     : "Voice input not supported"
                 }
-                className={`shrink-0 h-10 w-10 flex items-center justify-center rounded-full transition-colors active:scale-95 ${listening ? "bg-red-500/90 hover:bg-red-500 text-white animate-pulse" : "bg-surface-700 hover:bg-surface-600 text-gray-300 border border-gray-600"}`}
+                className={`shrink-0 h-8 w-8 flex items-center justify-center rounded-full transition-colors active:scale-95 ${listening ? "bg-red-500/90 hover:bg-red-500 text-white animate-pulse" : "bg-surface-700 hover:bg-surface-600 text-gray-300 border border-gray-600"}`}
               >
-                {listening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </button>
               <button
                 type="submit"
                 disabled={isGenerateDisabled}
                 aria-label="Generate email"
-                className={`shrink-0 h-10 w-10 flex items-center justify-center rounded-full transition-colors active:scale-95 ${isGenerateDisabled ? "bg-brand-800 text-gray-400" : "bg-brand-700 text-white"}`}
+                className={`shrink-0 h-8 w-8 flex items-center justify-center rounded-full transition-colors active:scale-95 ${isGenerateDisabled ? "bg-brand-800 text-gray-400" : "bg-brand-700 text-white"}`}
               >
-                {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
               </button>
             </div>
           )}
@@ -383,7 +554,7 @@ export default function EmailHistory() {
         onClose={() => setShowLimitModal(false)}
         onCreateNew={handleCreateNewEmail}
         onUpgrade={handleUpgrade}
-        maxVersions={maxVersions}
+        maxVersions={maxVersions ?? 2}
       />
     </div>
   )

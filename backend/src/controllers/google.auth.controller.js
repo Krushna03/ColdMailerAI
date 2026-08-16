@@ -15,15 +15,16 @@ const verifyGoogleToken = async (req, res) => {
     });
     
     const payload = ticket.getPayload();
+    const email = payload.email.trim().toLowerCase();
 
-    let user = await UserModel.findOne({ email: payload.email });
+    let user = await UserModel.findOne({ email });
     
     if (!user) {
       const hashedPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
 
       user = await UserModel.create({
         username: payload.name,
-        email: payload.email,
+        email,
         password: hashedPassword,
         authProvider: 'google'
       });

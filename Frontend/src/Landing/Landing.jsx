@@ -5,7 +5,7 @@ import Faq from './Faq';
 import Contact from './Contact';
 import Footer from './Footer';
 import CallToAction from './CallToAction';
-import {MovingDots} from "../components/MovingDots"
+import {MovingDots} from "../components/common/MovingDots"
 import { RiMailSendFill, RiMoneyDollarCircleLine } from "react-icons/ri";
 import { User } from 'lucide-react';
 import PricingSection from './Pricing';
@@ -13,7 +13,8 @@ import MarqueeTestimonials from "./Testimonials"
 import { navigationLinks, features } from "../data/landingData"
 import { fetchToken, isTokenExpired } from '../helpers/tokenValidation';
 import { useUserCount } from '../hooks/useUser';
-import Seo from '../components/Seo';
+import Seo from '../components/common/Seo';
+import { Toaster } from '../components/ui/toaster';
 
 const LandingPage = () => {
 
@@ -39,7 +40,7 @@ const LandingPage = () => {
   }, [])
 
   if (!token) {
-    return <Navigate to="/generate-email" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return (
@@ -49,6 +50,7 @@ const LandingPage = () => {
         description="Transform your outreach with AI-powered cold emails. Generate personalized, engaging emails that boost engagement and conversions."
         path="/"
       />
+      <Toaster />
       {/* Navbar & hero  */}
       <Element name='home' id='home' className="min-h-screen bg-black text-white relative overflow-hidden">
         

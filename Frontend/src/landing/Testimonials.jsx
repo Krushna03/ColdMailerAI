@@ -1,5 +1,5 @@
 import { useState } from "react";
-import TestimonialCard from "../components/TestimonialCard";
+import TestimonialCard from "../components/common/TestimonialCard";
 import { testimonialCardsData } from "../data/testimonialData";
 
 const MarqueeTestimonials = () => {

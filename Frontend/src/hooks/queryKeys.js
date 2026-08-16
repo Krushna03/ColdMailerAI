@@ -8,4 +8,8 @@ export const queryKeys = {
   paymentPlans: ["paymentPlans"],
   paymentHistory: ["paymentHistory"],
   communityTemplates: ["communityTemplates"],
+  leads: (page) => ["leads", page],
+  leadsAll: ["leads"],
+  lead: (id) => ["lead", id],
+  leadCategories: ["leadCategories"],
 };

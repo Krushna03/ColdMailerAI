@@ -85,7 +85,8 @@ const createOrder = async (req, res) => {
       data: {
         orderId: razorpayOrder.id,
         amount: plan.amount,
-        amountInRupees: plan.amount / 100,
+        amountMajor: plan.amount / 100,
+        amountInRupees: plan.amount / 100, // legacy alias for major units
         currency: plan.currency,
         key: process.env.RAZORPAY_KEY_ID,
         planName: plan.name,
@@ -288,13 +289,17 @@ const getPaymentPlans = async (req, res) => {
       id: plan.id,
       name: plan.name,
       amount: plan.amount,
-      amountInRupees: plan.amount / 100,
+      amountMajor: plan.amount / 100,
+      amountInRupees: plan.amount / 100, // legacy alias for major units
       currency: plan.currency,
       description: plan.description,
       features: plan.features,
       billingPeriod: plan.billingPeriod,
       limits: plan.limits || null,
       requiresPayment: plan.requiresPayment,
+      isCustom: Boolean(plan.isCustom),
+      contactHref: plan.contactHref || null,
+      contactEmail: plan.contactEmail || null,
       buttonText: plan.buttonText,
       popular: plan.popular
     }));

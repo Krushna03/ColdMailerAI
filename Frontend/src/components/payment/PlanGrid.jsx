@@ -1,12 +1,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatPrice } from './utils';
+import { formatPlanAmount } from './utils';
 
 const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
   if (plansLoading) {
     return (
-      <section className="grid gap-6 md:grid-cols-2">
-        {Array.from({ length: 2 }).map((_, index) => (
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={`plan-skeleton-${index}`}
             className="rounded-3xl border border-white/5 bg-white/5 p-6 animate-pulse space-y-4"
@@ -36,20 +36,21 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
   const hasActivePlan = user?.isPaidUser && user?.planName && user.planName !== 'Free';
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
+    <section className="space-y-9">
+      <div className="flex items-center justify-center text-center">
         <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Plans</p>
-          <h2 className="text-2xl font-semibold">Choose what fits your workflow</h2>
+          <p className="text-2xl uppercase tracking-[0.05em] text-slate-100">Plans</p>
+          <h2 className="text-xl font-semibold text-slate-200">Choose what fits your workflow</h2>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => {
           const isCurrentPlan =
             user?.planName?.toLowerCase() === plan.name?.toLowerCase() && hasActivePlan;
-          const isPaidPlan = plan.requiresPayment !== false;
-          const isDisabled = (!isPaidPlan && !plan.requiresPayment) || isCurrentPlan;
+          const isCustomPlan = Boolean(plan.isCustom);
+          const isFreePlan = !plan.requiresPayment && !isCustomPlan;
+          const isDisabled = isFreePlan || isCurrentPlan;
 
           return (
             <div
@@ -74,12 +75,17 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
                   )}
                 </h3>
                 <p className="text-4xl font-bold text-white">
-                  {plan.amount === 0 ? 'Free' : `₹${formatPrice(plan.amount)}`}
-                  {plan.amount > 0 && (
+                  {isCustomPlan
+                    ? 'Custom'
+                    : formatPlanAmount(plan.amount, plan.currency || 'USD')}
+                  {!isCustomPlan && plan.amount > 0 && (
                     <span className="text-base font-normal text-slate-400">
                       {' '}
                       / {plan.billingPeriod || 'month'}
                     </span>
+                  )}
+                  {isCustomPlan && (
+                    <span className="text-base font-normal text-slate-400"> pricing</span>
                   )}
                 </p>
                 {plan.description && (
@@ -103,11 +109,11 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
                     : 'bg-brand text-white hover:bg-brand-400'
                 }`}
               >
-                {!plan.requiresPayment
+                {isFreePlan
                   ? 'Included in your workspace'
                   : isCurrentPlan
                     ? 'Current plan'
-                    : plan.buttonText || 'Choose Plan'}
+                    : plan.buttonText || (isCustomPlan ? 'Contact sales' : 'Choose Plan')}
               </Button>
             </div>
           );
@@ -118,4 +124,3 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
 };
 
 export default PlanGrid;
-

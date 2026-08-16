@@ -21,7 +21,7 @@ const Googlelogin = () => {
           });
 
           setTimeout(() => {
-            navigate("/generate-email");
+            navigate("/dashboard");
           }, 1300);
         }
       },

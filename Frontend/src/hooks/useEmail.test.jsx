@@ -73,10 +73,15 @@ describe("useGenerateEmail", () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(api.post).toHaveBeenCalledWith("/api/v1/email/generate-email", {
-      prompt: "hi",
-      userId: "u1",
-    });
+    expect(api.post).toHaveBeenCalledWith(
+      "/api/v1/email/generate-email",
+      expect.any(FormData),
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
     expect(result.current.data.emailId).toBe("42");
   });
 
@@ -107,10 +112,15 @@ describe("useUpdateEmailIteration", () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(api.patch).toHaveBeenCalledWith("/api/v1/email/update-email-history", {
-      modification: "make it shorter",
-      emailId: "1",
-    });
+    expect(api.patch).toHaveBeenCalledWith(
+      "/api/v1/email/update-email-history",
+      expect.any(FormData),
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   });
 });
 

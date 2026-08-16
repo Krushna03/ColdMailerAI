@@ -4,8 +4,8 @@ import { app } from "../app.js";
 import { registerUser } from "./helpers.js";
 
 describe("user registration", () => {
-  it("registers a new user and returns a token", async () => {
-    const { res } = await registerUser({ email: "reg@example.com" });
+  it("registers a new user with a lowercase email and returns a token", async () => {
+    const { res } = await registerUser({ email: "  Reg@Example.COM  " });
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.user.email).toBe("reg@example.com");
@@ -24,7 +24,7 @@ describe("user registration", () => {
     await registerUser({ email: "dup@example.com" });
     const res = await request(app)
       .post("/api/v1/user/register")
-      .send({ username: "second", email: "dup@example.com", password: "password123" });
+      .send({ username: "second", email: "DUP@EXAMPLE.COM", password: "password123" });
     expect(res.status).toBe(409);
   });
 });
@@ -34,7 +34,7 @@ describe("user login", () => {
     await registerUser({ email: "login@example.com", password: "password123" });
     const res = await request(app)
       .post("/api/v1/user/login")
-      .send({ email: "login@example.com", password: "password123" });
+      .send({ email: "LOGIN@EXAMPLE.COM", password: "password123" });
     expect(res.status).toBe(200);
     expect(res.body.data.accessToken).toBeTruthy();
     expect(res.body.data.user.email).toBe("login@example.com");

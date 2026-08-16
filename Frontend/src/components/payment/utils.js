@@ -1,5 +1,22 @@
-export const formatPrice = (amount = 0) =>
-  (amount / 100).toLocaleString('en-IN');
+export const formatPrice = (amount = 0, currency = 'USD') => {
+  const major = amount / 100;
+  if (currency === 'USD') {
+    return major.toLocaleString('en-US', {
+      minimumFractionDigits: Number.isInteger(major) ? 0 : 2,
+      maximumFractionDigits: 2,
+    });
+  }
+  return major.toLocaleString('en-IN', {
+    minimumFractionDigits: Number.isInteger(major) ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+export const formatPlanAmount = (amount = 0, currency = 'USD') => {
+  if (!amount) return 'Free';
+  const symbol = currency === 'USD' ? '$' : currency === 'INR' ? '₹' : `${currency} `;
+  return `${symbol}${formatPrice(amount, currency)}`;
+};
 
 export const formatDate = (date) =>
   date
@@ -24,4 +41,3 @@ export const formatDaysLabel = (days) => {
   if (days <= 0) return 'Expired';
   return `${days} day${days === 1 ? '' : 's'}`;
 };
-

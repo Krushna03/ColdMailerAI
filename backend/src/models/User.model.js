@@ -13,6 +13,8 @@ const UserSchema = new Schema({
       type: String,
       required: [true, "Email is required"],
       unique: true,
+      lowercase: true,
+      trim: true,
       match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
       , "Please use valid email"]
     },
@@ -24,6 +26,7 @@ const UserSchema = new Schema({
     
     authProvider: {
       type: String,
+      enum: ['google', 'email'],
       default: null
     },
 

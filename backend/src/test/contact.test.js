@@ -1,14 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
-
-// Prevent real emails: stub the transporter's sendMail.
-vi.mock("nodemailer", () => ({
-  default: {
-    createTransport: () => ({
-      sendMail: vi.fn().mockResolvedValue({ messageId: "test-message-id" }),
-    }),
-  },
-}));
-
+import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { app } from "../app.js";
 
@@ -25,7 +15,7 @@ describe("contact form", () => {
     const res = await request(app)
       .post("/api/v1/contact/new-contact")
       .send({ name: "Jane" });
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
   });
 });

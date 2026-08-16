@@ -1,16 +1,16 @@
 import { useEffect, useState, useMemo } from "react"
 import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
-import { Header } from "../components/Header"
-import Sidebar from "../components/Sidebar"
-import { EmailOutput } from "../components/EmailOutput"
+import { Header } from "../components/layout/Header"
+import Sidebar from "../components/layout/Sidebar"
+import { EmailOutput } from "../components/email/EmailOutput"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { getToken } from "../utils"
 import { ensureAuthenticated, useLogout } from "../helpers/tokenValidation"
 import { useErrorToast } from "../hooks/useErrorToast"
 import { useEmail, useUpdateEmailIteration } from "../hooks/useEmail"
-import Seo from "../components/Seo"
+import Seo from "../components/common/Seo"
 
 export default function EmailOutputPage() {
   const { id } = useParams()
@@ -22,7 +22,7 @@ export default function EmailOutputPage() {
   const showErrorToast = useErrorToast()
 
   const emailHistoryFromState = location.state?.email
- 
+  
   const initialData =
     emailHistoryFromState?._id === id && emailHistoryFromState?.generatedEmail
       ? emailHistoryFromState
@@ -30,6 +30,7 @@ export default function EmailOutputPage() {
 
   const [newModification, setNewModification] = useState("")
   const [error, setError] = useState(null)
+  const [images, setImages] = useState([])
 
   const {
     data: emailHistory,
@@ -57,7 +58,7 @@ export default function EmailOutputPage() {
     return emailHistory?.generatedEmail || "";
   }, [emailHistory]);
 
-  const generateNewEmailIteration = (e) => {
+  const generateNewEmailIteration = (e, imageFiles) => {
     if (e && e.preventDefault) e.preventDefault();
     if (isGenerating) return;
     if (!newModification.trim()) return;
@@ -67,10 +68,11 @@ export default function EmailOutputPage() {
     setError(null);
 
     iterateEmail(
-      { emailId: id, modification: newModification },
+      { emailId: id, modification: newModification, images: imageFiles },
       {
         onSuccess: () => {
           setNewModification("");
+          setImages([]);
           toast({
             title: "Success",
             description: "New email iteration generated successfully",
@@ -127,6 +129,8 @@ export default function EmailOutputPage() {
               updating={isGenerating}
               error={error}
               onBack={() => navigate("/generate-email")}
+              images={images}
+              setImages={setImages}
             />
           </div>
         )}

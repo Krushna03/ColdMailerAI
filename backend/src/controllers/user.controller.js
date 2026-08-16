@@ -66,15 +66,22 @@ const login = async (req, res) => {
     );
   }
 
-  const user = await UserModel.findOne({ email })
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const user = await UserModel.findOne({
+    $expr: {
+      $eq: [
+        { $toLower: "$email" },
+        normalizedEmail
+      ]
+    }
+  })
 
   if (!user) {
-    return res.status(404).json(
-      {
-        success: false,
-        message: "User does not exist. Please enter correct email !",
-      },
-    );
+    return res.status(404).json({
+      success: false,
+      message: "User does not exist. Please enter correct email !",
+    });
   }
 
   const isPaswordValidate = await user.isPasswordCorrect(password)

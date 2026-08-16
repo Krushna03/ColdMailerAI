@@ -1,17 +1,22 @@
 import { z } from "zod"
 
+const normalizedEmailSchema = z.preprocess(
+  (value) => typeof value === "string" ? value.trim().toLowerCase() : value,
+  z.string().email("Invalid email format"),
+)
+
 const registerSchema = z.object({
   username: z.string()
               .min(3, "Username must be atleast 3 characters")
               .max(30, "Username must not exceed 30 characters"),
 
-  email: z.string().email("Invalid email format"),
+  email: normalizedEmailSchema,
 
   password: z.string().min(5, "Password must be at least 5 characters long"),
 })
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: normalizedEmailSchema,
   password: z.string().min(5, "Password must be at least 5 characters long"),
 })
 
@@ -21,7 +26,7 @@ const firstIssueMessage = (err, fallback = "Invalid input") =>
 
 export const validateRegister = (req, res, next) => {
   try {
-    registerSchema.parse(req.body);
+    req.body = registerSchema.parse(req.body);
     next();
   } catch (err) {
     return res.status(400).json({
@@ -34,7 +39,7 @@ export const validateRegister = (req, res, next) => {
 
 export const validateLogin = (req, res, next) => {
   try{
-    loginSchema.parse(req.body);
+    req.body = loginSchema.parse(req.body);
     next();
   } 
   catch (err) {

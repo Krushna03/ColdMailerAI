@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { ArrowRight, BookOpen, Mail, Search } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import CommunityTemplateCard from "../components/CommunityTemplateCard";
-import Seo from "../components/Seo";
+import CommunityTemplateCard from "../components/community/CommunityTemplateCard";
+import Seo from "../components/common/Seo";
 import Footer from "../landing/Footer";
 import { useCommunityTemplates } from "../hooks/useCommunityTemplates";
 

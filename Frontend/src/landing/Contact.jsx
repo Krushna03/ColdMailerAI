@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useErrorToast } from "@/hooks/useErrorToast"
-import { Toaster } from "../components/ui/toaster"
 import { useContactMutation } from "../hooks/useAuth"
 
 
@@ -25,31 +24,49 @@ export default function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    formData.email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
 
-    sendContact(formData, {
-      onSuccess: (res) => {
-        if (res.status === 200) {
-          toast({
-            title: "Message Sent !!",
-            description: "Thanks for sending messsage, we will love to reply you.",
-          });
-          setFormData({ email: "", name: "", message: "" })
-        }
+    const email = formData.email.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      })
+      return
+    }
 
-        if (res.status === 500) {
+    sendContact(
+      {
+        name: formData.name.trim(),
+        email,
+        message: formData.message.trim(),
+        source: "contact",
+      },
+      {
+        onSuccess: (res) => {
+          if (res.status === 200) {
+            toast({
+              title: "Message submitted",
+              description: "Thanks for reaching out — we received your message and will reply soon.",
+            })
+            setFormData({ email: "", name: "", message: "" })
+            return
+          }
+
           toast({
-            title: "Error !!",
-            description: res.data.message,
-          });
-          setFormData({ email: "", name: "", message: "" })
-        }
-      },
-      onError: (error) => {
-        console.log("Error in contact", error);
-        showErrorToast(error, { title: "Error", fallback: "An unexpected error occurred. Please try again later." });
-      },
-    })
+            title: "Could not submit message",
+            description: res.data?.message || "Please try again.",
+            variant: "destructive",
+          })
+        },
+        onError: (error) => {
+          showErrorToast(error, {
+            title: "Could not submit message",
+            fallback: "An unexpected error occurred. Please try again later.",
+          })
+        },
+      }
+    )
   }
 
   return (
@@ -72,7 +89,7 @@ export default function Contact() {
       </div>
 
       {/* Right side - Form */}
-      <div className="lg:w-1/2 z-50">
+      <div className="lg:w-1/2 z-10">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label htmlFor="name" className="text-gray-200 block text-sm font-medium">
@@ -127,12 +144,10 @@ export default function Contact() {
               !formData.message.trim()}
             className="w-full py-2 md:py-3 md:px-4 bg-brand-700 hover:bg-brand-800 text-white font-medium rounded-md transition-colors"
           >
-            {loading ? "Sending..." : "Submit"}
+            {loading ? "Submitting..." : "Submit"}
           </button>
         </form>
       </div>
-      <Toaster />
     </div>
   )
 }
-

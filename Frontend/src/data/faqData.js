@@ -27,7 +27,7 @@ export const faqData = [
     id: "item-5",
     question: "Do you offer a free trial?",
     answer:
-      "Yes, you can try Cold Mailer AI for free and generate a unlimited number of emails for your use cases.",
+      "Yes. The Starter plan includes 10 emails per month so you can try Cold Mailer AI before upgrading.",
   },
   {
     id: "item-6",

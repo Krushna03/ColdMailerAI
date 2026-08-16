@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Check } from "lucide-react"
@@ -7,6 +8,7 @@ import { usePayment } from "../hooks/usePayment"
 import { useSelector } from "react-redux"
 import { plans } from "../data/pricingData"
 import { getToken } from "../utils"
+import EnterpriseContactDialog from "../components/payment/EnterpriseContactDialog"
 
 export default function PricingSection() {
 
@@ -17,23 +19,31 @@ export default function PricingSection() {
     processPayment,
     resetPaymentState,
   } = usePayment();
+  const [showEnterpriseContact, setShowEnterpriseContact] = useState(false);
 
   const token = getToken();
   
-  const handleNavigation = async (buttonName) => {  
+  const handleNavigation = async (planId) => {
+    const selectedPlan = plans.find((plan) => plan.id === planId);
+
+    if (selectedPlan?.isCustom) {
+      setShowEnterpriseContact(true);
+      return;
+    }
+
     if (!ensureAuthenticated(token, logoutUser, {
       missingMessage: "Please Login First",
       expiredMessage: "Session expired. Please Login Again.",
     })) return;
-    
+
     if (token) {
-      if (buttonName === "GETSTARTED") {
-        navigate('/generate-email')
+      if (planId === "GETSTARTED") {
+        navigate('/dashboard')
       }
       else {
         try {
           resetPaymentState();
-          await processPayment(buttonName, {
+          await processPayment(planId, {
             username: userData.username,
             email: userData.email,
             userId: userData._id,
@@ -65,7 +75,7 @@ export default function PricingSection() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10 max-w-[800px] mx-auto">
+      <div className="grid gap-8 lg:grid-cols-3 lg:gap-8 max-w-6xl mx-auto">
         {plans.map((plan, index) => (
           <Card
             key={index}
@@ -88,8 +98,12 @@ export default function PricingSection() {
               <CardTitle className="text-2xl font-bold text-white mb-2">{plan.name}</CardTitle>
               <div className="mb-4">
                 <span className="text-4xl font-bold text-white">{plan.price}</span>
-                {plan.price !== "Free" && <span className="text-slate-400 ml-2">/{plan.period}</span>}
-                {plan.price === "Free" && <span className="text-slate-400 ml-2">{plan.period}</span>}
+                {plan.price !== "Free" && plan.price !== "Custom" && (
+                  <span className="text-slate-400 ml-2">/{plan.period}</span>
+                )}
+                {(plan.price === "Free" || plan.price === "Custom") && (
+                  <span className="text-slate-400 ml-2">{plan.period}</span>
+                )}
               </div>
               <CardDescription className="text-slate-400">{plan.description}</CardDescription>
             </CardHeader>
@@ -120,6 +134,13 @@ export default function PricingSection() {
           </Card>
         ))}
       </div>
+
+      <EnterpriseContactDialog
+        open={showEnterpriseContact}
+        onOpenChange={setShowEnterpriseContact}
+        defaultName={userData?.username || ""}
+        defaultEmail={userData?.email || ""}
+      />
     </div>
   )
 }

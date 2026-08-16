@@ -1,4 +1,6 @@
-import { Zap, Crown } from "lucide-react";
+import { Building2, Crown, Zap } from "lucide-react";
+
+export const ENTERPRISE_CONTACT_EMAIL = "krushnasakhare965@gmail.com";
 
 export const plans = [
   {
@@ -9,7 +11,8 @@ export const plans = [
     icon: Zap,
     iconClassName: "h-6 w-6 text-brand",
     features: [
-      "50 emails per month",
+      "10 emails per month",
+      "1 revision per email",
       "Basic email templates",
       "Standard tone options",
       "Copy & export functionality",
@@ -18,24 +21,46 @@ export const plans = [
     id: "GETSTARTED",
     buttonVariant: "outline",
     popular: false,
+    isCustom: false,
   },
   {
     name: "Professional",
-    price: "₹9",
+    price: "$15",
     period: "per month",
-    description: "Ideal for professionals and small teams",
+    description: "Ideal for freelancers and founders running real outreach",
     icon: Crown,
     iconClassName: "h-6 w-6 text-brand",
     features: [
-      "500 emails per month",
+      "100 emails per month",
+      "3 revisions per email",
       "Advanced personalization",
-      "All tone customizations",
+      "Leads & batch generation",
       "Priority email support",
-      "Unlimited revisions",
     ],
-    buttonText: "Start Free Trial",
+    buttonText: "Upgrade to Pro",
     id: "STARTFREETRIAL",
     buttonVariant: "default",
     popular: true,
+    isCustom: false,
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    period: "pricing",
+    description: "Custom volume, support, and limits for teams and agencies",
+    icon: Building2,
+    iconClassName: "h-6 w-6 text-brand",
+    features: [
+      "Custom monthly email volume",
+      "Higher revision limits",
+      "Dedicated onboarding & support",
+      "Priority generation capacity",
+      "Custom terms for teams",
+    ],
+    buttonText: "Contact sales",
+    id: "ENTERPRISE",
+    buttonVariant: "outline",
+    popular: false,
+    isCustom: true,
   },
 ];

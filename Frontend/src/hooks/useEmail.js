@@ -42,10 +42,23 @@ export function useGenerateEmail() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ prompt, userId }) => {
-      const res = await api.post(`/api/v1/email/generate-email`, {
-        prompt,
-        userId,
+    mutationKey: ["generateEmail"],
+    mutationFn: async ({ prompt, userId, images = [] }) => {
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('userId', userId);
+      
+      if (images) {
+        const imageArray = Array.isArray(images) ? images : [images];
+        imageArray.forEach((img) => {
+          formData.append('image', img);
+        });
+      }
+
+      const res = await api.post(`/api/v1/email/generate-email`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       if (!res.data.success) {
         throw new Error(res.data.error || "Failed to generate email");
@@ -73,10 +86,23 @@ export function useUpdateEmailIteration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ emailId, modification }) => {
-      const res = await api.patch(`/api/v1/email/update-email-history`, {
-        modification,
-        emailId,
+    mutationKey: ["updateEmail"],
+    mutationFn: async ({ emailId, modification, images = [] }) => {
+      const formData = new FormData();
+      formData.append('modification', modification);
+      formData.append('emailId', emailId);
+      
+      if (images) {
+        const imageArray = Array.isArray(images) ? images : [images];
+        imageArray.forEach((img) => {
+          formData.append('image', img);
+        });
+      }
+
+      const res = await api.patch(`/api/v1/email/update-email-history`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       if (!res.data.success && !res.data.updatedEmail) {
         throw new Error(res.data.error || "Failed to update email");

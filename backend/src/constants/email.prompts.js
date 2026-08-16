@@ -29,6 +29,38 @@ export const EMAIL_GENERATION_PROMPT = `
 `;
 
 
+export const BATCH_EMAIL_GENERATION_PROMPT = (
+  lead,
+  { instructions = '', tone = 'professional', purpose = '' } = {}
+) => {
+  const goal = purpose || instructions;
+  const toneLabel = tone || 'professional';
+
+  return `
+  Generate a high-converting outreach email for the following recipient.
+
+  Recipient details:
+  - Name: ${lead.name}
+  ${lead.company ? `- Company: ${lead.company}` : ''}
+  ${lead.role ? `- Role: ${lead.role}` : ''}
+  ${lead.categoryId?.name || lead.categoryName ? `- Outreach category: ${lead.categoryId?.name || lead.categoryName}` : ''}
+  ${lead.notes ? `- Notes / context: ${lead.notes}` : ''}
+
+  Tone: ${toneLabel}
+  ${goal ? `Purpose of contact / what the sender wants to achieve:\n${goal}` : 'Write a warm cold-outreach email introducing the sender and inviting a reply.'}
+
+  Requirements:
+  - Match the requested tone throughout the email.
+  - Stay aligned with the outreach category when provided (job outreach, client sales, agency partnerships, or a custom category).
+  - Address the recipient by name and reference their company/role naturally, only if provided above.
+  - Never invent facts, metrics, or details that were not provided.
+  - Keep the email concise (prefer under 180 words), engaging, and professional.
+  - Include a clear call to action.
+
+  Do NOT include any suggestions or bullets. Return only the generated email—no explanation, tips, or extra info.
+`;
+};
+
 
 export const EMAIL_UPDATE_PROMPT = (baseEmail, modifications) => `
   Update the following email according to the user's requested modifications.

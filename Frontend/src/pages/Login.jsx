@@ -3,14 +3,14 @@ import { useForm } from "react-hook-form"
 import { Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MovingDots } from "@/components/MovingDots"
+import { MovingDots } from "@/components/common/MovingDots"
 import { NavLink, useNavigate } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "../components/ui/toaster"
 import Googlelogin from "./GoogleLogin"
 import { useErrorToast } from "@/hooks/useErrorToast"
 import { useLogin } from "../hooks/useAuth"
-import Seo from "../components/Seo"
+import Seo from "../components/common/Seo"
 
 export default function LoginPage() {
 
@@ -22,7 +22,10 @@ export default function LoginPage() {
   const { mutate: loginUser, isPending: loading } = useLogin()
 
   const submit = (data) => {
-    loginUser(data, {
+    loginUser({
+      ...data,
+      email: data.email.trim().toLowerCase(),
+    }, {
       onSuccess: () => {
         toast({
           title: "Login Successfull !",
@@ -30,7 +33,7 @@ export default function LoginPage() {
         });
 
         setTimeout(() => {
-          navigate("/generate-email")
+          navigate("/dashboard")
         }, 1300)
 
         reset()

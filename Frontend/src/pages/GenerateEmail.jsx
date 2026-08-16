@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { MovingDots } from '../components/MovingDots';
-import { Header } from '../components/Header';
-import { EmailGenerator } from '../components/EmailGenerator';
-import { Footer } from '../components/Footer';
-import Sidebar from '../components/Sidebar';
+import { MovingDots } from '../components/common/MovingDots';
+import { Header } from '../components/layout/Header';
+import { EmailGenerator } from '../components/email/EmailGenerator';
+import { Footer } from '../components/layout/Footer';
+import Sidebar from '../components/layout/Sidebar';
 import { useCurrentUser } from '../hooks/useUser';
-import Seo from '../components/Seo';
+import Seo from '../components/common/Seo';
 
 export const GenerateEmail = () => {
 
