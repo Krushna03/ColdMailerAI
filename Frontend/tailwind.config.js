@@ -9,6 +9,10 @@ export default {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+  			mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+  		},
   		animation: {
   			'shimmer-slide': 'shimmer-slide var(--speed) ease-in-out infinite alternate',
   			'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear',
@@ -53,9 +57,10 @@ export default {
   			}
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			xl: '10px',
+  			lg: '8px',
+  			md: '6px',
+  			sm: '4px'
   		},
   		colors: {
   			brand: {

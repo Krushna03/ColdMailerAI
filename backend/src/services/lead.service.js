@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { Lead, isValidStatusTransition } from "../models/Lead.model.js";
 import { FollowUp } from "../models/FollowUp.model.js";
 import { Email } from "../models/Email.model.js";
+import { Activity } from "../models/Activity.model.js";
+import { logActivity } from "./activity.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { assertCategoryAccessible } from "./leadCategory.service.js";
 
@@ -67,6 +69,14 @@ export const createLeadService = async ({ leadData, userId }) => {
     lastActivityAt: new Date()
   });
 
+  await logActivity({
+    userId,
+    leadId: lead._id,
+    type: "LEAD_CREATED",
+    title: `Lead created: ${lead.name}`,
+    metadata: { name: lead.name, email: lead.email, company: lead.company }
+  });
+
   return lead;
 };
 
@@ -118,6 +128,17 @@ export const bulkCreateLeadsService = async ({ leads, userId }) => {
   let createdLeads = [];
   if (validLeadsToInsert.length > 0) {
     createdLeads = await Lead.insertMany(validLeadsToInsert, { ordered: false });
+    await Promise.all(
+      createdLeads.map((created) =>
+        logActivity({
+          userId,
+          leadId: created._id,
+          type: "LEAD_CREATED",
+          title: `Lead imported: ${created.name}`,
+          metadata: { name: created.name, email: created.email, company: created.company }
+        })
+      )
+    );
   }
 
   return {
@@ -224,9 +245,10 @@ export const getLeadByIdService = async ({ leadId, userId }) => {
     throw new ApiError(404, "Lead not found");
   }
 
-  const [emails, followUps] = await Promise.all([
+  const [emails, followUps, activities] = await Promise.all([
     Email.find({ leadId, userId }).sort({ createdAt: -1 }).lean(),
-    FollowUp.find({ leadId, userId }).sort({ dueAt: 1 }).lean()
+    FollowUp.find({ leadId, userId }).sort({ dueAt: 1 }).lean(),
+    Activity.find({ leadId, userId }).sort({ createdAt: -1 }).lean()
   ]);
 
   const pendingFollowUps = followUps.filter((f) => f.status === "pending");
@@ -242,6 +264,7 @@ export const getLeadByIdService = async ({ leadId, userId }) => {
       emailsSentCount: emails.filter((e) => e.sendStatus === "sent").length
     },
     emails,
+    activities,
     stats: {
       emailsGenerated: emails.length,
       emailsSent: emails.filter((e) => e.sendStatus === "sent").length,
@@ -262,6 +285,8 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
   if (!lead) {
     throw new ApiError(404, "Lead not found");
   }
+
+  const oldStatus = lead.status;
 
   if (updates.categoryId !== undefined) {
     await assertCategoryAccessible({
@@ -290,6 +315,43 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
   lead.lastActivityAt = new Date();
   await lead.save();
 
+  if (updates.status !== undefined && updates.status !== oldStatus) {
+    const formattedStatus = updates.status.charAt(0).toUpperCase() + updates.status.slice(1);
+    await logActivity({
+      userId,
+      leadId,
+      type: "STATUS_CHANGED",
+      title: `Status → ${formattedStatus}`,
+      metadata: { oldStatus, newStatus: updates.status }
+    });
+
+    if (updates.status === "meeting") {
+      await logActivity({
+        userId,
+        leadId,
+        type: "MEETING_SCHEDULED",
+        title: "Meeting scheduled",
+        metadata: { status: "meeting" }
+      });
+    }
+  } else if (updates.notes !== undefined) {
+    await logActivity({
+      userId,
+      leadId,
+      type: "NOTE_ADDED",
+      title: "Note updated",
+      metadata: { notes: updates.notes }
+    });
+  } else {
+    await logActivity({
+      userId,
+      leadId,
+      type: "LEAD_UPDATED",
+      title: "Lead details updated",
+      metadata: updates
+    });
+  }
+
   return lead;
 };
 
@@ -303,12 +365,20 @@ export const addFollowUpService = async ({ leadId, userId, dueAt, note }) => {
     throw new ApiError(404, "Lead not found");
   }
 
-  await FollowUp.create({
+  const followUp = await FollowUp.create({
     leadId,
     userId,
     dueAt: new Date(dueAt),
     note: note || "",
     status: "pending"
+  });
+
+  await logActivity({
+    userId,
+    leadId,
+    type: "FOLLOWUP_CREATED",
+    title: "Follow-up scheduled",
+    metadata: { followUpId: followUp._id, dueAt, note }
   });
 
   lead.nextFollowUpAt = await earliestPendingFollowUp(leadId);
@@ -349,6 +419,16 @@ export const updateFollowUpService = async ({
 
   if (!updatedFollowUp) {
     throw new ApiError(404, "Follow-up not found");
+  }
+
+  if (updates.status === "done" || updates.status === "skipped") {
+    await logActivity({
+      userId,
+      leadId,
+      type: "FOLLOWUP_COMPLETED",
+      title: `Follow-up ${updates.status === "done" ? "completed" : "skipped"}`,
+      metadata: { followUpId, status: updates.status, note: updatedFollowUp.note }
+    });
   }
 
   lead.nextFollowUpAt = await earliestPendingFollowUp(leadId);

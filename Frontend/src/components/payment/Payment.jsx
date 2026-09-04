@@ -235,7 +235,7 @@ const PaymentComponent = () => {
   return (
     <>
       <Seo title="Upgrade Plan" path="/dashboard/pricing" noIndex />
-      <div className="space-y-10">
+      <div className="space-y-6 font-sans">
         <HeroSection  
           user={user}
           paidPlanId={paidPlanId}
@@ -256,7 +256,7 @@ const PaymentComponent = () => {
         )}
 
         {error && (
-          <div className="rounded-3xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-xs font-medium text-red-300">
             {error}
           </div>
         )}
@@ -307,12 +307,12 @@ const PaymentComponent = () => {
 };
 
 const RenewalReminder = ({ expiresOn, daysLeft, onRenew, disabled }) => (
-  <div className="rounded-3xl border border-amber-300/40 bg-amber-300/10 p-5 text-amber-50 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div className="flex items-start gap-3">
-      <BellRing className="h-5 w-5 text-amber-200 mt-1.5" />
+  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200 flex flex-col gap-3 md:flex-row md:items-center md:justify-between font-sans">
+    <div className="flex items-center gap-3">
+      <BellRing className="h-4 w-4 text-amber-400 shrink-0" />
       <div>
-        <p className="font-semibold">Plan expires soon</p>
-        <p className="text-sm text-amber-100/80">
+        <p className="text-xs font-semibold text-white">Plan expires soon</p>
+        <p className="text-xs text-amber-200/80">
           Renew by {formatDate(expiresOn)} to avoid interruptions — {formatDaysLabel(daysLeft)} remaining.
         </p>
       </div>
@@ -320,7 +320,7 @@ const RenewalReminder = ({ expiresOn, daysLeft, onRenew, disabled }) => (
     <Button
       onClick={onRenew}
       disabled={disabled}
-      className="bg-white text-black hover:bg-slate-200 disabled:opacity-60 disabled:cursor-not-allowed"
+      className="bg-white text-black hover:bg-gray-200 h-8 px-3 text-xs font-medium rounded-md shrink-0 shadow-none"
     >
       Renew plan
     </Button>

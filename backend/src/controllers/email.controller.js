@@ -12,7 +12,8 @@ import {
   unmarkEmailSentService,
   createBatchJobService,
   getBatchJobStatusService,
-  getBatchJobsService
+  getBatchJobsService,
+  deleteBatchJobService
 } from "../services/email.service.js";
 import {
   validateUserAuth,
@@ -324,18 +325,56 @@ const getBatchJobStatus = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * Get all batch email generation jobs for user
- * GET /api/v1/email/batch-jobs
- */
 const getBatchJobs = asyncHandler(async (req, res) => {
   if (!validateUserAuth(req.user, res)) return;
 
-  const jobs = await getBatchJobsService({ userId: req.user._id });
+  const { limit, page } = req.query;
+
+  let limitNum, pageNum;
+  if (limit !== undefined || page !== undefined) {
+    const pagination = validatePagination(limit ?? 15, page ?? 0, res);
+    if (!pagination) return;
+    limitNum = pagination.limit;
+    pageNum = pagination.page;
+  }
+
+  const { jobs, hasMore } = await getBatchJobsService({
+    userId: req.user._id,
+    limit: limitNum,
+    page: pageNum
+  });
 
   return res.status(200).json({
     success: true,
-    jobs
+    jobs,
+    hasMore: hasMore ?? false
+  });
+});
+
+
+/**
+ * Cancel and/or delete a batch email generation job
+ * DELETE /api/v1/email/batch-jobs/:jobId
+ */
+const deleteBatchJob = asyncHandler(async (req, res) => {
+  if (!validateUserAuth(req.user, res)) return;
+
+  const { jobId } = req.params;
+  if (!jobId) {
+    return res.status(400).json({
+      success: false,
+      message: "Job ID is required"
+    });
+  }
+
+  await deleteBatchJobService({
+    jobId,
+    userId: req.user._id
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Batch job deleted successfully"
   });
 });
 
@@ -352,5 +391,6 @@ export {
   unmarkEmailSent,
   startBatchJob,
   getBatchJobStatus,
-  getBatchJobs
+  getBatchJobs,
+  deleteBatchJob
 };

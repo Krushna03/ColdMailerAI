@@ -379,16 +379,45 @@ export function useBatchJobStatus(jobId) {
 }
 
 export function useBatchJobs() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["batchJobs"],
-    queryFn: async () => {
-      const res = await api.get(`/api/v1/email/batch-jobs`);
+    queryFn: async ({ pageParam = 0 }) => {
+      const res = await api.get(`/api/v1/email/batch-jobs`, {
+        params: { limit: 15, page: pageParam },
+      });
       if (!res.data.success) {
         throw new Error(res.data.message || "Failed to fetch batch jobs");
       }
-      return res.data.jobs ?? [];
+      return {
+        jobs: res.data.jobs ?? [],
+        hasMore: res.data.hasMore ?? false,
+        page: pageParam,
+      };
     },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.page + 1 : undefined,
     staleTime: 30_000,
+  });
+}
+
+// DELETE /api/v1/email/batch-jobs/:jobId
+export function useDeleteBatchJob() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (jobId) => {
+      const res = await api.delete(`/api/v1/email/batch-jobs/${jobId}`);
+      if (!res.data.success) {
+        throw new Error(res.data.message || "Failed to delete batch job");
+      }
+      return res.data;
+    },
+    onSuccess: (_data, jobId) => {
+      queryClient.invalidateQueries({ queryKey: ["batchJobs"] });
+      queryClient.invalidateQueries({ queryKey: ["batchJob", jobId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leadsAll });
+    },
   });
 }
 

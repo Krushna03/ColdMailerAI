@@ -42,7 +42,7 @@ app.post('/api/v1/payment/webhook',
 
 app.use(rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 100,
+  max: 500,
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: "Too many requests, please try again later."

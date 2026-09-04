@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Plus, Trash2, Search, X, Clock } from "lucide-react";
+import { Mail, Plus, Trash2, Search, X, Clock, CheckCircle2, Loader2 } from "lucide-react";
 import Seo from "../components/common/Seo";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -23,6 +23,8 @@ import {
   useGenerateBatchEmails,
   useLeadCategories,
   useCreateLeadCategory,
+  useBatchJobStatus,
+  useDeleteBatchJob,
 } from "../hooks/useLeads";
 import LeadsTable from "../components/leads/LeadsTable";
 import AddLeadDialog from "../components/leads/AddLeadDialog";
@@ -30,6 +32,7 @@ import AddCategoryDialog from "../components/leads/AddCategoryDialog";
 import CsvUploadButton from "../components/leads/CsvUploadButton";
 import BatchGenerateDialog from "../components/leads/BatchGenerateDialog";
 import BatchProgressDialog from "../components/leads/BatchProgressDialog";
+import ConfirmDeleteDialog from "../components/common/ConfirmDeleteDialog";
 import CategorySelect, { getCategoryName } from "../components/leads/CategorySelect";
 import { LEAD_STATUS_OPTIONS } from "../components/leads/leadUtils";
 
@@ -43,7 +46,14 @@ export default function Leads() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [confirmDeleteBatchOpen, setConfirmDeleteBatchOpen] = useState(false);
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [leadToDeleteId, setLeadToDeleteId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
+
+  const { data: activeJob } = useBatchJobStatus(activeJobId);
+  const isJobActive = Boolean(activeJob && ["pending", "processing"].includes(activeJob.status));
   const [categoryFilter, setCategoryFilter] = useState("");
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [searchVal, setSearchVal] = useState("");
@@ -80,6 +90,28 @@ export default function Leads() {
   const bulkDelete = useBulkDeleteLeads();
   const updateLead = useUpdateLead();
   const generateBatch = useGenerateBatchEmails();
+  const deleteBatchJob = useDeleteBatchJob();
+
+  const handleDeleteBatchJob = async (jobId) => {
+    if (!jobId) return;
+    try {
+      await deleteBatchJob.mutateAsync(jobId);
+      if (activeJobId === jobId) {
+        setActiveJobId(null);
+        setProgressOpen(false);
+      }
+      toast({
+        title: "Batch job deleted",
+        description: "The batch processing job has been cancelled and deleted.",
+      });
+    } catch (err) {
+      toast({
+        title: "Could not delete batch job",
+        description: err?.response?.data?.message || err.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const leads = useMemo(
     () => data?.pages.flatMap((page) => page.leads) ?? [],
@@ -238,6 +270,7 @@ export default function Leads() {
       if (data?.jobId) {
         setActiveJobId(data.jobId);
         setGenerateOpen(false);
+        setProgressOpen(true);
       }
       return data.jobId;
     } catch (err) {
@@ -252,38 +285,41 @@ export default function Leads() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 font-sans">
       <Seo title="Leads" path="/dashboard/leads" noIndex />
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white sm:text-3xl">Leads</h1>
+          <h1 className="text-2xl font-semibold text-white tracking-tight sm:text-3xl">Leads</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-400">
-            Filter by category, select leads, then generate with one shared purpose
-            and tone.
+            Manage lead contacts, filter by category and status, and launch tailored cold email batches.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {selectedLeadIds.size > 0 && (
             <Button
               type="button"
-              disabled={bulkDelete.isPending || deleteLead.isPending}
-              onClick={handleBulkDelete}
-              className="border border-red-400/40 bg-transparent text-red-300 hover:bg-red-500/10 hover:text-red-200 text-[12px] px-2.5"
+              disabled={bulkDelete.isPending || deleteLead.isPending || isJobActive}
+              onClick={() => setConfirmBulkDeleteOpen(true)}
+              title={isJobActive ? "Cannot delete leads while a batch generation is active" : ""}
+              className="border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs sm:text-sm px-3 h-9 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-4 w-4" />
               {bulkDelete.isPending
                 ? "Deleting..."
-                : `Delete all (${selectedLeadIds.size})`}
+                : `Delete (${selectedLeadIds.size})`}
             </Button>
           )}
           <Button
             type="button"
-            disabled={selectedLeadIds.size === 0 || generateBatch.isPending}
+            disabled={selectedLeadIds.size === 0 || generateBatch.isPending || isJobActive}
             onClick={() => setGenerateOpen(true)}
-            className="bg-brand text-white hover:bg-brand-400 text-[12px] px-3"
+            title={isJobActive ? "A batch job is currently in progress. Please wait for it to complete." : ""}
+            className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-sm font-semibold px-3.5 h-9 rounded-md shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Mail className="h-3 w-3" />
-            {selectedLeadIds.size > 0
+            <Mail className="h-4 w-4" />
+            {isJobActive
+              ? "Batch in progress..."
+              : selectedLeadIds.size > 0
               ? `Generate (${selectedLeadIds.size})`
               : "Generate emails"}
           </Button>
@@ -297,23 +333,23 @@ export default function Leads() {
           <Button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="border border-white/15 bg-transparent text-white hover:bg-white/10 text-[13px] px-2.5"
+            className="border border-white/15 bg-surface-900 text-white hover:bg-white/5 text-xs sm:text-sm font-medium px-3 h-9 rounded-md"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 mr-1.5" />
             Add lead
           </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="relative w-full max-w-[360px]">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+        <div className="relative w-full max-w-[380px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
             type="text"
             placeholder="Search name, email, company, role..."
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
-            className="h-8 pl-8 pr-7 text-xs border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:ring-offset-surface-900 rounded-lg w-full"
+            className="h-9 pl-9 pr-7 text-xs sm:text-sm border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:ring-offset-surface-900 rounded-md w-full"
           />
           {searchVal && (
             <button
@@ -389,14 +425,116 @@ export default function Leads() {
         </p>
       )}
 
+      {activeJobId && activeJob && (
+        <div className="relative rounded-xl border border-brand/30 bg-surface-900 p-4 shadow-lg transition-all duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 pr-6 sm:pr-0">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                activeJob.status === "completed" || activeJob.status === "completed_with_errors"
+                  ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                  : activeJob.status === "failed"
+                  ? "bg-red-500/10 border border-red-500/30 text-red-400"
+                  : "bg-brand/10 border border-brand/30 text-brand"
+              }`}>
+                {activeJob.status === "completed" || activeJob.status === "completed_with_errors" ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                ) : activeJob.status === "failed" ? (
+                  <X className="h-5 w-5 text-red-400" />
+                ) : (
+                  <Loader2 className="h-5 w-5 animate-spin text-brand" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-sm font-semibold text-white truncate">
+                    {activeJob.status === "completed"
+                      ? "Batch generation complete!"
+                      : activeJob.status === "completed_with_errors"
+                      ? "Batch completed with errors"
+                      : activeJob.status === "failed"
+                      ? "Batch generation failed"
+                      : "Generating outreach emails..."}
+                  </h4>
+                  <span className="text-xs font-mono font-medium text-brand">
+                    {activeJob.processedLeads || 0}/{activeJob.totalLeads || 0} ({Math.round(((activeJob.processedLeads || 0) / (activeJob.totalLeads || 1)) * 100)}%)
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">
+                  {["completed", "completed_with_errors", "failed"].includes(activeJob.status)
+                    ? `${activeJob.successCount || 0} succeeded, ${activeJob.failureCount || 0} failed.`
+                    : "Gemini is crafting tailored messages for your selected leads."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setProgressOpen(true)}
+                className="h-8 border-white/15 bg-white/5 text-xs text-white hover:bg-white/10 hover:text-white gap-1.5"
+              >
+                View Live Progress
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={deleteBatchJob.isPending}
+                onClick={() => setConfirmDeleteBatchOpen(true)}
+                className="h-8 border-red-500/30 bg-red-500/10 text-xs text-red-300 hover:bg-red-500/20 hover:text-red-300 gap-1.5"
+                title="Cancel and delete this batch job"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                {isJobActive ? "Cancel Batch" : "Delete Batch"}
+              </Button>
+              {["completed", "completed_with_errors"].includes(activeJob.status) && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => navigate("/dashboard/batches")}
+                  className="h-8 bg-brand text-xs text-white hover:bg-brand-400 gap-1.5"
+                >
+                  View Drafts
+                </Button>
+              )}
+              {["completed", "completed_with_errors", "failed"].includes(activeJob.status) && (
+                <button
+                  type="button"
+                  onClick={() => setActiveJobId(null)}
+                  className="text-gray-400 hover:text-white p-1 rounded-md transition-colors"
+                  title="Dismiss banner"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-800">
+            <div
+              className={`h-full transition-all duration-500 ease-out ${
+                activeJob.status === "completed_with_errors" || activeJob.status === "failed"
+                  ? "bg-amber-500"
+                  : "bg-brand"
+              }`}
+              style={{
+                width: `${Math.round(((activeJob.processedLeads || 0) / (activeJob.totalLeads || 1)) * 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       <LeadsTable
         leads={leads}
         selectedLeadIds={selectedLeadIds}
         onToggleLead={toggleLead}
         onToggleAll={toggleAll}
-        onDeleteLead={handleDeleteLead}
+        onDeleteLead={(id) => setLeadToDeleteId(id)}
         isLoading={isFetching && leads.length === 0}
-        isDeleting={deleteLead.isPending || bulkDelete.isPending}
+        isDeleting={deleteLead.isPending || bulkDelete.isPending || isJobActive}
       />
 
       {hasNextPage && (
@@ -412,8 +550,6 @@ export default function Leads() {
           </Button>
         </div>
       )}
-
-
 
       <AddLeadDialog
         open={addOpen}
@@ -445,9 +581,11 @@ export default function Leads() {
 
       <BatchProgressDialog
         activeJobId={activeJobId}
-        onClose={() => setActiveJobId(null)}
+        open={progressOpen}
+        onClose={() => setProgressOpen(false)}
+        onDelete={() => setConfirmDeleteBatchOpen(true)}
         onComplete={(job) => {
-          setActiveJobId(null);
+          setProgressOpen(false);
           navigate("/dashboard/batches");
           toast({
             title: "Batch complete",
@@ -455,6 +593,54 @@ export default function Leads() {
           });
         }}
         fallbackReadyCount={selectedLeads.length}
+      />
+
+      {/* Confirmation Modals */}
+      <ConfirmDeleteDialog
+        open={confirmDeleteBatchOpen}
+        onOpenChange={setConfirmDeleteBatchOpen}
+        title={isJobActive ? "Are you sure you want to cancel & delete?" : "Are you sure you want to delete?"}
+        description={
+          isJobActive
+            ? "Cancelling will immediately stop background email generation and remove this batch."
+            : "Are you sure you want to delete this batch job record? This action cannot be undone."
+        }
+        confirmText={isJobActive ? "Yes, Cancel & Delete" : "Yes, Delete Batch"}
+        isDeleting={deleteBatchJob.isPending}
+        onConfirm={async () => {
+          await handleDeleteBatchJob(activeJobId);
+          setConfirmDeleteBatchOpen(false);
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        open={confirmBulkDeleteOpen}
+        onOpenChange={setConfirmBulkDeleteOpen}
+        title="Are you sure you want to delete selected leads?"
+        description={`This will permanently remove ${selectedLeadIds.size} lead(s) and their email stats.`}
+        confirmText="Yes, Delete Leads"
+        isDeleting={bulkDelete.isPending}
+        onConfirm={async () => {
+          await handleBulkDelete();
+          setConfirmBulkDeleteOpen(false);
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!leadToDeleteId}
+        onOpenChange={(val) => {
+          if (!val) setLeadToDeleteId(null);
+        }}
+        title="Are you sure you want to delete this lead?"
+        description="This action will permanently delete the lead contact."
+        confirmText="Yes, Delete Lead"
+        isDeleting={deleteLead.isPending}
+        onConfirm={async () => {
+          if (leadToDeleteId) {
+            handleDeleteLead(leadToDeleteId);
+            setLeadToDeleteId(null);
+          }
+        }}
       />
     </div>
   );

@@ -5,14 +5,11 @@ import { SYSTEM_PROMPT } from "../constants/email.prompts.js";
 const geminiapiKey = process.env.GEMINIAPIKEY;
 const genAI = new GoogleGenerativeAI(geminiapiKey);
 
-// Fastest models first.
+// Active Google Gemini models
 const MODEL_NAMES = [
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash-lite",
-  "gemini-2.0-flash",
   "gemini-2.5-flash",
-  "gemini-3.5-flash",
-  "gemini-2.5-pro",
+  "gemini-2.5-flash-lite",
+  "gemini-3.1-flash-lite-preview"
 ];
 
 const MODELS_WITH_THINKING_OFF = new Set(["gemini-2.5-flash"]);
@@ -34,7 +31,7 @@ const createModelInstance = (modelName) => {
       systemInstruction: SYSTEM_PROMPT,
       generationConfig,
     },
-    { timeout: 5000 }
+    { timeout: 20000 }
   );
 };
 

@@ -91,6 +91,7 @@ export default function LeadDetail() {
 
   const lead = data?.lead;
   const emails = data?.emails ?? [];
+  const activities = data?.activities ?? [];
   const stats = data?.stats;
 
   const latestUnsent = useMemo(
@@ -233,6 +234,7 @@ export default function LeadDetail() {
       />
 
       <LeadTimeline
+        activities={activities}
         emails={emails}
         followUps={lead.followUps || []}
         onMarkSent={runMark}

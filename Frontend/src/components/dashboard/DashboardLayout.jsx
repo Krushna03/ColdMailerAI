@@ -24,12 +24,8 @@ export default function DashboardLayout() {
   return (
     // overflow-x-clip contains any wide child without turning this into a
     // scroll container, which would break the sticky sidebar and header.
-    <div className="flex min-h-[100dvh] w-full overflow-x-clip bg-surface-950 text-white">
+    <div className="flex min-h-[100dvh] w-full overflow-x-clip bg-surface-950 text-white font-sans">
       <Toaster />
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -right-40 top-16 h-[30rem] w-[30rem] rounded-full bg-brand/15 blur-[150px]" />
-        <div className="absolute -bottom-28 left-1/4 h-[24rem] w-[24rem] rounded-full bg-blue-500/10 blur-[140px]" />
-      </div>
 
       <div className="sticky top-0 z-40 hidden h-[100dvh] shrink-0 self-start lg:block">
         <DashboardSidebar />
@@ -50,31 +46,31 @@ export default function DashboardLayout() {
       )}
 
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center border-b border-white/10 bg-surface-950/80 px-4 backdrop-blur-xl sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center border-b border-white/10 bg-surface-950 px-4 sm:px-6">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-label="Open dashboard navigation"
-            className="mr-3 rounded-lg p-2 text-gray-300 hover:bg-white/10 lg:hidden"
+            className="mr-3 rounded-md p-1.5 text-gray-400 hover:bg-white/5 hover:text-white lg:hidden"
           >
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">{title}</p>
-            <p className="hidden truncate text-xs text-gray-500 sm:block">
+            <h1 className="truncate text-base font-semibold text-white tracking-tight">{title}</h1>
+            <p className="hidden truncate text-xs text-gray-400 sm:block font-normal">
               Welcome back{user?.username ? `, ${user.username}` : ""}
             </p>
           </div>
           <NavLink
             to="/dashboard/profile"
             aria-label="Open profile"
-            className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold transition hover:bg-white/10"
+            className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-xs font-semibold transition hover:bg-white/10"
           >
             {(user?.username || user?.email || "U").charAt(0).toUpperCase()}
           </NavLink>
         </header>
 
-        <main className="relative mx-auto w-full min-w-0 max-w-7xl px-4 pb-6 pt-5 sm:px-6 lg:px-8">
+        <main className="relative mx-auto w-full min-w-0 max-w-7xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>

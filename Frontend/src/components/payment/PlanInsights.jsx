@@ -10,18 +10,18 @@ const PlanInsights = ({
   reminderWindowDays,
   usageResetLabel,
 }) => (
-  <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-    <div className="flex items-start justify-between gap-4">
+  <div className="rounded-lg border border-white/10 bg-surface-900 p-4 sm:p-5 font-sans">
+    <div className="flex items-center justify-between gap-4">
       <div>
-        <h2 className="text-xl font-semibold">Plan insights</h2>
-        <p className="text-sm text-slate-400 mt-1">Real-time overview of your membership.</p>
+        <h2 className="text-sm sm:text-base font-semibold text-white">Plan Insights</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Real-time overview of your membership status.</p>
       </div>
-      <Badge className="bg-brand/20 text-brand-50 border border-brand/40">
+      <Badge className="bg-brand/10 text-brand-300 border border-brand/20 text-[11px] px-2 py-0.5 font-medium">
         {user?.isPaidUser ? 'Pro access' : 'Free tier'}
       </Badge>
     </div>
 
-    <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <InsightCard
         label="Emails / month"
         value={user?.isPaidUser ? '100' : '10'}
@@ -53,10 +53,10 @@ const PlanInsights = ({
 );
 
 const InsightCard = ({ label, value, helper }) => (
-  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-    <p className="text-sm text-slate-400">{label}</p>
-    <p className="text-2xl font-semibold mt-2">{value}</p>
-    <p className="text-xs text-slate-500 mt-1">{helper}</p>
+  <div className="rounded-md border border-white/10 bg-surface-950 p-3.5">
+    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
+    <p className="text-base sm:text-lg font-semibold text-white mt-1 font-mono">{value}</p>
+    <p className="text-[11px] text-gray-400 mt-1">{helper}</p>
   </div>
 );
 

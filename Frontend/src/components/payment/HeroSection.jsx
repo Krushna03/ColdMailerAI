@@ -11,23 +11,22 @@ const HeroSection = ({
   onUpgrade,
   onHistory
 }) => (
-  <section className="text-center space-y-4">
-    <Badge className="border border-white/10 bg-white/10 text-white">
+  <section className="text-center space-y-3.5 font-sans">
+    <Badge className="border border-white/10 bg-white/5 text-gray-300 text-xs px-3 py-0.5 font-medium">
       Billing & Access
     </Badge>
-    <h1 className="text-3xl md:text-5xl font-semibold leading-tight">
+    <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
       Manage Your Plan
     </h1>
-    <p className="text-slate-300 max-w-3xl mx-auto">
-      Upgrade, verify and track every payment without leaving the app. <br /> Your workspace,
-      billing, and automation limits stay in sync in real-time.
+    <p className="text-sm text-gray-400 max-w-xl mx-auto leading-relaxed">
+      Upgrade, verify and track every payment without leaving the workspace. Real-time access and automation limits stay synchronized.
     </p>
-    <div className="flex flex-wrap justify-center gap-3 pt-2">
+    <div className="flex flex-wrap justify-center gap-3 pt-1">
       {!user?.isPaidUser && (
         <Button
           onClick={() => paidPlanId && onUpgrade(paidPlanId)}
           disabled={plansLoading || paymentLoading || !paidPlanId}
-          className="bg-brand hover:bg-brand-400 text-white px-6"
+          className="bg-brand hover:bg-brand-400 text-white h-9 px-5 text-sm font-semibold rounded-md shadow-none"
         >
           {(plansLoading || paymentLoading) ? (
             <>
@@ -46,7 +45,7 @@ const HeroSection = ({
         variant="outline"
         onClick={onHistory}
         disabled={historyLoading}
-        className="border-white/20 bg-white/5 text-white hover:text-white hover:bg-white/10"
+        className="border-white/15 bg-surface-900 text-white hover:bg-white/5 h-9 px-4 text-sm font-medium rounded-md"
       >
         <HistoryIcon className="mr-2 h-4 w-4" />
         {historyLoading ? 'Syncing history...' : 'View history'}

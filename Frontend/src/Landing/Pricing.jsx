@@ -59,9 +59,9 @@ export default function PricingSection() {
   } 
 
   return (
-    <div className="w-full max-w-7xl mx-auto container px-5 md:px-6 py-20">
+    <section className="w-full max-w-7xl mx-auto py-12 md:py-16 px-4 md:px-0 font-sans">
       {/* Header */}
-      <div className="text-center mb-16">
+      <div className="text-center mb-8 md:mb-12">
         <div className="max-w-24 flex justify-center bg-surface-800 mx-auto rounded-full px-4 py-2 mb-8">
           <span className="text-sm sm:text-base font-normal text-gray-200">Pricing</span>
         </div>  
@@ -70,62 +70,63 @@ export default function PricingSection() {
           Choose Your Plan
         </h2>
         <p className="text-lg text-gray-300 px-2 md:px-0 max-w-2xl text-center mx-auto mb-8 md:mb-12">
-          Start free and scale as you grow. <br /> All plans include our core AI-powered email generation features.
+          Start free and scale as you grow. All plans include core AI-powered email generation features.
         </p>
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid gap-8 lg:grid-cols-3 lg:gap-8 max-w-6xl mx-auto">
+      <div className="grid gap-6 md:gap-8 grid-cols-1 lg:grid-cols-3 max-w-6xl mx-auto p-5 md:p-0">
         {plans.map((plan, index) => (
           <Card
             key={index}
-            className={`relative bg-slate-900/50 border-slate-800 backdrop-blur-sm ${
-              plan.popular ? "ring-2 ring-brand scale-105" : ""
+            className={`relative bg-surface-900 border-white/10 rounded-2xl p-2 md:p-4 shadow-none ${
+              plan.popular ? "ring-1 ring-brand border-brand" : ""
             }`}
           >
             {plan.popular && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-brand text-white px-4 py-1 rounded-full text-sm font-medium">
+              <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2">
+                <span className="bg-brand text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider shadow-md">
                   Most Popular
                 </span>
               </div>
             )}
 
-            <CardHeader className="text-center pb-8">
-              <div className="flex justify-center mb-4">
-                <plan.icon className={plan.iconClassName} />
+            <CardHeader className="text-center pb-5 pt-6">
+              <div className="flex justify-center mb-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-[#28252ee7] rounded-lg flex items-center justify-center">
+                  <plan.icon className="h-6 w-6 text-brand" />
+                </div>
               </div>
-              <CardTitle className="text-2xl font-bold text-white mb-2">{plan.name}</CardTitle>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-white">{plan.price}</span>
+              <CardTitle className="text-lg md:text-xl font-bold text-white mb-2">{plan.name}</CardTitle>
+              <div className="mb-2 flex items-baseline justify-center">
+                <span className="text-2xl md:text-3xl font-bold text-white font-mono">{plan.price}</span>
                 {plan.price !== "Free" && plan.price !== "Custom" && (
-                  <span className="text-slate-400 ml-2">/{plan.period}</span>
+                  <span className="text-sm md:text-sm text-gray-300 ml-1 font-sans">/{plan.period}</span>
                 )}
                 {(plan.price === "Free" || plan.price === "Custom") && (
-                  <span className="text-slate-400 ml-2">{plan.period}</span>
+                  <span className="text-sm md:text-sm text-gray-300 ml-1 font-sans">{plan.period}</span>
                 )}
               </div>
-              <CardDescription className="text-slate-400">{plan.description}</CardDescription>
+              <CardDescription className="text-sm md:text-sm text-gray-300">{plan.description}</CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-6">
               <ul className="space-y-3">
                 {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-center text-slate-300">
-                    <Check className="h-4 w-4 text-brand mr-3 flex-shrink-0" />
-                    <span className="text-sm">{feature}</span>
+                  <li key={featureIndex} className="flex items-center text-gray-300">
+                    <Check className="h-4 w-4 text-brand mr-2.5 flex-shrink-0" />
+                    <span className="text-sm md:text-base">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <Button
-                className={`w-full ${
+                className={`w-full py-2.5 md:py-3 h-auto text-sm md:text-base font-semibold rounded-lg shadow-none ${
                   plan.buttonVariant === "default"
-                    ? "bg-brand hover:from-purple-600 hover:to-purple-700 text-white"
-                    : "bg-gray-800 border-slate-700 text-slate-300 hover:bg-slate-900 hover:text-white"
+                    ? "bg-brand hover:bg-brand-600 text-white"
+                    : "bg-surface-950 border border-white/10 text-gray-200 hover:bg-white/10 hover:text-white"
                 }`}
                 variant={plan.buttonVariant}
-                size="lg"
                 onClick={() => handleNavigation(plan.id)}
               >
                 {plan.buttonText}
@@ -141,6 +142,6 @@ export default function PricingSection() {
         defaultName={userData?.username || ""}
         defaultEmail={userData?.email || ""}
       />
-    </div>
+    </section>
   )
 }

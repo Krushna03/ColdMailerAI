@@ -5,20 +5,20 @@ import { formatPlanAmount } from './utils';
 const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
   if (plansLoading) {
     return (
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 font-sans">
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={`plan-skeleton-${index}`}
-            className="rounded-3xl border border-white/5 bg-white/5 p-6 animate-pulse space-y-4"
+            className="rounded-lg border border-white/10 bg-surface-900 p-5 animate-pulse space-y-3"
           >
-            <div className="h-4 w-32 rounded bg-white/20" />
-            <div className="h-10 w-24 rounded bg-white/20" />
-            <div className="space-y-3">
+            <div className="h-3 w-24 rounded bg-white/10" />
+            <div className="h-8 w-20 rounded bg-white/10" />
+            <div className="space-y-2 pt-2">
               {Array.from({ length: 4 }).map((__, featureIdx) => (
-                <div key={featureIdx} className="h-3 w-full rounded bg-white/10" />
+                <div key={featureIdx} className="h-3 w-full rounded bg-white/5" />
               ))}
             </div>
-            <div className="h-11 w-full rounded bg-white/15" />
+            <div className="h-8 w-full rounded bg-white/10 mt-4" />
           </div>
         ))}
       </section>
@@ -27,7 +27,7 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
 
   if (!plans.length) {
     return (
-      <section className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center text-slate-300">
+      <section className="rounded-lg border border-white/10 bg-surface-900 p-6 text-center text-xs text-gray-400 font-sans">
         No plans available at the moment. Please check back later.
       </section>
     );
@@ -36,15 +36,15 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
   const hasActivePlan = user?.isPaidUser && user?.planName && user.planName !== 'Free';
 
   return (
-    <section className="space-y-9">
+    <section className="space-y-6 font-sans">
       <div className="flex items-center justify-center text-center">
         <div>
-          <p className="text-2xl uppercase tracking-[0.05em] text-slate-100">Plans</p>
-          <h2 className="text-xl font-semibold text-slate-200">Choose what fits your workflow</h2>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Plans</p>
+          <h2 className="text-lg font-semibold text-white mt-0.5">Choose what fits your workflow</h2>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => {
           const isCurrentPlan =
             user?.planName?.toLowerCase() === plan.name?.toLowerCase() && hasActivePlan;
@@ -55,47 +55,47 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
           return (
             <div
               key={plan.id}
-              className={`relative rounded-3xl border bg-white/5 p-6 backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:border-white/30 ${
-                plan.popular ? 'border-brand/60 ring-1 ring-brand/50' : 'border-white/10'
+              className={`relative rounded-lg border bg-surface-900 p-5 sm:p-6 transition-colors ${
+                plan.popular ? 'border-brand ring-1 ring-brand/40' : 'border-white/10'
               }`}
             >
               {plan.popular && (
-                <span className="absolute -top-3 left-6 rounded-full bg-brand px-3 py-1 text-xs font-medium">
+                <span className="absolute -top-2.5 left-5 rounded-full bg-brand px-3 py-0.5 text-[11px] font-semibold text-white uppercase tracking-wider">
                   Most popular
                 </span>
               )}
               <div className="space-y-3">
-                <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                   {plan.billingPeriod || 'one-time'}
                 </p>
-                <h3 className="text-2xl font-semibold flex items-center gap-2">
-                  {plan.name}
+                <h3 className="text-lg font-semibold text-white flex items-center justify-between">
+                  <span>{plan.name}</span>
                   {isCurrentPlan && (
-                    <Badge className="bg-white/10 text-white border-white/20">Current</Badge>
+                    <Badge className="bg-white/10 text-white border-white/20 text-xs px-2.5 py-0.5">Current</Badge>
                   )}
                 </h3>
-                <p className="text-4xl font-bold text-white">
+                <div className="text-2xl sm:text-3xl font-semibold text-white tracking-tight font-mono">
                   {isCustomPlan
                     ? 'Custom'
                     : formatPlanAmount(plan.amount, plan.currency || 'USD')}
                   {!isCustomPlan && plan.amount > 0 && (
-                    <span className="text-base font-normal text-slate-400">
+                    <span className="text-sm font-normal text-gray-400 font-sans">
                       {' '}
                       / {plan.billingPeriod || 'month'}
                     </span>
                   )}
                   {isCustomPlan && (
-                    <span className="text-base font-normal text-slate-400"> pricing</span>
+                    <span className="text-sm font-normal text-gray-400 font-sans"> pricing</span>
                   )}
-                </p>
+                </div>
                 {plan.description && (
-                  <p className="text-sm text-slate-300">{plan.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">{plan.description}</p>
                 )}
-                <ul className="space-y-2 text-sm text-slate-200">
+                <ul className="space-y-2 text-xs sm:text-sm text-gray-300 pt-1">
                   {plan.features?.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-brand" />
-                      {feature}
+                    <li key={index} className="flex items-start gap-2.5">
+                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-brand shrink-0" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -103,14 +103,14 @@ const PlanGrid = ({ plans, plansLoading, user, onSelectPlan }) => {
               <Button
                 onClick={() => onSelectPlan(plan.id)}
                 disabled={isDisabled}
-                className={`mt-6 w-full ${
+                className={`mt-6 w-full h-9 text-xs sm:text-sm font-semibold rounded-md shadow-none ${
                   isDisabled
-                    ? 'cursor-not-allowed bg-slate-600/60 text-slate-200'
+                    ? 'cursor-not-allowed bg-surface-950 text-gray-500 border border-white/5'
                     : 'bg-brand text-white hover:bg-brand-400'
                 }`}
               >
                 {isFreePlan
-                  ? 'Included in your workspace'
+                  ? 'Included in workspace'
                   : isCurrentPlan
                     ? 'Current plan'
                     : plan.buttonText || (isCustomPlan ? 'Contact sales' : 'Choose Plan')}

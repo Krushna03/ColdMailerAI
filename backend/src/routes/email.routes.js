@@ -13,7 +13,8 @@ import {
   updateEmailHistory,
   startBatchJob,
   getBatchJobStatus,
-  getBatchJobs
+  getBatchJobs,
+  deleteBatchJob
 } from "../controllers/email.controller.js";
 import { uploadImage, handleMulterError } from "../middlewares/upload.middleware.js";
 
@@ -27,7 +28,9 @@ router.route('/batch-jobs')
   .post(verifyJWT, startBatchJob)
   .get(verifyJWT, getBatchJobs)
 
-router.route('/batch-jobs/:jobId').get(verifyJWT, getBatchJobStatus)
+router.route('/batch-jobs/:jobId')
+  .get(verifyJWT, getBatchJobStatus)
+  .delete(verifyJWT, deleteBatchJob);
 
 router.route('/update-email').post(verifyJWT, uploadImage, handleMulterError, updateEmail)
 

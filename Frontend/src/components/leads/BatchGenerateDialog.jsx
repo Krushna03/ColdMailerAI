@@ -101,7 +101,7 @@ export default function BatchGenerateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-7xl flex-col overflow-hidden border-white/20 bg-surface-900 p-0 text-white sm:rounded-3xl [&>button]:text-slate-400 [&>button]:hover:text-white">
+      <DialogContent className="flex max-h-[90vh] max-w-7xl flex-col overflow-hidden border-white/10 bg-surface-900 p-0 text-white sm:rounded-xl [&>button]:text-slate-400 [&>button]:hover:text-white">
         <DialogHeader className="space-y-1 border-b border-white/10 px-6 pb-4 pt-4 pr-12 text-left">
           <DialogTitle className="text-xl font-semibold text-white">
             Generate emails

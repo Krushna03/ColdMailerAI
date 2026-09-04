@@ -4,8 +4,9 @@ import { BatchJob } from "../models/BatchJob.model.js";
 import User from "../models/User.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { buildPlanUsageSummary, getPlanConfigForUser, getMonthlyEmailUsage } from "../utils/planLimits.js";
-import { generateAIContent, generateAIContentWithRole } from "./ai.service.js";
+import { generateAIContent, generateAIContentWithRole, isRateLimitError } from "./ai.service.js";
 import { getLeadsByIdsService, syncLeadStatsFromEmails } from "./lead.service.js";
+import { logActivity } from "./activity.service.js";
 import { EMAIL_GENERATION_PROMPT, EMAIL_UPDATE_PROMPT, EMAIL_HISTORY_UPDATE_PROMPT, BATCH_EMAIL_GENERATION_PROMPT } from "../constants/email.prompts.js";
 import { convertImageToBase64 } from "../middlewares/upload.middleware.js";
 
@@ -118,22 +119,26 @@ export const generateBatchEmailsService = async ({
 
   const leads = await getLeadsByIdsService({ leadIds, userId: user._id });
 
-  const { planConfig, monthlyUsage } = await checkBatchLimit(user, now, leads.length);
+  const { planConfig, monthlyUsage } = await checkBatchLimit(user, now, leads?.length);
   const goal = purpose || instructions;
 
   const results = [];
   let successCount = 0;
 
-  // Sequential, not parallel — keeps us within Gemini rate limits and makes
-  // the fallback-model logic in ai.service.js behave predictably per call.
-  for (const lead of leads) {
+  for (let i = 0; i < leads.length; i++) {
+    const lead = leads[i];
+
+    if (i > 0) {
+      await delay(BATCH_DELAY_MS);
+    }
+
     try {
       const prompt = BATCH_EMAIL_GENERATION_PROMPT(lead, {
         instructions,
         purpose: goal,
         tone
       });
-      const aiResponse = await generateAIContent(prompt);
+      const aiResponse = await generateWithRetry(prompt);
 
       if (!aiResponse.success) {
         results.push({ leadId: lead._id, leadName: lead.name, success: false, error: aiResponse.error });
@@ -181,7 +186,7 @@ export const generateBatchEmailsService = async ({
   return {
     results,
     successCount,
-    failureCount: results.length - successCount,
+    failureCount: results?.length - successCount,
     usage: usageSummary
   };
 };
@@ -357,11 +362,30 @@ export const markEmailSentService = async ({ emailId, userId }) => {
   if (email.leadId) {
     const lead = await Lead.findOne({ _id: email.leadId, userId });
     if (lead) {
+      const oldStatus = lead.status;
       if (lead.status === 'new') {
         lead.status = 'contacted';
       }
       await lead.save();
       await syncLeadStatsFromEmails(lead._id);
+
+      await logActivity({
+        userId,
+        leadId: lead._id,
+        type: "EMAIL_SENT",
+        title: "Email sent",
+        metadata: { emailId: email._id }
+      });
+
+      if (oldStatus === 'new') {
+        await logActivity({
+          userId,
+          leadId: lead._id,
+          type: "STATUS_CHANGED",
+          title: "Status → Contacted",
+          metadata: { oldStatus: "new", newStatus: "contacted" }
+        });
+      }
     }
   }
 
@@ -394,17 +418,28 @@ export const unmarkEmailSentService = async ({ emailId, userId }) => {
 // Batch Job Processing — Controlled concurrency + retry
 // ---------------------------------------------------------------------------
 
-const BATCH_CONCURRENCY = 3;
-const MAX_RETRIES = 3;
-const RETRY_BASE_MS = 1000;
+const BATCH_CONCURRENCY = 2;
+const BATCH_DELAY_MS = 1500;
+const MAX_RETRIES = 5;
+const RETRY_BASE_MS = 2000;
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const RETRYABLE_PATTERNS = [
   'rate limit', '429', '500', '503', 'timeout',
   'temporarily', 'overloaded', 'quota', 'ECONNABORTED',
-  'ECONNRESET', 'ETIMEDOUT', 'Resource has been exhausted'
+  'ECONNRESET', 'ETIMEDOUT', 'Resource has been exhausted',
+  'resource_exhausted', 'too many requests'
 ];
 
-const isRetryableError = (errorMsg) => {
+const isRetryableError = (errorVal) => {
+  if (!errorVal) return false;
+  if (isRateLimitError(errorVal)) return true;
+
+  const errorMsg = typeof errorVal === 'string'
+    ? errorVal
+    : errorVal?.error || errorVal?.message || '';
+
   if (!errorMsg) return false;
   const lower = errorMsg.toLowerCase();
   return RETRYABLE_PATTERNS.some((p) => lower.includes(p.toLowerCase()));
@@ -419,19 +454,28 @@ const generateWithRetry = async (prompt) => {
       if (lastResult.success) return lastResult;
 
       // Non-retryable AI error — fail immediately
-      if (!isRetryableError(lastResult.error)) return lastResult;
+      if (!isRetryableError(lastResult)) return lastResult;
 
       // Last attempt — return as-is
       if (attempt === MAX_RETRIES) return lastResult;
 
-      // Exponential backoff before retry
-      await new Promise((r) => setTimeout(r, RETRY_BASE_MS * Math.pow(2, attempt - 1)));
+      // Exponential backoff + randomized jitter
+      const rateLimited = lastResult?.isRateLimit || isRateLimitError(lastResult);
+      const baseMs = rateLimited ? 2500 : RETRY_BASE_MS;
+      const backoff = Math.pow(2, attempt - 1) * baseMs;
+      const jitter = Math.floor(Math.random() * 1000);
+      const waitTime = backoff + jitter;
+
+      console.warn(`[Batch Retry] Attempt ${attempt}/${MAX_RETRIES} failed (Rate limit/Temporary error). Retrying in ${waitTime}ms...`);
+      await delay(waitTime);
     } catch (err) {
       lastResult = { success: false, data: null, error: err.message || 'Unexpected error' };
 
-      if (!isRetryableError(err.message) || attempt === MAX_RETRIES) return lastResult;
+      if (!isRetryableError(err) || attempt === MAX_RETRIES) return lastResult;
 
-      await new Promise((r) => setTimeout(r, RETRY_BASE_MS * Math.pow(2, attempt - 1)));
+      const backoff = Math.pow(2, attempt - 1) * RETRY_BASE_MS;
+      const jitter = Math.floor(Math.random() * 1000);
+      await delay(backoff + jitter);
     }
   }
 
@@ -439,13 +483,16 @@ const generateWithRetry = async (prompt) => {
 };
 
 /**
- * Runs an array of async tasks with a concurrency limit.
+ * Runs an array of async tasks with a concurrency limit and optional delay between items to respect API rate limits.
  * Each task is a function returning a promise.
  */
-const runWithConcurrency = async (tasks, concurrency) => {
+const runWithConcurrency = async (tasks, concurrency, checkCancel = null) => {
   let idx = 0;
   const worker = async () => {
     while (idx < tasks.length) {
+      if (checkCancel && await checkCancel()) {
+        break;
+      }
       const i = idx++;
       await tasks[i]();
     }
@@ -457,7 +504,7 @@ const runWithConcurrency = async (tasks, concurrency) => {
 
 export const processBatchJobService = async (jobId) => {
   const job = await BatchJob.findById(jobId);
-  if (!job) return;
+  if (!job || job.status === 'cancelled') return;
 
   job.status = 'processing';
   await job.save();
@@ -481,7 +528,16 @@ export const processBatchJobService = async (jobId) => {
   const goal = job.purpose || job.instructions;
 
   // Build a task for each lead
-  const tasks = leads.map((lead) => async () => {
+  const tasks = leads.map((lead, index) => async () => {
+    // Check before running task if job was cancelled
+    const checkJob = await BatchJob.findById(jobId).select("status");
+    if (!checkJob || checkJob.status === "cancelled") return;
+
+    // Introduce pacing delay between tasks to stay within API rate limits
+    if (index > 0) {
+      await delay(BATCH_DELAY_MS);
+    }
+
     const resultEntry = {
       leadId: lead._id,
       leadName: lead.name,
@@ -504,6 +560,13 @@ export const processBatchJobService = async (jobId) => {
 
       if (!aiResponse.success) {
         resultEntry.error = aiResponse.error || 'AI generation failed';
+        await logActivity({
+          userId: user._id,
+          leadId: lead._id,
+          type: "EMAIL_FAILED",
+          title: "Email generation failed",
+          metadata: { error: resultEntry.error }
+        });
       } else {
         const email = await Email.create({
           prompt: goal || `Batch outreach email for ${lead.name}`,
@@ -516,12 +579,27 @@ export const processBatchJobService = async (jobId) => {
 
         await syncLeadStatsFromEmails(lead._id);
 
+        await logActivity({
+          userId: user._id,
+          leadId: lead._id,
+          type: "EMAIL_GENERATED",
+          title: "Email generated",
+          metadata: { emailId: email._id }
+        });
+
         resultEntry.success = true;
         resultEntry.emailId = email._id;
         resultEntry.generatedEmail = aiResponse.data;
       }
     } catch (err) {
       resultEntry.error = err.message || 'Unexpected error during generation';
+      await logActivity({
+        userId: user._id,
+        leadId: lead._id,
+        type: "EMAIL_FAILED",
+        title: "Email generation failed",
+        metadata: { error: resultEntry.error }
+      });
     }
 
     // Atomic update — safe for concurrent workers
@@ -538,11 +616,18 @@ export const processBatchJobService = async (jobId) => {
     );
   });
 
+  const checkCancel = async () => {
+    const currentJob = await BatchJob.findById(jobId).select("status");
+    return !currentJob || currentJob.status === "cancelled";
+  };
+
   // Run with controlled concurrency
-  await runWithConcurrency(tasks, BATCH_CONCURRENCY);
+  await runWithConcurrency(tasks, BATCH_CONCURRENCY, checkCancel);
 
   // Set final status
   const finalJob = await BatchJob.findById(jobId);
+  if (!finalJob || finalJob.status === 'cancelled') return;
+
   if (finalJob.failureCount > 0 && finalJob.successCount > 0) {
     finalJob.status = 'completed_with_errors';
   } else if (finalJob.failureCount > 0 && finalJob.successCount === 0) {
@@ -604,9 +689,42 @@ export const getBatchJobStatusService = async ({ jobId, userId }) => {
   return job;
 };
 
-export const getBatchJobsService = async ({ userId }) => {
-  return await BatchJob.find({ userId })
+export const getBatchJobsService = async ({ userId, limit, page }) => {
+  const query = BatchJob.find({ userId })
     .select("_id status totalLeads processedLeads successCount failureCount tone purpose createdAt")
-    .sort({ createdAt: -1 })
-    .lean();
+    .sort({ createdAt: -1 });
+
+  if (typeof limit === "number" && typeof page === "number") {
+    const jobs = await query
+      .limit(limit)
+      .skip(page * limit)
+      .lean();
+
+    const total = await BatchJob.countDocuments({ userId });
+    return {
+      jobs: jobs || [],
+      hasMore: (page + 1) * limit < total
+    };
+  }
+
+  const jobs = await query.lean();
+  return {
+    jobs: jobs || [],
+    hasMore: false
+  };
+};
+
+export const deleteBatchJobService = async ({ jobId, userId }) => {
+  const job = await BatchJob.findOne({ _id: jobId, userId });
+  if (!job) {
+    throw new ApiError(404, "Batch job not found");
+  }
+
+  if (job.status === "pending" || job.status === "processing") {
+    job.status = "cancelled";
+    await job.save();
+  }
+
+  await BatchJob.deleteOne({ _id: jobId, userId });
+  return { success: true };
 };
