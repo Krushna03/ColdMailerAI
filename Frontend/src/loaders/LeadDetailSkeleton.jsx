@@ -7,9 +7,11 @@ export default function LeadDetailSkeleton() {
       aria-busy="true"
       aria-label="Loading lead details"
     >
+      {/* Back link Skeleton */}
+      <div className={`${bone} h-4 w-28`} />
+
       {/* Header Skeleton */}
-      <div className="-mx-1 space-y-4 border-b border-white/10 px-1 pb-4 pt-1">
-        <div className={`${bone} h-4 w-28`} />
+      <div className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3.5 border-b border-white/10">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
