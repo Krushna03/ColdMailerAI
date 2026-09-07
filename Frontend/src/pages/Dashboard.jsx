@@ -1,4 +1,4 @@
-import { ArrowRight, CreditCard, Mail, Sparkles, Users } from "lucide-react";
+import { ArrowRight, CreditCard, Mail, Infinity, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Seo from "../components/common/Seo";
@@ -74,7 +74,7 @@ export default function Dashboard() {
         typeof limit === "number"
           ? `of ${limit} monthly${resetLabel ? ` · ${resetLabel}` : ""}`
           : resetLabel || "No monthly cap",
-      icon: Sparkles,
+      icon: Infinity,
     },
     {
       label: "Current plan",

@@ -28,7 +28,7 @@ export default function LeadDetailHeader({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="truncate text-2xl font-semibold text-white sm:text-3xl">
+              <h1 className="truncate text-2xl font-semibold text-white sm:text-2xl">
                 {lead.name}
               </h1>
               <span
@@ -50,9 +50,9 @@ export default function LeadDetailHeader({
               type="button"
               variant="ghost"
               onClick={onAddFollowUp}
-              className="border border-white/10 text-gray-200 hover:bg-white/10 hover:text-white"
+              className="border border-white/10 text-gray-200 hover:bg-white/10 hover:text-white text-xs sm:text-sm px-3"
             >
-              <CalendarPlus className="h-4 w-4" />
+              <CalendarPlus className="h-3 w-3" />
               Add follow-up
             </Button>
             <Button
@@ -60,18 +60,18 @@ export default function LeadDetailHeader({
               variant="ghost"
               disabled={!canMarkLatestSent || isMarkingSent}
               onClick={onMarkLatestSent}
-              className="border border-white/10 text-gray-200 hover:bg-white/10 hover:text-white disabled:opacity-40"
+              className="border border-white/10 text-gray-200 hover:bg-white/10 hover:text-white disabled:opacity-40 text-xs sm:text-sm px-3"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-3 w-3" />
               {isMarkingSent ? "Marking..." : "Mark latest sent"}
             </Button>
             <Button
               type="button"
               disabled={isGenerating}
               onClick={onGenerate}
-              className="bg-brand text-white hover:bg-brand-400"
+              className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-sm px-3"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-3 w-3" />
               {isGenerating ? "Generating..." : "Generate email"}
             </Button>
           </div>

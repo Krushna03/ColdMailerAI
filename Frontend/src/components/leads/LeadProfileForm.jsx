@@ -181,7 +181,7 @@ export default function LeadProfileForm({
           </label>
           <Textarea
             id="profile-notes"
-            className="min-h-[100px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-white/20 focus-visible:ring-1 focus-visible:ring-white/10 focus-visible:ring-offset-0 md:text-sm"
+            className="min-h-[80px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-white/20 focus-visible:ring-1 focus-visible:ring-white/10 focus-visible:ring-offset-0 md:text-sm"
             {...register("notes")}
           />
         </div>

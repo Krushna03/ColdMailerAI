@@ -23,7 +23,7 @@ export default function LeadStatsStrip({ stats }) {
           <p className="text-xs uppercase tracking-wide text-gray-500">{item.label}</p>
           <p
             className={`mt-1 font-semibold text-white ${
-              item.wide ? "text-sm" : "text-2xl"
+              item.wide ? "text-sm" : "text-xl"
             }`}
           >
             {item.value}
