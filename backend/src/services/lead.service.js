@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
 import { Lead, isValidStatusTransition } from "../models/Lead.model.js";
+import { Segment } from "../models/Segment.model.js";
 import { FollowUp } from "../models/FollowUp.model.js";
 import { Email } from "../models/Email.model.js";
 import { Activity } from "../models/Activity.model.js";
 import { logActivity } from "./activity.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { assertCategoryAccessible } from "./leadCategory.service.js";
+import { leadRepository } from "../repositories/lead.repository.js";
+import { buildMongoQueryFromSegment } from "../utils/segmentQueryBuilder.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -44,55 +47,77 @@ export const syncLeadStatsFromEmails = async (leadId) => {
   return lead;
 };
 
-export const createLeadService = async ({ leadData, userId }) => {
+export const normalizeCompany = (company) => {
+  if (!company) return { name: "", domain: "", industry: "", size: "", revenue: "" };
+  
+  if (typeof company === "string") return { name: company, domain: "", industry: "", size: "", revenue: "" };
+
+  if (typeof company === "object") return { name: "", domain: "", industry: "", size: "", revenue: "", ...company };
+
+  return { name: "", domain: "", industry: "", size: "", revenue: "" };
+};
+
+export const createLeadService = async ({ leadData, userId, workspaceId }) => {
   await assertCategoryAccessible({
     categoryId: leadData.categoryId,
     userId
   });
 
   const email = (leadData.email || "").trim().toLowerCase();
+  const effectiveWorkspaceId = workspaceId || leadData.workspaceId || null;
+
   if (email) {
-    const existing = await Lead.findOne({
-      userId,
-      categoryId: leadData.categoryId,
-      email
-    });
+    const existingFilter = effectiveWorkspaceId
+      ? { $or: [{ workspaceId: effectiveWorkspaceId }, { userId }], categoryId: leadData.categoryId, email }
+      : { userId, categoryId: leadData.categoryId, email };
+
+    const existing = await Lead.findOne(existingFilter);
     if (existing) {
       throw new ApiError(409, "A lead with this email already exists in this category");
     }
   }
 
+  const company = normalizeCompany(leadData.company);
+
   const lead = await Lead.create({
     ...leadData,
+    company,
     email,
     userId,
+    workspaceId: effectiveWorkspaceId,
+    createdBy: userId,
+    updatedBy: userId,
+    assignedTo: leadData.assignedTo || userId,
     lastActivityAt: new Date()
   });
 
   await logActivity({
     userId,
+    workspaceId: effectiveWorkspaceId,
+    performedBy: userId,
     leadId: lead._id,
     type: "LEAD_CREATED",
     title: `Lead created: ${lead.name}`,
-    metadata: { name: lead.name, email: lead.email, company: lead.company }
+    metadata: { name: lead.name, email: lead.email, company: lead.company?.name || "" }
   });
 
   return lead;
 };
 
-export const bulkCreateLeadsService = async ({ leads, userId }) => {
+export const bulkCreateLeadsService = async ({ leads, userId, workspaceId }) => {
   const categoryIds = [...new Set(leads.map((lead) => String(lead.categoryId)))];
   await Promise.all(
     categoryIds.map((categoryId) => assertCategoryAccessible({ categoryId, userId }))
   );
 
   const now = new Date();
+  const effectiveWorkspaceId = workspaceId || null;
 
-  const existingDocs = await Lead.find({
-    userId,
-    categoryId: { $in: categoryIds },
-    email: { $ne: "" }
-  })
+  const existingFilter = effectiveWorkspaceId
+    ? { $or: [{ workspaceId: effectiveWorkspaceId }, { userId }], categoryId: { $in: categoryIds }, email: { $ne: "" } }
+    : { userId, categoryId: { $in: categoryIds }, email: { $ne: "" } };
+
+  const existingDocs = await Lead.find(existingFilter)
     .select("categoryId email")
     .lean();
 
@@ -119,8 +144,13 @@ export const bulkCreateLeadsService = async ({ leads, userId }) => {
 
     validLeadsToInsert.push({
       ...lead,
+      company: normalizeCompany(lead.company),
       email: normEmail,
       userId,
+      workspaceId: effectiveWorkspaceId,
+      createdBy: userId,
+      updatedBy: userId,
+      assignedTo: lead.assignedTo || userId,
       lastActivityAt: now
     });
   }
@@ -132,6 +162,8 @@ export const bulkCreateLeadsService = async ({ leads, userId }) => {
       createdLeads.map((created) =>
         logActivity({
           userId,
+          workspaceId: effectiveWorkspaceId,
+          performedBy: userId,
           leadId: created._id,
           type: "LEAD_CREATED",
           title: `Lead imported: ${created.name}`,
@@ -151,22 +183,58 @@ export const bulkCreateLeadsService = async ({ leads, userId }) => {
 
 export const getUserLeadsService = async ({
   userId,
+  workspaceId,
   limit,
   page,
   status,
   overdueOnly,
   categoryId,
-  search
+  search,
+  tags,
+  segmentId,
+  verificationStatus
 }) => {
   const skip = page * limit;
-  const filter = { userId };
+  let filter = workspaceId
+    ? { $or: [{ workspaceId }, { userId }] }
+    : { userId };
+
+  if (segmentId && isValidObjectId(segmentId)) {
+    const segment = await Segment.findOne({
+      _id: segmentId,
+      ...(workspaceId ? { $or: [{ workspaceId }, { userId }] } : { userId })
+    }).lean();
+
+    if (segment?.filters) {
+      const segmentFilter = buildMongoQueryFromSegment(segment.filters, 
+      { workspaceId, userId });
+      filter = { ...filter, ...segmentFilter };
+    }
+  }
 
   if (status) {
     filter.status = status;
   }
 
+  if (verificationStatus) {
+    filter['emailVerification.status'] = verificationStatus;
+  }
+
   if (categoryId) {
     filter.categoryId = categoryId;
+  }
+
+  if (tags) {
+    const tagArray = Array.isArray(tags)
+      ? tags
+      : String(tags)
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean);
+
+    if (tagArray.length > 0) {
+      filter.tags = { $in: tagArray };
+    }
   }
 
   if (overdueOnly) {
@@ -175,12 +243,28 @@ export const getUserLeadsService = async ({
 
   if (search) {
     const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-    filter.$or = [
+    const searchConditions = [
       { name: { $regex: escapedSearch, $options: "i" } },
       { email: { $regex: escapedSearch, $options: "i" } },
-      { company: { $regex: escapedSearch, $options: "i" } },
-      { role: { $regex: escapedSearch, $options: "i" } }
+      { "company.name": { $regex: escapedSearch, $options: "i" } },
+      { "company.industry": { $regex: escapedSearch, $options: "i" } },
+      { role: { $regex: escapedSearch, $options: "i" } },
+      { jobTitle: { $regex: escapedSearch, $options: "i" } },
+      { tags: { $regex: escapedSearch, $options: "i" } }
     ];
+
+    if (filter.$or && Array.isArray(filter.$or) && filter.$or[0]?.workspaceId !== undefined) {
+      // Tenancy scope exists on $or, use $and to combine cleanly
+      const tenancyScope = { $or: filter.$or };
+      delete filter.$or;
+      filter.$and = [tenancyScope, { $or: searchConditions }];
+    } 
+    else if (filter.$and) {
+      filter.$and.push({ $or: searchConditions });
+    } 
+    else {
+      filter.$or = searchConditions;
+    }
   }
 
   const [leads, total] = await Promise.all([
@@ -195,7 +279,7 @@ export const getUserLeadsService = async ({
 
   const leadIds = (leads || []).map((l) => l._id);
   
-  const allFollowUps = await FollowUp.find({ leadId: { $in: leadIds }, userId })
+  const allFollowUps = await FollowUp.find({ leadId: { $in: leadIds } })
     .sort({ dueAt: 1 })
     .lean();
 
@@ -218,11 +302,12 @@ export const getUserLeadsService = async ({
   };
 };
 
-export const getLeadsByIdsService = async ({ leadIds, userId }) => {
-  const leads = await Lead.find({
-    _id: { $in: leadIds },
-    userId
-  })
+export const getLeadsByIdsService = async ({ leadIds, userId, workspaceId }) => {
+  const scope = workspaceId
+    ? { _id: { $in: leadIds }, $or: [{ workspaceId }, { userId }] }
+    : { _id: { $in: leadIds }, userId };
+
+  const leads = await Lead.find(scope)
     .populate("categoryId", "name slug description isDefault")
     .lean();
 
@@ -233,12 +318,16 @@ export const getLeadsByIdsService = async ({ leadIds, userId }) => {
   return leads;
 };
 
-export const getLeadByIdService = async ({ leadId, userId }) => {
+export const getLeadByIdService = async ({ leadId, userId, workspaceId }) => {
   if (!isValidObjectId(leadId)) {
     throw new ApiError(400, "Invalid lead ID");
   }
 
-  const lead = await Lead.findOne({ _id: leadId, userId })
+  const scope = workspaceId
+    ? { _id: leadId, $or: [{ workspaceId }, { userId }] }
+    : { _id: leadId, userId };
+
+  const lead = await Lead.findOne(scope)
     .populate("categoryId", "name slug description isDefault")
     .lean();
   if (!lead) {
@@ -246,9 +335,9 @@ export const getLeadByIdService = async ({ leadId, userId }) => {
   }
 
   const [emails, followUps, activities] = await Promise.all([
-    Email.find({ leadId, userId }).sort({ createdAt: -1 }).lean(),
-    FollowUp.find({ leadId, userId }).sort({ dueAt: 1 }).lean(),
-    Activity.find({ leadId, userId }).sort({ createdAt: -1 }).lean()
+    Email.find({ leadId }).sort({ createdAt: -1 }).lean(),
+    FollowUp.find({ leadId }).sort({ dueAt: 1 }).lean(),
+    Activity.find({ leadId }).sort({ createdAt: -1 }).lean()
   ]);
 
   const pendingFollowUps = followUps.filter((f) => f.status === "pending");
@@ -276,12 +365,16 @@ export const getLeadByIdService = async ({ leadId, userId }) => {
   };
 };
 
-export const updateLeadService = async ({ leadId, userId, updates }) => {
+export const updateLeadService = async ({ leadId, userId, workspaceId, updates }) => {
   if (!isValidObjectId(leadId)) {
     throw new ApiError(400, "Invalid lead ID");
   }
 
-  const lead = await Lead.findOne({ _id: leadId, userId });
+  const scope = workspaceId
+    ? { _id: leadId, $or: [{ workspaceId }, { userId }] }
+    : { _id: leadId, userId };
+
+  const lead = await Lead.findOne(scope);
   if (!lead) {
     throw new ApiError(404, "Lead not found");
   }
@@ -304,14 +397,75 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
     }
   }
 
-  const allowed = ["name", "company", "role", "email", "notes", "status", "categoryId"];
+  const allowed = [
+    "name",
+    "company",
+    "role",
+    "jobTitle",
+    "email",
+    "phone",
+    "linkedinUrl",
+    "location",
+    "timezone",
+    "notes",
+    "status",
+    "categoryId",
+    "assignedTo",
+    "source",
+    "tags",
+    "customFields"
+  ];
   
   for (const key of allowed) {
     if (updates[key] !== undefined) {
-      lead[key] = updates[key];
+      if (key === "company") {
+        const existingCompany =
+          lead.company && typeof lead.company.toObject === "function"
+            ? lead.company.toObject()
+            : typeof lead.company === "object" && lead.company !== null
+            ? lead.company
+            : { name: typeof lead.company === "string" ? lead.company : "" };
+
+        if (typeof updates.company === "string") {
+          lead.company = {
+            ...existingCompany,
+            name: updates.company
+          };
+        } 
+        else if (typeof updates.company === "object" && updates.company !== null) {
+          lead.company = {
+            ...existingCompany,
+            ...updates.company
+          };
+        }
+        lead.markModified("company");
+      } 
+      else if (key === "jobTitle") {
+        lead.jobTitle = updates.jobTitle;
+        if (updates.role === undefined) {
+          lead.role = updates.jobTitle;
+        }
+      } 
+      else if (key === "role") {
+        lead.role = updates.role;
+        if (updates.jobTitle === undefined) {
+          lead.jobTitle = updates.role;
+        }
+      } 
+      else if (key === "customFields") {
+        lead.customFields = {
+          ...(lead.customFields || {}),
+          ...updates.customFields
+        };
+        lead.markModified("customFields");
+      } 
+      else {
+        lead[key] = updates[key];
+      }
     }
   }
 
+  lead.updatedBy = userId;
   lead.lastActivityAt = new Date();
   await lead.save();
 
@@ -319,6 +473,8 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
     const formattedStatus = updates.status.charAt(0).toUpperCase() + updates.status.slice(1);
     await logActivity({
       userId,
+      workspaceId: lead.workspaceId,
+      performedBy: userId,
       leadId,
       type: "STATUS_CHANGED",
       title: `Status → ${formattedStatus}`,
@@ -328,6 +484,8 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
     if (updates.status === "meeting") {
       await logActivity({
         userId,
+        workspaceId: lead.workspaceId,
+        performedBy: userId,
         leadId,
         type: "MEETING_SCHEDULED",
         title: "Meeting scheduled",
@@ -337,6 +495,8 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
   } else if (updates.notes !== undefined) {
     await logActivity({
       userId,
+      workspaceId: lead.workspaceId,
+      performedBy: userId,
       leadId,
       type: "NOTE_ADDED",
       title: "Note updated",
@@ -345,6 +505,8 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
   } else {
     await logActivity({
       userId,
+      workspaceId: lead.workspaceId,
+      performedBy: userId,
       leadId,
       type: "LEAD_UPDATED",
       title: "Lead details updated",
@@ -355,12 +517,16 @@ export const updateLeadService = async ({ leadId, userId, updates }) => {
   return lead;
 };
 
-export const addFollowUpService = async ({ leadId, userId, dueAt, note }) => {
+export const addFollowUpService = async ({ leadId, userId, workspaceId, dueAt, note }) => {
   if (!isValidObjectId(leadId)) {
     throw new ApiError(400, "Invalid lead ID");
   }
 
-  const lead = await Lead.findOne({ _id: leadId, userId });
+  const scope = workspaceId
+    ? { _id: leadId, $or: [{ workspaceId }, { userId }] }
+    : { _id: leadId, userId };
+
+  const lead = await Lead.findOne(scope);
   if (!lead) {
     throw new ApiError(404, "Lead not found");
   }
@@ -368,6 +534,8 @@ export const addFollowUpService = async ({ leadId, userId, dueAt, note }) => {
   const followUp = await FollowUp.create({
     leadId,
     userId,
+    workspaceId: lead.workspaceId || workspaceId || null,
+    createdBy: userId,
     dueAt: new Date(dueAt),
     note: note || "",
     status: "pending"
@@ -375,6 +543,8 @@ export const addFollowUpService = async ({ leadId, userId, dueAt, note }) => {
 
   await logActivity({
     userId,
+    workspaceId: lead.workspaceId,
+    performedBy: userId,
     leadId,
     type: "FOLLOWUP_CREATED",
     title: "Follow-up scheduled",
@@ -385,7 +555,7 @@ export const addFollowUpService = async ({ leadId, userId, dueAt, note }) => {
   lead.lastActivityAt = new Date();
   await lead.save();
 
-  const followUps = await FollowUp.find({ leadId, userId }).sort({ dueAt: 1 }).lean();
+  const followUps = await FollowUp.find({ leadId }).sort({ dueAt: 1 }).lean();
   const leadObj = lead.toObject();
   leadObj.followUps = followUps;
   return leadObj;
@@ -395,13 +565,18 @@ export const updateFollowUpService = async ({
   leadId,
   followUpId,
   userId,
+  workspaceId,
   updates
 }) => {
   if (!isValidObjectId(leadId) || !isValidObjectId(followUpId)) {
     throw new ApiError(400, "Invalid lead or follow-up ID");
   }
 
-  const lead = await Lead.findOne({ _id: leadId, userId });
+  const scope = workspaceId
+    ? { _id: leadId, $or: [{ workspaceId }, { userId }] }
+    : { _id: leadId, userId };
+
+  const lead = await Lead.findOne(scope);
   if (!lead) {
     throw new ApiError(404, "Lead not found");
   }
@@ -412,7 +587,7 @@ export const updateFollowUpService = async ({
   if (updates.status !== undefined) followUpUpdates.status = updates.status;
 
   const updatedFollowUp = await FollowUp.findOneAndUpdate(
-    { _id: followUpId, leadId, userId },
+    { _id: followUpId, leadId },
     { $set: followUpUpdates },
     { new: true }
   );
@@ -424,6 +599,8 @@ export const updateFollowUpService = async ({
   if (updates.status === "done" || updates.status === "skipped") {
     await logActivity({
       userId,
+      workspaceId: lead.workspaceId,
+      performedBy: userId,
       leadId,
       type: "FOLLOWUP_COMPLETED",
       title: `Follow-up ${updates.status === "done" ? "completed" : "skipped"}`,
@@ -435,26 +612,29 @@ export const updateFollowUpService = async ({
   lead.lastActivityAt = new Date();
   await lead.save();
 
-  const followUps = await FollowUp.find({ leadId, userId }).sort({ dueAt: 1 }).lean();
+  const followUps = await FollowUp.find({ leadId }).sort({ dueAt: 1 }).lean();
   const leadObj = lead.toObject();
   leadObj.followUps = followUps;
   return leadObj;
 };
 
-export const deleteFollowUpService = async ({ leadId, followUpId, userId }) => {
+export const deleteFollowUpService = async ({ leadId, followUpId, userId, workspaceId }) => {
   if (!isValidObjectId(leadId) || !isValidObjectId(followUpId)) {
     throw new ApiError(400, "Invalid lead or follow-up ID");
   }
 
-  const lead = await Lead.findOne({ _id: leadId, userId });
+  const scope = workspaceId
+    ? { _id: leadId, $or: [{ workspaceId }, { userId }] }
+    : { _id: leadId, userId };
+
+  const lead = await Lead.findOne(scope);
   if (!lead) {
     throw new ApiError(404, "Lead not found");
   }
 
   const deletedFollowUp = await FollowUp.findOneAndDelete({
     _id: followUpId,
-    leadId,
-    userId
+    leadId
   });
 
   if (!deletedFollowUp) {
@@ -465,37 +645,75 @@ export const deleteFollowUpService = async ({ leadId, followUpId, userId }) => {
   lead.lastActivityAt = new Date();
   await lead.save();
 
-  const followUps = await FollowUp.find({ leadId, userId }).sort({ dueAt: 1 }).lean();
+  const followUps = await FollowUp.find({ leadId }).sort({ dueAt: 1 }).lean();
   const leadObj = lead.toObject();
   leadObj.followUps = followUps;
   return leadObj;
 };
 
-export const deleteLeadService = async ({ leadId, userId }) => {
-  const deletedLead = await Lead.findOneAndDelete({
-    _id: leadId,
-    userId
-  });
+export const deleteLeadService = async ({ leadId, userId, workspaceId }) => {
+  const scope = workspaceId
+    ? { _id: leadId, $or: [{ workspaceId }, { userId }] }
+    : { _id: leadId, userId };
+
+  const deletedLead = await Lead.findOneAndDelete(scope);
 
   if (!deletedLead) {
     throw new ApiError(404, "Lead not found or already deleted");
   }
 
-  await FollowUp.deleteMany({ leadId, userId });
+  await FollowUp.deleteMany({ leadId });
 
   return { success: true };
 };
 
-export const bulkDeleteLeadsService = async ({ leadIds, userId }) => {
-  const result = await Lead.deleteMany({
-    _id: { $in: leadIds },
-    userId
-  });
+export const bulkDeleteLeadsService = async ({ leadIds, userId, workspaceId }) => {
+  const scope = workspaceId
+    ? { _id: { $in: leadIds }, $or: [{ workspaceId }, { userId }] }
+    : { _id: { $in: leadIds }, userId };
 
-  await FollowUp.deleteMany({ leadId: { $in: leadIds }, userId });
+  const result = await Lead.deleteMany(scope);
+
+  await FollowUp.deleteMany({ leadId: { $in: leadIds } });
 
   return {
     success: true,
     deletedCount: result.deletedCount ?? 0
   };
 };
+
+export const getWorkspaceTagsService = async ({ userId, workspaceId }) => {
+  return leadRepository.distinctTags({ workspaceId, userId });
+};
+
+export const bulkTagLeadsService = async ({ leadIds, tags, action = "add", userId, workspaceId }) => {
+  if (!Array.isArray(leadIds) || leadIds.length === 0) {
+    throw new ApiError(400, "Select at least one lead");
+  }
+  if (!Array.isArray(tags) || tags.length === 0) {
+    throw new ApiError(400, "Provide at least one tag");
+  }
+
+  const cleanTags = [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))];
+  const scope = workspaceId
+    ? { _id: { $in: leadIds }, $or: [{ workspaceId }, { userId }] }
+    : { _id: { $in: leadIds }, userId };
+
+  const updateOp =
+    action === "remove"
+      ? { $pull: { tags: { $in: cleanTags } } }
+      : { $addToSet: { tags: { $each: cleanTags } } };
+
+  const result = await Lead.updateMany(scope, {
+    ...updateOp,
+    $set: { updatedBy: userId, lastActivityAt: new Date() }
+  });
+
+  return {
+    success: true,
+    modifiedCount: result.modifiedCount ?? 0,
+    tags: cleanTags,
+    action
+  };
+};
+

@@ -15,9 +15,11 @@ import {
   useLeadCategories,
   useCreateLeadCategory,
   useBatchJobStatus,
+  useVerifyLeadEmail,
 } from "../hooks/useLeads";
 import LeadDetailHeader from "../components/leads/LeadDetailHeader";
 import LeadStatsStrip from "../components/leads/LeadStatsStrip";
+import LeadDeliverabilityCard from "../components/leads/LeadDeliverabilityCard";
 import LeadProfileForm from "../components/leads/LeadProfileForm";
 import LeadTimeline from "../components/leads/LeadTimeline";
 import AddFollowUpDialog from "../components/leads/AddFollowUpDialog";
@@ -56,6 +58,7 @@ export default function LeadDetail() {
   const markSent = useMarkEmailSent(leadId);
   const unmarkSent = useUnmarkEmailSent(leadId);
   const generateBatch = useGenerateBatchEmails();
+  const verifyEmail = useVerifyLeadEmail();
   const [activeJobId, setActiveJobId] = useState(null);
   const { data: job } = useBatchJobStatus(activeJobId);
   const jobStatus = job?.status;
@@ -209,6 +212,24 @@ export default function LeadDetail() {
     });
   };
 
+  const handleVerifyEmail = async () => {
+    try {
+      const res = await verifyEmail.mutateAsync(leadId);
+      const status = res?.verification?.status || "checked";
+      const score = res?.verification?.score;
+      toast({
+        title: "Email deliverability verified",
+        description: `Status: ${status.toUpperCase()}${score !== undefined ? ` (Score: ${score}/100)` : ""}`,
+      });
+    } catch (err) {
+      toast({
+        title: "Verification failed",
+        description: err?.response?.data?.message || err.message || "Could not verify email.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-5">
       <Seo title={`${lead.name} · Lead`} path={`/dashboard/leads/${leadId}`} noIndex />
@@ -224,6 +245,12 @@ export default function LeadDetail() {
       />
 
       <LeadStatsStrip stats={stats} />
+
+      <LeadDeliverabilityCard
+        lead={lead}
+        onVerify={handleVerifyEmail}
+        isVerifying={verifyEmail.isPending}
+      />
 
       <LeadProfileForm
         lead={lead}

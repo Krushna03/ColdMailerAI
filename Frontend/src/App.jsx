@@ -18,6 +18,7 @@ const LeadDetail = lazy(() => import('./pages/LeadDetail'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Profile = lazy(() => import('./pages/Profile'))
 const BatchHistory = lazy(() => import('./pages/BatchHistory'))
+const Mailboxes = lazy(() => import('./pages/Mailboxes'))
 const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout'))
 
 const withSuspense = (element) => (
@@ -86,6 +87,10 @@ function App() {
         {
           path: "batches",
           element: withSuspense(<BatchHistory />)
+        },
+        {
+          path: "mailboxes",
+          element: withSuspense(<Mailboxes />)
         }
       ]
     },

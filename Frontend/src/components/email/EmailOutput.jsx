@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowUp, Copy, CopyCheckIcon, Loader2, MailOpen, Mic, MicOff, Image, X } from "lucide-react";
+import { ArrowUp, Copy, CopyCheckIcon, Loader2, MailOpen, Mic, MicOff, Image, X, Send } from "lucide-react";
 import { Button } from "../ui/button";
 import { useToast } from "../../hooks/use-toast";
 import { TiArrowBack } from "react-icons/ti";
@@ -10,6 +10,16 @@ import { formatBulletPoints, processGeneratedEmail } from '../../lib/processGene
 import { useCopyToClipboard, getUserInitial, parseEmail, openGmailCompose, processImageFiles } from '../../utils';
 import { useKeyboardOffset } from '../../hooks/useKeyboardOffset';
 import { useVoiceInput } from '../../hooks/useVoiceInput';
+import { useMailboxes, useSendGeneratedEmail } from '../../hooks/useMailboxes';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
 
 const MAX_TEXTAREA_HEIGHT = 100;
 
@@ -19,6 +29,8 @@ const PLACEHOLDER_SUGGESTIONS = [
 ];
 
 export function EmailOutput({
+  emailId = null,
+  leadId = null,
   prompt,
   generatedEmail,
   bottomPrompt,
@@ -44,6 +56,13 @@ export function EmailOutput({
   const desktopFileInputRef = useRef(null);
   const user = useSelector(state => state.auth.userData);
   const userInitial = getUserInitial(user?.username);
+
+  const { data: mailboxes = [] } = useMailboxes();
+  const sendGeneratedEmailMutation = useSendGeneratedEmail();
+  const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [sendToEmail, setSendToEmail] = useState("");
+  const [sendSubject, setSendSubject] = useState("");
+  const [sendMailboxId, setSendMailboxId] = useState("");
 
   const {
     listening,
@@ -148,6 +167,59 @@ export function EmailOutput({
     });
   };
 
+  const handleOpenSendModal = () => {
+    if (mailboxes.length === 0) {
+      toast({
+        title: "No Connected Mailbox",
+        description: "Please connect a Gmail, Outlook, or SMTP mailbox in your dashboard first.",
+      });
+      navigate("/dashboard/mailboxes");
+      return;
+    }
+    const defaultMb = mailboxes.find((m) => m.isDefault && m.status === "active") || mailboxes.find((m) => m.status === "active") || mailboxes[0];
+    setSendMailboxId(defaultMb?._id || "");
+    setSendSubject(subject || "Follow up");
+    setSendToEmail("");
+    setSendModalOpen(true);
+  };
+
+  const handleDispatchEmail = (e) => {
+    e.preventDefault();
+    if (!sendToEmail) {
+      toast({
+        title: "Recipient Required",
+        description: "Please enter a destination email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!emailId) {
+      toast({
+        title: "Email not persisted",
+        description: "Cannot dispatch unsaved email without an email ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    sendGeneratedEmailMutation.mutate(
+      {
+        emailId,
+        mailboxId: sendMailboxId,
+        to: sendToEmail,
+        subject: sendSubject,
+        body,
+        leadId,
+      },
+      {
+        onSuccess: () => {
+          setSendModalOpen(false);
+        },
+      }
+    );
+  };
+
   const handleUpdateSubmit = (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (listening) stopListening();
@@ -249,6 +321,15 @@ export function EmailOutput({
               <span className="text-xs font-medium text-gray-300 truncate">Generated Email</span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={handleOpenSendModal}
+                disabled={!!error || !email}
+                aria-label="Send via Mailbox"
+                className="h-7 px-2 flex items-center gap-1 text-[11px] font-semibold text-brand bg-brand/15 border border-brand/30 rounded-full active:scale-95 transition-transform disabled:opacity-50"
+              >
+                <Send className="h-2.5 w-2.5" />
+                Send
+              </button>
               <button
                 onClick={() => handleCopyToClipboard(email)}
                 disabled={!!error || !email}
@@ -410,6 +491,15 @@ export function EmailOutput({
             >
               Gmail <MailOpen className="mt-1 w-4 h-4 p-0" />
             </Button>
+
+            <Button 
+              onClick={handleOpenSendModal} 
+              className="ml-2 px-3 bg-brand/20 hover:bg-brand/30 text-brand text-xs font-semibold rounded-md border border-brand/30 h-8 gap-1.5" 
+              disabled={!!error || !email}
+              size="sm"
+            >
+              Send via Mailbox <Send className="w-3.5 h-3.5" />
+            </Button>
           </div>
 
           <div className="bg-surface-850 border border-gray-700 p-5 w-full h-[calc(100dvh-10rem)] overflow-y-auto custom-scroll relative rounded-xl">
@@ -545,6 +635,89 @@ export function EmailOutput({
           </form>
         </div>
       </div>
+
+      {/* Send Email via Connected Mailbox Dialog */}
+      <Dialog open={sendModalOpen} onOpenChange={setSendModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-brand" />
+              Dispatch via Connected Mailbox
+            </DialogTitle>
+            <DialogDescription>
+              Select a connected mailbox to deliver this cold email directly.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleDispatchEmail} className="space-y-3.5 mt-2">
+            <div>
+              <label className="text-xs font-medium text-gray-300">Sending Mailbox</label>
+              <select
+                value={sendMailboxId}
+                onChange={(e) => setSendMailboxId(e.target.value)}
+                className="mt-1 w-full rounded-md border border-white/10 bg-surface-950 px-3 py-2 text-sm text-white focus:outline-none"
+              >
+                {mailboxes.map((mb) => (
+                  <option key={mb._id} value={mb._id}>
+                    {mb.email} ({mb.provider.toUpperCase()}) — {mb.sentToday || 0}/{mb.dailyLimit} sent today
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-gray-300">
+                To (Recipient Email) <span className="text-red-400">*</span>
+              </label>
+              <Input
+                type="email"
+                required
+                placeholder="prospect@targetcompany.com"
+                value={sendToEmail}
+                onChange={(e) => setSendToEmail(e.target.value)}
+                className="mt-1 bg-surface-950 border-white/10 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-gray-300">Subject</label>
+              <Input
+                type="text"
+                placeholder="Email Subject"
+                value={sendSubject}
+                onChange={(e) => setSendSubject(e.target.value)}
+                className="mt-1 bg-surface-950 border-white/10 text-sm"
+              />
+            </div>
+
+            <div className="rounded-lg border border-white/5 bg-surface-950 p-3">
+              <p className="text-xs font-medium text-gray-400 mb-1">Preview Body Snippet</p>
+              <p className="text-xs text-gray-300 line-clamp-3 font-mono">
+                {body || email}
+              </p>
+            </div>
+
+            <DialogFooter className="mt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setSendModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={sendGeneratedEmailMutation.isPending}
+                className="bg-brand hover:bg-brand-400 text-white font-semibold text-xs gap-1.5"
+              >
+                <Send className="h-3.5 w-3.5" />
+                {sendGeneratedEmailMutation.isPending ? "Dispatching..." : "Send Email Now"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

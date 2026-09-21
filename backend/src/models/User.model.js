@@ -67,7 +67,11 @@ const UserSchema = new Schema({
       paymentDate: Date
     },
 
-    // lastLogin: { type: Date }
+    activeWorkspaceId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Workspace',
+      default: null
+    }
   }, 
   { timestamps: true }
 )

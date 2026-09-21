@@ -33,6 +33,19 @@ const EmailSchema = new Schema({
       required: true
     },
 
+    workspaceId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Workspace',
+      default: null,
+      index: true
+    },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+
     leadId: {
       type: Schema.Types.ObjectId,
       ref: 'Lead',
@@ -58,5 +71,7 @@ const EmailSchema = new Schema({
 EmailSchema.index({ userId: 1, createdAt: -1 });
 EmailSchema.index({ userId: 1, leadId: 1 });
 EmailSchema.index({ leadId: 1, sendStatus: 1 });
+EmailSchema.index({ workspaceId: 1, createdAt: -1 });
+EmailSchema.index({ workspaceId: 1, leadId: 1 });
 
 export const Email = mongoose.model('Email', EmailSchema);

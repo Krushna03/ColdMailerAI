@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "../ui/table";
 import { Trash2Icon } from "lucide-react";
+import { getLeadCompanyName, getLeadJobTitle } from "./leadUtils";
 
 export const TONE_OPTIONS = [
   { value: "professional", label: "Professional" },
@@ -58,8 +59,8 @@ export default function BatchGenerateDialog({
       (leads || []).map((lead) => ({
         _id: lead._id,
         name: lead.name || "",
-        company: lead.company || "",
-        role: lead.role || "",
+        company: getLeadCompanyName(lead.company) || "",
+        role: getLeadJobTitle(lead) || "",
         email: lead.email || "",
         notes: lead.notes || "",
       }))

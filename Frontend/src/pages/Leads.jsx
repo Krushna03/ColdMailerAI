@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Plus, Trash2, Search, X, Clock, CheckCircle2, Loader2 } from "lucide-react";
+import { Mail, Plus, Trash2, Search, X, Clock, CheckCircle2, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 import Seo from "../components/common/Seo";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -25,6 +25,8 @@ import {
   useCreateLeadCategory,
   useBatchJobStatus,
   useDeleteBatchJob,
+  useCreateImportJob,
+  useImportJobStatus,
 } from "../hooks/useLeads";
 import LeadsTable from "../components/leads/LeadsTable";
 import AddLeadDialog from "../components/leads/AddLeadDialog";
@@ -34,7 +36,8 @@ import BatchGenerateDialog from "../components/leads/BatchGenerateDialog";
 import BatchProgressDialog from "../components/leads/BatchProgressDialog";
 import ConfirmDeleteDialog from "../components/common/ConfirmDeleteDialog";
 import CategorySelect, { getCategoryName } from "../components/leads/CategorySelect";
-import { LEAD_STATUS_OPTIONS } from "../components/leads/leadUtils";
+import { LEAD_STATUS_OPTIONS, EMAIL_VERIFICATION_STATUS_OPTIONS } from "../components/leads/leadUtils";
+import SavedSegmentsBar from "../components/leads/SavedSegmentsBar";
 
 export default function Leads() {
   useCurrentUser();
@@ -42,6 +45,7 @@ export default function Leads() {
   const navigate = useNavigate();
 
   const [selectedLeadIds, setSelectedLeadIds] = useState(() => new Set());
+  const [activeSegmentId, setActiveSegmentId] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
@@ -51,9 +55,18 @@ export default function Leads() {
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [leadToDeleteId, setLeadToDeleteId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
+  const [verificationFilter, setVerificationFilter] = useState("");
+  const [activeImportJobId, setActiveImportJobId] = useState(null);
 
   const { data: activeJob } = useBatchJobStatus(activeJobId);
   const isJobActive = Boolean(activeJob && ["pending", "processing"].includes(activeJob.status));
+
+  const { data: activeImportJob } = useImportJobStatus(activeImportJobId);
+
+  const isImportJobActive = Boolean(
+    activeImportJob && ["pending", "processing"].includes(activeImportJob.status)
+  );
+
   const [categoryFilter, setCategoryFilter] = useState("");
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [searchVal, setSearchVal] = useState("");
@@ -79,13 +92,16 @@ export default function Leads() {
     error,
   } = useLeads({
     status: statusFilter || undefined,
+    verificationStatus: verificationFilter === "all" ? undefined : (verificationFilter || undefined),
     categoryId: categoryFilter || undefined,
     overdueOnly,
     search: debouncedSearch || undefined,
+    segmentId: activeSegmentId || undefined,
   });
 
   const createLead = useCreateLead();
   const bulkCreate = useBulkCreateLeads();
+  const createImportJob = useCreateImportJob();
   const deleteLead = useDeleteLead();
   const bulkDelete = useBulkDeleteLeads();
   const updateLead = useUpdateLead();
@@ -189,7 +205,31 @@ export default function Leads() {
     }
   };
 
-  const handleBulkImport = async (parsedLeads) => {
+  const handleBulkImport = async (parsedLeads, options = {}) => {
+    if (options.verifyEmails !== false) {
+      try {
+        const res = await createImportJob.mutateAsync({
+          leads: parsedLeads,
+          categoryId: options.categoryId,
+          verifyEmails: true,
+        });
+        if (res?.job?._id) {
+          setActiveImportJobId(res.job._id);
+          toast({
+            title: "Verification import started",
+            description: `Queued ${parsedLeads.length} leads for deliverability verification & import.`,
+          });
+          return { isAsyncJob: true, jobId: res.job._id };
+        }
+      } catch (err) {
+        toast({
+          title: "Import job failed",
+          description: err?.response?.data?.message || err.message || "Please try again.",
+          variant: "destructive",
+        });
+        throw err;
+      }
+    }
     return await bulkCreate.mutateAsync(parsedLeads);
   };
 
@@ -285,13 +325,13 @@ export default function Leads() {
   };
 
   return (
-    <div className="space-y-5 font-sans">
+    <div className="space-y-4 font-sans">
       <Seo title="Leads" path="/dashboard/leads" noIndex />
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2 -mt-[8px]">
         <div>
           <h1 className="text-2xl font-semibold text-white tracking-tight sm:text-3xl">Leads</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-400">
-            Manage lead contacts, filter by category and status, and launch tailored cold email batches.
+            Manage lead contacts, filter category & status, and launch tailored cold email batches.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -314,7 +354,7 @@ export default function Leads() {
             disabled={selectedLeadIds.size === 0 || generateBatch.isPending || isJobActive}
             onClick={() => setGenerateOpen(true)}
             title={isJobActive ? "A batch job is currently in progress. Please wait for it to complete." : ""}
-            className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-sm font-semibold px-3.5 h-9 rounded-md shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[13px] px-3.5 h-9 rounded-md shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Mail className="h-4 w-4" />
             {isJobActive
@@ -340,6 +380,12 @@ export default function Leads() {
           </Button>
         </div>
       </div>
+
+      <SavedSegmentsBar
+        activeSegmentId={activeSegmentId}
+        onSelectSegment={setActiveSegmentId}
+        totalLeadsCount={data?.pages?.[0]?.total ?? leads.length}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="relative w-full max-w-[380px]">
@@ -403,6 +449,30 @@ export default function Leads() {
             </SelectContent>
           </Select>
 
+          <Select
+            value={verificationFilter || "all"}
+            onValueChange={(value) => setVerificationFilter(value === "all" ? "" : value)}
+          >
+            <SelectTrigger
+              aria-label="Filter leads by deliverability"
+              className="h-8 px-3 w-[150px] rounded-lg border-white/15 bg-surface-900 text-white text-xs"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-gray-400 font-normal mr-0.5">Quality:</span>
+                <span className="truncate">
+                  <SelectValue placeholder="All" />
+                </span>
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {EMAIL_VERIFICATION_STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Button
             type="button"
             onClick={() => setOverdueOnly(!overdueOnly)}
@@ -423,6 +493,99 @@ export default function Leads() {
           Showing <span className="text-white">{selectedCategoryLabel}</span> leads.
           Generate will use one purpose for this list.
         </p>
+      )}
+
+      {activeImportJobId && activeImportJob && (
+        <div className="relative rounded-xl border border-emerald-500/30 bg-surface-900 p-4 shadow-lg transition-all duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 pr-6 sm:pr-0">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                  activeImportJob.status === "completed" || activeImportJob.status === "completed_with_errors"
+                    ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                    : activeImportJob.status === "failed"
+                    ? "bg-red-500/10 border border-red-500/30 text-red-400"
+                    : "bg-brand/10 border border-brand/30 text-brand"
+                }`}
+              >
+                {activeImportJob.status === "completed" || activeImportJob.status === "completed_with_errors" ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                ) : activeImportJob.status === "failed" ? (
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                ) : (
+                  <Loader2 className="h-5 w-5 animate-spin text-emerald-400" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-sm font-semibold text-white truncate">
+                    {activeImportJob.status === "completed"
+                      ? "Lead import & deliverability check complete!"
+                      : activeImportJob.status === "completed_with_errors"
+                      ? "Import completed with some errors"
+                      : activeImportJob.status === "failed"
+                      ? "Import job failed"
+                      : "Verifying email deliverability & importing..."}
+                  </h4>
+                  <span className="text-xs font-mono font-medium text-emerald-400">
+                    {activeImportJob.processedRows || 0}/{activeImportJob.totalRows || 0} ({activeImportJob.percentComplete || 0}%)
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-gray-400 mt-1 flex-wrap font-mono">
+                  <span className="text-emerald-300">
+                    ✓ {activeImportJob.validCount || 0} valid
+                  </span>
+                  {activeImportJob.riskyCount > 0 && (
+                    <span className="text-amber-300">
+                      ⚡ {activeImportJob.riskyCount} risky
+                    </span>
+                  )}
+                  {activeImportJob.catchAllCount > 0 && (
+                    <span className="text-sky-300">
+                      ~ {activeImportJob.catchAllCount} catch-all
+                    </span>
+                  )}
+                  {activeImportJob.disposableCount > 0 && (
+                    <span className="text-fuchsia-300">
+                      ✕ {activeImportJob.disposableCount} disposable
+                    </span>
+                  )}
+                  {activeImportJob.invalidCount > 0 && (
+                    <span className="text-rose-400">
+                      ✕ {activeImportJob.invalidCount} invalid
+                    </span>
+                  )}
+                  {activeImportJob.duplicateCount > 0 && (
+                    <span className="text-gray-400">
+                      ⊘ {activeImportJob.duplicateCount} duplicates
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveImportJobId(null)}
+                className="h-8 px-2 text-gray-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-3 w-full overflow-hidden rounded-full bg-surface-800 h-1.5">
+            <div
+              className={`h-full transition-all duration-300 ${
+                activeImportJob.status === "failed" ? "bg-red-500" : "bg-emerald-500"
+              }`}
+              style={{ width: `${activeImportJob.percentComplete || 0}%` }}
+            />
+          </div>
+        </div>
       )}
 
       {activeJobId && activeJob && (

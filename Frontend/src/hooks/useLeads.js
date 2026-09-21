@@ -13,15 +13,18 @@ const invalidateLeadCaches = (queryClient, leadId) => {
 };
 
 // GET /api/v1/lead/get-user-leads — paginated leads list.
-export function useLeads({ status, overdueOnly, categoryId, search } = {}) {
+export function useLeads({ status, verificationStatus, overdueOnly, categoryId, search, tags, segmentId } = {}) {
   return useInfiniteQuery({
     queryKey: [
       ...queryKeys.leadsAll,
       {
         status: status || null,
+        verificationStatus: verificationStatus || null,
         overdueOnly: !!overdueOnly,
         categoryId: categoryId || null,
         search: search || null,
+        tags: tags || null,
+        segmentId: segmentId || null,
       },
     ],
     queryFn: async ({ pageParam = 0 }) => {
@@ -30,9 +33,12 @@ export function useLeads({ status, overdueOnly, categoryId, search } = {}) {
           limit: 20,
           page: pageParam,
           ...(status ? { status } : {}),
+          ...(verificationStatus ? { verificationStatus } : {}),
           ...(overdueOnly ? { overdueOnly: true } : {}),
           ...(categoryId ? { categoryId } : {}),
           ...(search ? { search } : {}),
+          ...(tags ? { tags } : {}),
+          ...(segmentId ? { segmentId } : {}),
         },
       });
       return {
@@ -417,6 +423,61 @@ export function useDeleteBatchJob() {
       queryClient.invalidateQueries({ queryKey: ["batchJobs"] });
       queryClient.invalidateQueries({ queryKey: ["batchJob", jobId] });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadsAll });
+    },
+  });
+}
+
+// POST /api/v1/lead/import-job — create async lead import with email verification
+export function useCreateImportJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ leads, categoryId, verifyEmails = true }) => {
+      const res = await api.post("/api/v1/lead/import-job", {
+        leads,
+        categoryId,
+        verifyEmails,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leadsAll });
+    },
+  });
+}
+
+// GET /api/v1/lead/import-jobs/:jobId — poll import job progress
+export function useImportJobStatus(jobId, { enabled = true, refetchInterval = 1500 } = {}) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["importJob", jobId],
+    queryFn: async () => {
+      if (!jobId) return null;
+      const res = await api.get(`/api/v1/lead/import-jobs/${jobId}`);
+      return res.data?.job || null;
+    },
+    enabled: Boolean(jobId) && enabled,
+    refetchInterval: (query) => {
+      const data = query?.state?.data;
+      if (!data) return refetchInterval;
+      if (["completed", "completed_with_errors", "failed", "cancelled"].includes(data.status)) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.leadsAll });
+        return false;
+      }
+      return refetchInterval;
+    },
+  });
+}
+
+// POST /api/v1/lead/:leadId/verify-email — on-demand lead verification
+export function useVerifyLeadEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (leadId) => {
+      const res = await api.post(`/api/v1/lead/${leadId}/verify-email`);
+      return res.data;
+    },
+    onSuccess: (data, leadId) => {
+      invalidateLeadCaches(queryClient, leadId);
     },
   });
 }

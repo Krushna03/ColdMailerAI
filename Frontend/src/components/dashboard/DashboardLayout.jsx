@@ -9,6 +9,7 @@ import { Toaster } from "../ui/toaster";
 const pageTitles = {
   "/dashboard": "Dashboard",
   "/dashboard/leads": "Leads",
+  "/dashboard/mailboxes": "Mailbox",
   "/dashboard/pricing": "Pricing & billing",
   "/dashboard/profile": "Profile",
   "/dashboard/batches": "Batch history",

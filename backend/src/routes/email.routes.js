@@ -14,7 +14,8 @@ import {
   startBatchJob,
   getBatchJobStatus,
   getBatchJobs,
-  deleteBatchJob
+  deleteBatchJob,
+  sendGeneratedEmail
 } from "../controllers/email.controller.js";
 import { uploadImage, handleMulterError } from "../middlewares/upload.middleware.js";
 
@@ -45,6 +46,8 @@ router.route('/usage').get(verifyJWT, getUsageSummary)
 router.route('/:id/mark-sent').patch(verifyJWT, markEmailSent)
 
 router.route('/:id/unmark-sent').patch(verifyJWT, unmarkEmailSent)
+
+router.route('/:id/send').post(verifyJWT, sendGeneratedEmail)
 
 router.route('/:id').get(verifyJWT, getEmailById)
 

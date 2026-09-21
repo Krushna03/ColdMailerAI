@@ -80,3 +80,87 @@ export const emailPreview = (body, max = 140) => {
   if (flat.length <= max) return flat;
   return `${flat.slice(0, max)}…`;
 };
+
+export const getLeadCompanyName = (company) => {
+  if (!company) return "";
+  if (typeof company === "object") return company.name || "";
+  return String(company);
+};
+
+export const getLeadJobTitle = (lead) => {
+  if (!lead) return "";
+  return lead.jobTitle || lead.role || "";
+};
+
+const TAG_COLOR_PALETTES = [
+  "bg-violet-500/15 text-violet-300 ring-violet-500/30",
+  "bg-sky-500/15 text-sky-300 ring-sky-500/30",
+  "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
+  "bg-amber-500/15 text-amber-300 ring-amber-500/30",
+  "bg-rose-500/15 text-rose-300 ring-rose-500/30",
+  "bg-cyan-500/15 text-cyan-300 ring-cyan-500/30",
+  "bg-indigo-500/15 text-indigo-300 ring-indigo-500/30"
+];
+
+export const getTagBadgeClass = (tag = "") => {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % TAG_COLOR_PALETTES.length;
+  return TAG_COLOR_PALETTES[index];
+};
+
+export const EMAIL_VERIFICATION_STATUS_OPTIONS = [
+  { value: "all", label: "All Deliverability" },
+  { value: "valid", label: "Valid" },
+  { value: "risky", label: "Risky" },
+  { value: "catch_all", label: "Catch-All" },
+  { value: "disposable", label: "Disposable" },
+  { value: "invalid", label: "Invalid" },
+  { value: "unknown", label: "Unverified" },
+];
+
+export const verificationLabel = (status) => {
+  switch (status) {
+    case "valid":
+      return "Valid";
+    case "risky":
+      return "Risky";
+    case "catch_all":
+      return "Catch-All";
+    case "disposable":
+      return "Disposable";
+    case "invalid":
+      return "Invalid";
+    case "unknown":
+    default:
+      return "Unverified";
+  }
+};
+
+export const verificationBadgeClass = (status) => {
+  switch (status) {
+    case "valid":
+      return "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30";
+    case "risky":
+      return "bg-amber-500/15 text-amber-300 ring-amber-500/30";
+    case "catch_all":
+      return "bg-sky-500/15 text-sky-300 ring-sky-500/30";
+    case "disposable":
+      return "bg-fuchsia-500/15 text-fuchsia-300 ring-fuchsia-500/30";
+    case "invalid":
+      return "bg-rose-500/15 text-rose-300 ring-rose-500/30";
+    case "unknown":
+    default:
+      return "bg-zinc-500/15 text-zinc-400 ring-zinc-500/30";
+  }
+};
+
+export const verificationScoreColor = (score) => {
+  if (score === null || score === undefined) return "text-zinc-500";
+  if (score >= 80) return "text-emerald-400";
+  if (score >= 50) return "text-amber-400";
+  return "text-rose-400";
+};
+

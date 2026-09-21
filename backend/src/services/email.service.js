@@ -161,7 +161,7 @@ export const generateBatchEmailsService = async ({
         leadId: lead._id,
         leadName: lead.name,
         leadEmail: lead.email,
-        leadCompany: lead.company,
+        leadCompany: (typeof lead.company === 'object' ? lead.company?.name : lead.company) || '',
         success: true,
         emailId: email._id,
         generatedEmail: aiResponse.data
@@ -542,7 +542,7 @@ export const processBatchJobService = async (jobId) => {
       leadId: lead._id,
       leadName: lead.name,
       leadEmail: lead.email,
-      leadCompany: lead.company,
+      leadCompany: (typeof lead.company === 'object' ? lead.company?.name : lead.company) || '',
       success: false,
       emailId: null,
       generatedEmail: null,

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
+    "worker": "node src/workers/workerRunner.js",
     "build": "npm install",
     "test": "vitest run",
     "test:watch": "vitest"

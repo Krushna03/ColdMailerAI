@@ -1,4 +1,4 @@
-import { CreditCard, LayoutDashboard, LogOut, UserRound, Users, History, X } from "lucide-react";
+import { CreditCard, LayoutDashboard, LogOut, UserRound, Users, History, Mail, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "../ui/button";
@@ -7,6 +7,7 @@ import { useLogout } from "../../helpers/tokenValidation";
 const navigation = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
   { label: "Leads", to: "/dashboard/leads", icon: Users },
+  { label: "Mailboxes", to: "/dashboard/mailboxes", icon: Mail },
   { label: "Batch History", to: "/dashboard/batches", icon: History },
   { label: "Pricing", to: "/dashboard/pricing", icon: CreditCard },
   { label: "Profile", to: "/dashboard/profile", icon: UserRound },

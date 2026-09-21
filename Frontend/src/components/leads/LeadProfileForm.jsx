@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -10,11 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { LEAD_STATUS_OPTIONS, getAllowedNextStatuses } from "./leadUtils";
+import { LEAD_STATUS_OPTIONS, getAllowedNextStatuses, getTagBadgeClass } from "./leadUtils";
 import CategorySelect, { getCategoryId } from "./CategorySelect";
+import { Plus, X, Tag, Sliders } from "lucide-react";
 
 const fieldClass =
-  "h-11 border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:ring-offset-surface-900";
+  "h-10 border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:ring-offset-surface-900 text-xs sm:text-sm";
 
 export default function LeadProfileForm({
   lead,
@@ -23,6 +24,15 @@ export default function LeadProfileForm({
   categories = [],
   onAddCategory,
 }) {
+  const [tagsList, setTagsList] = useState(lead?.tags || []);
+  const [newTag, setNewTag] = useState("");
+
+  const [customFieldsState, setCustomFieldsState] = useState(
+    lead?.customFields && typeof lead?.customFields === "object" ? lead.customFields : {}
+  );
+  const [newFieldKey, setNewFieldKey] = useState("");
+  const [newFieldValue, setNewFieldValue] = useState("");
+
   const {
     register,
     control,
@@ -32,9 +42,17 @@ export default function LeadProfileForm({
   } = useForm({
     defaultValues: {
       name: lead?.name || "",
-      company: lead?.company || "",
-      role: lead?.role || "",
+      companyName: typeof lead?.company === "object" ? lead?.company?.name || "" : lead?.company || "",
+      companyDomain: lead?.company?.domain || "",
+      companyIndustry: lead?.company?.industry || "",
+      companySize: lead?.company?.size || "",
+      companyRevenue: lead?.company?.revenue || "",
+      jobTitle: lead?.jobTitle || lead?.role || "",
       email: lead?.email || "",
+      phone: lead?.phone || "",
+      linkedinUrl: lead?.linkedinUrl || "",
+      location: lead?.location || "",
+      timezone: lead?.timezone || "",
       notes: lead?.notes || "",
       status: lead?.status || "new",
       categoryId: getCategoryId(lead?.categoryId),
@@ -44,44 +62,116 @@ export default function LeadProfileForm({
   useEffect(() => {
     reset({
       name: lead?.name || "",
-      company: lead?.company || "",
-      role: lead?.role || "",
+      companyName: typeof lead?.company === "object" ? lead?.company?.name || "" : lead?.company || "",
+      companyDomain: lead?.company?.domain || "",
+      companyIndustry: lead?.company?.industry || "",
+      companySize: lead?.company?.size || "",
+      companyRevenue: lead?.company?.revenue || "",
+      jobTitle: lead?.jobTitle || lead?.role || "",
       email: lead?.email || "",
+      phone: lead?.phone || "",
+      linkedinUrl: lead?.linkedinUrl || "",
+      location: lead?.location || "",
+      timezone: lead?.timezone || "",
       notes: lead?.notes || "",
       status: lead?.status || "new",
       categoryId: getCategoryId(lead?.categoryId),
     });
+    setTagsList(lead?.tags || []);
+    setCustomFieldsState(
+      lead?.customFields && typeof lead?.customFields === "object" ? lead.customFields : {}
+    );
   }, [lead, reset]);
+
+  const handleAddTag = (e) => {
+    e.preventDefault();
+    const clean = newTag.trim();
+    if (clean && !tagsList.includes(clean)) {
+      setTagsList([...tagsList, clean]);
+      setNewTag("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setTagsList(tagsList.filter((t) => t !== tagToRemove));
+  };
+
+  const handleAddCustomField = (e) => {
+    e.preventDefault();
+    const key = newFieldKey.trim();
+    const val = newFieldValue.trim();
+    if (key) {
+      setCustomFieldsState({
+        ...customFieldsState,
+        [key]: val,
+      });
+      setNewFieldKey("");
+      setNewFieldValue("");
+    }
+  };
+
+  const handleRemoveCustomField = (keyToRemove) => {
+    const updated = { ...customFieldsState };
+    delete updated[keyToRemove];
+    setCustomFieldsState(updated);
+  };
 
   const submit = handleSubmit(async (data) => {
     await onSave({
-      ...data,
+      name: data.name.trim(),
+      company: {
+        name: data.companyName.trim(),
+        domain: data.companyDomain.trim(),
+        industry: data.companyIndustry.trim(),
+        size: data.companySize.trim(),
+        revenue: data.companyRevenue.trim(),
+      },
+      jobTitle: data.jobTitle.trim(),
+      role: data.jobTitle.trim(),
       email: data.email?.trim().toLowerCase() || "",
+      phone: data.phone?.trim() || "",
+      linkedinUrl: data.linkedinUrl?.trim() || "",
+      location: data.location?.trim() || "",
+      timezone: data.timezone?.trim() || "",
+      notes: data.notes?.trim() || "",
+      status: data.status,
+      categoryId: data.categoryId,
+      tags: tagsList,
+      customFields: customFieldsState,
     });
   });
 
+  const hasTagChanges = JSON.stringify(tagsList) !== JSON.stringify(lead?.tags || []);
+  const hasCustomFieldChanges =
+    JSON.stringify(customFieldsState) !== JSON.stringify(lead?.customFields || {});
+  const canSave = isDirty || hasTagChanges || hasCustomFieldChanges;
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-surface-800/50 p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-white">Profile</h2>
-        {isDirty && (
+    <section className="rounded-2xl border border-white/10 bg-surface-800/50 p-5 space-y-6">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+        <div>
+          <h2 className="text-base font-semibold text-white">Lead Profile</h2>
+          <p className="text-xs text-gray-400">Enterprise contact, company data, tags & custom fields</p>
+        </div>
+        {canSave && (
           <Button
             type="button"
             size="sm"
             disabled={isSaving}
             onClick={submit}
-            className="bg-brand text-white hover:bg-brand-400"
+            className="bg-brand text-white hover:bg-brand-400 text-xs px-4"
           >
             {isSaving ? "Saving..." : "Save changes"}
           </Button>
         )}
       </div>
 
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-5">
+        {/* Basic info */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="profile-name" className="mb-1.5 block text-sm text-gray-300">
-              Name
+            <label htmlFor="profile-name" className="mb-1 block text-xs font-medium text-gray-300">
+              Full Name *
             </label>
             <Input
               id="profile-name"
@@ -93,7 +183,7 @@ export default function LeadProfileForm({
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-sm text-gray-300">Category</label>
+            <label className="mb-1 block text-xs font-medium text-gray-300">Category *</label>
             <Controller
               name="categoryId"
               control={control}
@@ -115,9 +205,33 @@ export default function LeadProfileForm({
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* Persona & Status */}
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1.5 block text-sm text-gray-300">Status</label>
+            <label htmlFor="profile-jobTitle" className="mb-1 block text-xs font-medium text-gray-300">
+              Job Title / Role
+            </label>
+            <Input
+              id="profile-jobTitle"
+              placeholder="e.g. VP of Sales"
+              className={fieldClass}
+              {...register("jobTitle")}
+            />
+          </div>
+          <div>
+            <label htmlFor="profile-email" className="mb-1 block text-xs font-medium text-gray-300">
+              Email
+            </label>
+            <Input
+              id="profile-email"
+              type="email"
+              placeholder="lead@company.com"
+              className={fieldClass}
+              {...register("email")}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-300">Status</label>
             <Controller
               name="status"
               control={control}
@@ -147,41 +261,240 @@ export default function LeadProfileForm({
               }}
             />
           </div>
-          <div>
-            <label htmlFor="profile-company" className="mb-1.5 block text-sm text-gray-300">
-              Company
-            </label>
-            <Input id="profile-company" className={fieldClass} {...register("company")} />
-          </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* Contact info: Phone, LinkedIn, Location */}
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label htmlFor="profile-role" className="mb-1.5 block text-sm text-gray-300">
-              Role
-            </label>
-            <Input id="profile-role" className={fieldClass} {...register("role")} />
-          </div>
-          <div>
-            <label htmlFor="profile-email" className="mb-1.5 block text-sm text-gray-300">
-              Email
+            <label htmlFor="profile-phone" className="mb-1 block text-xs font-medium text-gray-300">
+              Phone
             </label>
             <Input
-              id="profile-email"
-              type="email"
+              id="profile-phone"
+              placeholder="+1-555-123-4567"
               className={fieldClass}
-              {...register("email")}
+              {...register("phone")}
+            />
+          </div>
+          <div>
+            <label htmlFor="profile-linkedin" className="mb-1 block text-xs font-medium text-gray-300">
+              LinkedIn URL
+            </label>
+            <Input
+              id="profile-linkedin"
+              placeholder="https://linkedin.com/in/..."
+              className={fieldClass}
+              {...register("linkedinUrl")}
+            />
+          </div>
+          <div>
+            <label htmlFor="profile-location" className="mb-1 block text-xs font-medium text-gray-300">
+              Location
+            </label>
+            <Input
+              id="profile-location"
+              placeholder="San Francisco, CA"
+              className={fieldClass}
+              {...register("location")}
             />
           </div>
         </div>
 
+        {/* Company card */}
+        <div className="rounded-xl border border-white/10 bg-surface-900/40 p-3.5 space-y-3">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            Company Details
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label htmlFor="company-name" className="mb-1 block text-xs text-gray-300">
+                Company Name
+              </label>
+              <Input
+                id="company-name"
+                placeholder="Acme Corp"
+                className={fieldClass}
+                {...register("companyName")}
+              />
+            </div>
+            <div>
+              <label htmlFor="company-domain" className="mb-1 block text-xs text-gray-300">
+                Domain
+              </label>
+              <Input
+                id="company-domain"
+                placeholder="acme.com"
+                className={fieldClass}
+                {...register("companyDomain")}
+              />
+            </div>
+            <div>
+              <label htmlFor="company-industry" className="mb-1 block text-xs text-gray-300">
+                Industry
+              </label>
+              <Input
+                id="company-industry"
+                placeholder="SaaS, E-commerce..."
+                className={fieldClass}
+                {...register("companyIndustry")}
+              />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="company-size" className="mb-1 block text-xs text-gray-300">
+                Company Size
+              </label>
+              <Input
+                id="company-size"
+                placeholder="50-100, 1000+"
+                className={fieldClass}
+                {...register("companySize")}
+              />
+            </div>
+            <div>
+              <label htmlFor="company-revenue" className="mb-1 block text-xs text-gray-300">
+                Revenue
+              </label>
+              <Input
+                id="company-revenue"
+                placeholder="$10M, Series B..."
+                className={fieldClass}
+                {...register("companyRevenue")}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tags */}
+        <div className="rounded-xl border border-white/10 bg-surface-900/40 p-3.5 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Tag className="h-3 w-3 text-brand-300" />
+              Tags
+            </span>
+            <span className="text-[11px] text-gray-500">Multi-tagging support</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5 min-h-[32px]">
+            {tagsList.map((tag) => (
+              <span
+                key={tag}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset ${getTagBadgeClass(
+                  tag
+                )}`}
+              >
+                <span>{tag}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTag(tag)}
+                  className="hover:text-red-300 transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            {tagsList.length === 0 && (
+              <span className="text-xs text-gray-500 italic">No tags assigned yet</span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 max-w-sm pt-1">
+            <Input
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddTag(e);
+                }
+              }}
+              placeholder="Add a tag (e.g. Decision Maker)"
+              className="h-8 bg-surface-950 border-white/10 text-xs"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleAddTag}
+              className="h-8 border-white/15 border hover:bg-white/5 text-xs text-gray-300 shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add
+            </Button>
+          </div>
+        </div>
+
+        {/* Custom Fields */}
+        <div className="rounded-xl border border-white/10 bg-surface-900/40 p-3.5 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Sliders className="h-3 w-3 text-brand-300" />
+              Custom Fields (Metadata)
+            </span>
+            <span className="text-[11px] text-gray-500">Flexible key-value attributes</span>
+          </div>
+
+          <div className="space-y-1.5">
+            {Object.entries(customFieldsState).map(([k, v]) => (
+              <div
+                key={k}
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-surface-950/70 border border-white/5 text-xs"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span className="font-mono text-brand-300">{k}:</span>
+                  <span className="text-gray-300">{String(v)}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCustomField(k)}
+                  className="text-gray-500 hover:text-red-400 transition-colors ml-2"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+            {Object.keys(customFieldsState).length === 0 && (
+              <p className="text-xs text-gray-500 italic">
+                No custom fields defined (e.g. companyTech, fundingStage).
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Input
+              value={newFieldKey}
+              onChange={(e) => setNewFieldKey(e.target.value)}
+              placeholder="Field name (e.g. companyTech)"
+              className="h-8 bg-surface-950 border-white/10 text-xs w-1/2"
+            />
+            <Input
+              value={newFieldValue}
+              onChange={(e) => setNewFieldValue(e.target.value)}
+              placeholder="Value (e.g. React)"
+              className="h-8 bg-surface-950 border-white/10 text-xs w-1/2"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleAddCustomField}
+              className="h-8 border-white/15 border hover:bg-white/5 text-xs text-gray-300 shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add
+            </Button>
+          </div>
+        </div>
+
+        {/* Notes */}
         <div>
-          <label htmlFor="profile-notes" className="mb-1.5 block text-sm text-gray-300">
-            Notes
+          <label htmlFor="profile-notes" className="mb-1 block text-xs font-medium text-gray-300">
+            Notes & Context
           </label>
           <Textarea
             id="profile-notes"
-            className="min-h-[80px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-white/20 focus-visible:ring-1 focus-visible:ring-white/10 focus-visible:ring-offset-0 md:text-sm"
+            className="min-h-[80px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-white/20 focus-visible:ring-1 focus-visible:ring-white/10 focus-visible:ring-offset-0 text-xs sm:text-sm md:text-sm"
             {...register("notes")}
           />
         </div>

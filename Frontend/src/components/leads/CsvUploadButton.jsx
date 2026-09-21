@@ -36,8 +36,8 @@ export default function CsvUploadButton({
     }
   };
 
-  const handleConfirm = async (leads) => {
-    const res = await onImport(leads);
+  const handleConfirm = async (leads, options) => {
+    const res = await onImport(leads, options);
     setPreviewOpen(false);
     setPreviewRows([]);
     return res;

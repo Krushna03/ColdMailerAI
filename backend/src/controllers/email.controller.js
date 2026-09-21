@@ -24,6 +24,10 @@ import {
   validatePagination
 } from "../validators/email.validators.js";
 import { validateBatchGeneration } from "../validators/lead.validators.js";
+import { Mailbox } from "../models/Mailbox.model.js";
+import { Lead } from "../models/Lead.model.js";
+import { sendEmailViaMailbox } from "../services/mailboxSender.service.js";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * Generate a new email
@@ -378,6 +382,86 @@ const deleteBatchJob = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Send a generated email directly through a connected mailbox
+ * POST /api/v1/email/:id/send
+ */
+const sendGeneratedEmail = asyncHandler(async (req, res) => {
+  const { id: emailId } = req.params;
+  const { mailboxId, to: recipientOverride, subject: subjectOverride, body: bodyOverride } = req.body;
+
+  if (!validateUserAuth(req.user, res)) return;
+  if (!validateEmailDeletion(emailId, res)) return;
+
+  const emailRecord = await getEmailByIdService({ emailId, userId: req.user._id });
+  if (!emailRecord) {
+    throw new ApiError(404, "Email not found");
+  }
+
+  // Determine target mailbox
+  let targetMailboxId = mailboxId;
+  if (!targetMailboxId) {
+    const defaultMailbox = await Mailbox.findOne({
+      userId: req.user._id,
+      status: "active"
+    }).sort({ isDefault: -1, createdAt: -1 });
+
+    if (!defaultMailbox) {
+      throw new ApiError(400, "No active mailbox found. Please connect a mailbox first.");
+    }
+    targetMailboxId = defaultMailbox._id;
+  }
+
+  // Determine recipient
+  let recipient = recipientOverride;
+  if (!recipient && emailRecord.leadId) {
+    const lead = await Lead.findById(emailRecord.leadId);
+    if (lead) recipient = lead.email;
+  }
+
+  if (!recipient) {
+    throw new ApiError(400, "Recipient email address ('to') is required to send this email");
+  }
+
+  // Parse subject and body if not provided
+  let subject = subjectOverride;
+  let content = bodyOverride;
+
+  if (!content) {
+    const raw = emailRecord.generatedEmail || "";
+    const lines = raw.split("\n");
+    const subjectLineIndex = lines.findIndex(l => /^Subject:\s*/i.test(l));
+    if (subjectLineIndex !== -1 && !subject) {
+      subject = lines[subjectLineIndex].replace(/^Subject:\s*/i, "").trim();
+      content = [...lines.slice(0, subjectLineIndex), ...lines.slice(subjectLineIndex + 1)].join("\n").trim();
+    } else {
+      content = raw;
+    }
+  }
+
+  if (!subject) {
+    subject = "Follow up";
+  }
+
+  const result = await sendEmailViaMailbox({
+    mailboxId: targetMailboxId,
+    to: recipient,
+    subject,
+    text: content,
+    html: content.replace(/\n/g, "<br/>"),
+    emailId: emailRecord._id,
+    leadId: emailRecord.leadId,
+    userId: req.user._id,
+    workspaceId: emailRecord.workspaceId || req.workspaceId
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Email sent successfully via connected mailbox",
+    ...result
+  });
+});
+
 export {
   generateEmail,
   generateBatchEmails,
@@ -392,5 +476,6 @@ export {
   startBatchJob,
   getBatchJobStatus,
   getBatchJobs,
-  deleteBatchJob
+  deleteBatchJob,
+  sendGeneratedEmail
 };

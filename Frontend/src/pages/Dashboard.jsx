@@ -6,6 +6,7 @@ import { useLeads } from "../hooks/useLeads";
 import { useEmailHistory } from "../hooks/useEmail";
 import { usePlanUsage } from "../hooks/usePlanUsage";
 import { getUserData } from "../utils";
+import { getLeadCompanyName, getLeadJobTitle } from "../components/leads/leadUtils";
 
 const quickActions = [
   {
@@ -169,7 +170,7 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <p className="truncate text-xs sm:text-sm font-medium text-white">{lead.name}</p>
                     <p className="truncate text-xs text-gray-400">
-                      {[lead.role, lead.company].filter(Boolean).join(" at ") || "No company details"}
+                      {[getLeadJobTitle(lead), getLeadCompanyName(lead.company)].filter(Boolean).join(" at ") || "No company details"}
                     </p>
                   </div>
                   <span className="min-w-0 truncate text-xs sm:text-sm text-gray-400 font-mono">

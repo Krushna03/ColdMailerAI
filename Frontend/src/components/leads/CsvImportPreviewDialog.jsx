@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Trash2 } from "lucide-react";
+import { CheckCircle2, Trash2, ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import {
   Table,
@@ -38,6 +39,7 @@ export default function CsvImportPreviewDialog({
   const [draftRows, setDraftRows] = useState([]);
   const [categoryId, setCategoryId] = useState("");
   const [categoryError, setCategoryError] = useState("");
+  const [verifyEmails, setVerifyEmails] = useState(true);
   const [summary, setSummary] = useState(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
@@ -46,6 +48,7 @@ export default function CsvImportPreviewDialog({
     setDraftRows(rows || []);
     setCategoryId("");
     setCategoryError("");
+    setVerifyEmails(true);
     setSummary(null);
     setSummaryOpen(false);
   }, [open, rows]);
@@ -165,7 +168,11 @@ export default function CsvImportPreviewDialog({
       }));
 
     try {
-      const res = await onConfirm(ready);
+      const res = await onConfirm(ready, { categoryId, verifyEmails });
+      if (res?.isAsyncJob) {
+        onOpenChange(false);
+        return;
+      }
       const insertedCount = res?.insertedCount ?? ready.length;
       const backendDuplicates = res?.duplicateCount ?? 0;
       const skippedDuplicates = duplicateCount + backendDuplicates;
@@ -196,7 +203,7 @@ export default function CsvImportPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2 border-b border-white/10 px-6 pb-3">
+        <div className="space-y-3 border-b border-white/10 px-6 pb-3 pt-2">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-[220px] max-w-[360px] flex-1">
               <label className="mb-2.5 block text-xs font-medium text-gray-300">
@@ -272,6 +279,23 @@ export default function CsvImportPreviewDialog({
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+            <Checkbox
+              id="verify-emails-toggle"
+              checked={verifyEmails}
+              onCheckedChange={(checked) => setVerifyEmails(Boolean(checked))}
+            />
+            <label
+              htmlFor="verify-emails-toggle"
+              className="text-xs text-gray-300 select-none cursor-pointer flex items-center gap-1.5"
+            >
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span>
+                Run background email deliverability verification (Syntax, Disposable domains, MX records & Risk Scoring)
+              </span>
+            </label>
           </div>
         </div>
 

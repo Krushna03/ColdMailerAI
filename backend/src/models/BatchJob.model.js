@@ -15,7 +15,7 @@ const BatchJobResultSchema = new Schema({
     default: ''
   },
   leadCompany: {
-    type: String,
+    type: Schema.Types.Mixed,
     default: ''
   },
   success: {
@@ -43,6 +43,17 @@ const BatchJobSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true
+    },
+    workspaceId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Workspace',
+      default: null,
+      index: true
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
     },
     leadIds: [
       {
@@ -90,5 +101,6 @@ const BatchJobSchema = new Schema(
 );
 
 BatchJobSchema.index({ userId: 1, createdAt: -1 });
+BatchJobSchema.index({ workspaceId: 1, createdAt: -1 });
 
 export const BatchJob = mongoose.model('BatchJob', BatchJobSchema);

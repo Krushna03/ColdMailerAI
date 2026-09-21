@@ -120,6 +120,8 @@ export default function EmailOutputPage() {
         ) : (
           <div className="w-full h-full pb-8">
             <EmailOutput
+              emailId={id}
+              leadId={emailHistory?.leadId}
               prompt={emailHistory?.prompt || ""}
               generatedEmail={latestGeneratedEmail}
               bottomPrompt={newModification}

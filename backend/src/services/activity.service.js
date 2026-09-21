@@ -1,10 +1,12 @@
 import { Activity } from "../models/Activity.model.js";
 
-export const logActivity = async ({ userId, leadId, type, title, metadata = {} }) => {
+export const logActivity = async ({ userId, workspaceId, performedBy, leadId, type, title, metadata = {} }) => {
   if (!userId || !leadId || !type || !title) return null;
   try {
     const activity = await Activity.create({
       userId,
+      workspaceId: workspaceId || null,
+      performedBy: performedBy || userId,
       leadId,
       type,
       title,

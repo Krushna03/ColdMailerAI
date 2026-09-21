@@ -50,6 +50,19 @@ const LeadCategorySchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       default: null
+    },
+
+    workspaceId: {
+      type: Schema.Types.ObjectId,
+      ref: "Workspace",
+      default: null,
+      index: true
+    },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null
     }
   },
   { timestamps: true }
@@ -58,5 +71,6 @@ const LeadCategorySchema = new Schema(
 LeadCategorySchema.index({ slug: 1, userId: 1 }, { unique: true });
 LeadCategorySchema.index({ userId: 1, name: 1 });
 LeadCategorySchema.index({ isDefault: 1 });
+LeadCategorySchema.index({ workspaceId: 1, name: 1 });
 
 export const LeadCategory = mongoose.model("LeadCategory", LeadCategorySchema);

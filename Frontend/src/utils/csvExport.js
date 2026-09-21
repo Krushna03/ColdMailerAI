@@ -110,7 +110,9 @@ export function downloadResultsAsCsv(results, filename = "coldmailer-batch-resul
   const rows = (results || []).map((item) => ({
     name: item.leadName ?? "",
     email: item.leadEmail ?? "",
-    company: item.leadCompany ?? "",
+    company: typeof item.leadCompany === "object"
+        ? item.leadCompany?.name ?? ""
+        : item.leadCompany ?? "",
     success: item.success ? "yes" : "no",
     generatedEmail: item.generatedEmail ?? "",
     error: item.error ?? "",

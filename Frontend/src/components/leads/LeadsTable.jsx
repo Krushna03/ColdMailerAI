@@ -16,6 +16,12 @@ import {
   isFollowUpOverdue,
   statusBadgeClass,
   statusLabel,
+  getLeadCompanyName,
+  getLeadJobTitle,
+  getTagBadgeClass,
+  verificationBadgeClass,
+  verificationLabel,
+  verificationScoreColor,
 } from "./leadUtils";
 import { getCategoryName } from "./CategorySelect";
 
@@ -64,6 +70,7 @@ export default function LeadsTable({
               <TableHead className="h-9 px-3.5 py-2 font-medium">Category</TableHead>
               <TableHead className="h-9 px-3.5 py-2 font-medium">Company</TableHead>
               <TableHead className="h-9 px-3.5 py-2 font-medium">Status</TableHead>
+              <TableHead className="h-9 px-3.5 py-2 font-medium">Deliverability</TableHead>
               <TableHead className="h-9 px-3.5 py-2 font-medium text-center">Generated</TableHead>
               <TableHead className="h-9 px-3.5 py-2 font-medium text-center">Sent</TableHead>
               <TableHead className="h-9 px-3.5 py-2 font-medium">Next follow-up</TableHead>
@@ -74,6 +81,9 @@ export default function LeadsTable({
             {leads.map((lead) => {
               const checked = selectedLeadIds.has(lead._id);
               const overdue = isFollowUpOverdue(lead.nextFollowUpAt, "pending");
+              const ver = lead.emailVerification || {};
+              const verStatus = ver.status || "unknown";
+              const verScore = ver.score;
 
               return (
                 <TableRow
@@ -100,15 +110,41 @@ export default function LeadsTable({
                     />
                   </TableCell>
                   <TableCell className="px-3.5 py-2.5 font-medium text-white">
-                    <span className="hover:underline underline-offset-2">
+                    <span className="hover:underline underline-offset-2 block">
                       {lead.name}
                     </span>
+                    {getLeadJobTitle(lead) && (
+                      <span className="text-[11px] text-gray-400 font-normal block truncate max-w-[180px]">
+                        {getLeadJobTitle(lead)}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="px-3.5 py-2.5 text-gray-300">
                     {getCategoryName(lead.categoryId)}
                   </TableCell>
                   <TableCell className="px-3.5 py-2.5 text-gray-300">
-                    {lead.company || "—"}
+                    <div>
+                      <span>{getLeadCompanyName(lead.company) || "—"}</span>
+                      {Array.isArray(lead.tags) && lead.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {lead.tags.slice(0, 2).map((t) => (
+                            <span
+                              key={t}
+                              className={`inline-flex px-1.5 py-0.2 rounded text-[10px] ring-1 ring-inset ${getTagBadgeClass(
+                                t
+                              )}`}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                          {lead.tags.length > 2 && (
+                            <span className="text-[10px] text-gray-400">
+                              +{lead.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="px-3.5 py-2.5">
                     <span
@@ -118,6 +154,23 @@ export default function LeadsTable({
                     >
                       {statusLabel(lead.status)}
                     </span>
+                  </TableCell>
+                  <TableCell className="px-3.5 py-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset ${verificationBadgeClass(
+                          verStatus
+                        )}`}
+                        title={ver.reason || verStatus}
+                      >
+                        {verificationLabel(verStatus)}
+                      </span>
+                      {verScore !== null && verScore !== undefined && verStatus !== "unknown" && (
+                        <span className={`text-[10px] font-mono font-semibold ${verificationScoreColor(verScore)}`}>
+                          {verScore}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="px-3.5 py-2.5 text-gray-300 text-center font-mono text-xs">
                     {lead.emailsGeneratedCount ?? 0}

@@ -1,5 +1,7 @@
 import express from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { workspaceMiddleware } from "../middlewares/workspace.middleware.js";
+import { idempotencyMiddleware } from "../middlewares/idempotency.middleware.js";
 import {
   createLead,
   bulkCreateLeads,
@@ -10,7 +12,13 @@ import {
   updateFollowUp,
   deleteFollowUp,
   deleteLead,
-  bulkDeleteLeads
+  bulkDeleteLeads,
+  getWorkspaceTags,
+  bulkTagLeads,
+  createImportJob,
+  getImportJobStatus,
+  listImportJobs,
+  verifyLeadEmail
 } from "../controllers/lead.controller.js";
 import {
   getLeadCategories,
@@ -20,30 +28,38 @@ import {
 
 const router = express.Router();
 
-router.route("/create").post(verifyJWT, createLead);
+router.use(verifyJWT, workspaceMiddleware, idempotencyMiddleware);
 
-router.route("/bulk-create").post(verifyJWT, bulkCreateLeads);
+router.route("/create").post(createLead);
 
-router.route("/get-user-leads").get(verifyJWT, getUserLeads);
+router.route("/bulk-create").post(bulkCreateLeads);
 
-router.route("/delete-lead").delete(verifyJWT, deleteLead);
+router.route("/import-job").post(createImportJob);
 
-router.route("/bulk-delete").delete(verifyJWT, bulkDeleteLeads);
+router.route("/import-jobs").get(listImportJobs);
 
-router
-  .route("/categories")
-  .get(verifyJWT, getLeadCategories)
-  .post(verifyJWT, createLeadCategory);
+router.route("/import-jobs/:jobId").get(getImportJobStatus);
 
-router.route("/categories/:categoryId").delete(verifyJWT, deleteLeadCategory);
+router.route("/get-user-leads").get(getUserLeads);
 
-router
-  .route("/:leadId/follow-ups/:followUpId")
-  .patch(verifyJWT, updateFollowUp)
-  .delete(verifyJWT, deleteFollowUp);
+router.route("/delete-lead").delete(deleteLead);
 
-router.route("/:leadId/follow-ups").post(verifyJWT, addFollowUp);
+router.route("/bulk-delete").delete(bulkDeleteLeads);
 
-router.route("/:leadId").get(verifyJWT, getLeadById).patch(verifyJWT, updateLead);
+router.route("/tags").get(getWorkspaceTags);
+
+router.route("/bulk-tag").post(bulkTagLeads);
+
+router.route("/categories").get(getLeadCategories).post(createLeadCategory);
+
+router.route("/categories/:categoryId").delete(deleteLeadCategory);
+
+router.route("/:leadId/verify-email").post(verifyLeadEmail);
+
+router.route("/:leadId/follow-ups/:followUpId").patch(updateFollowUp).delete(deleteFollowUp);
+
+router.route("/:leadId/follow-ups").post(addFollowUp);
+
+router.route("/:leadId").get(getLeadById).patch(updateLead);
 
 export default router;

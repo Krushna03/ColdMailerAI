@@ -21,6 +21,17 @@ const activitySchema = new mongoose.Schema(
       required: true,
       index: true
     },
+    workspaceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workspace",
+      default: null,
+      index: true
+    },
+    performedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
     leadId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Lead",
@@ -47,6 +58,7 @@ const activitySchema = new mongoose.Schema(
 );
 
 activitySchema.index({ leadId: 1, createdAt: -1 });
+activitySchema.index({ workspaceId: 1, createdAt: -1 });
 
 export const Activity = mongoose.model("Activity", activitySchema);
 export { activityTypes };

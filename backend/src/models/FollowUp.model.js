@@ -14,6 +14,22 @@ export const FollowUpSchema = new Schema(
       ref: 'User',
       required: true
     },
+    workspaceId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Workspace',
+      default: null,
+      index: true
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    assignedTo: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
     dueAt: {
       type: Date,
       required: true
@@ -35,5 +51,7 @@ export const FollowUpSchema = new Schema(
 FollowUpSchema.index({ leadId: 1, dueAt: 1 });
 FollowUpSchema.index({ userId: 1, status: 1 });
 FollowUpSchema.index({ userId: 1, dueAt: 1 });
+FollowUpSchema.index({ workspaceId: 1, status: 1 });
+FollowUpSchema.index({ workspaceId: 1, dueAt: 1 });
 
 export const FollowUp = mongoose.model('FollowUp', FollowUpSchema);

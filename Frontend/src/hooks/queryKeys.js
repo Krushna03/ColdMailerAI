@@ -12,4 +12,9 @@ export const queryKeys = {
   leadsAll: ["leads"],
   lead: (id) => ["lead", id],
   leadCategories: ["leadCategories"],
+  leadTags: ["leadTags"],
+  segments: ["segments"],
+  segment: (id) => ["segment", id],
+  mailboxes: ["mailboxes"],
+  mailbox: (id) => ["mailbox", id],
 };
