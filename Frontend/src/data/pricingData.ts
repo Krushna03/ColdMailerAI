@@ -1,0 +1,81 @@
+import { Building2, Crown, Zap, LucideIcon } from "lucide-react";
+
+export const ENTERPRISE_CONTACT_EMAIL = "krushnasakhare965@gmail.com";
+
+export interface PricingPlan {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  icon: LucideIcon;
+  iconClassName: string;
+  features: string[];
+  buttonText: string;
+  id: string;
+  buttonVariant: "outline" | "default";
+  popular: boolean;
+  isCustom: boolean;
+}
+
+export const plans: PricingPlan[] = [
+  {
+    name: "Starter",
+    price: "Free",
+    period: "forever",
+    description: "Perfect for trying AI-powered email generation",
+    icon: Zap,
+    iconClassName: "h-6 w-6 text-brand",
+    features: [
+      "10 emails per month",
+      "1 revision per email",
+      "Basic email templates",
+      "Standard tone options",
+      "Copy & export functionality",
+    ],
+    buttonText: "Get Started",
+    id: "GETSTARTED",
+    buttonVariant: "outline",
+    popular: false,
+    isCustom: false,
+  },
+  {
+    name: "Professional",
+    price: "$15",
+    period: "per month",
+    description: "Ideal for freelancers and founders running real outreach",
+    icon: Crown,
+    iconClassName: "h-6 w-6 text-brand",
+    features: [
+      "100 emails per month",
+      "3 revisions per email",
+      "Advanced personalization",
+      "Leads & batch generation",
+      "Priority email support",
+    ],
+    buttonText: "Upgrade to Pro",
+    id: "STARTFREETRIAL",
+    buttonVariant: "default",
+    popular: true,
+    isCustom: false,
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    period: "pricing",
+    description: "Custom volume, support, and limits for teams and agencies",
+    icon: Building2,
+    iconClassName: "h-6 w-6 text-brand",
+    features: [
+      "Custom monthly email volume",
+      "Higher revision limits",
+      "Dedicated onboarding & support",
+      "Priority generation capacity",
+      "Custom terms for teams",
+    ],
+    buttonText: "Contact sales",
+    id: "ENTERPRISE",
+    buttonVariant: "outline",
+    popular: false,
+    isCustom: true,
+  },
+];

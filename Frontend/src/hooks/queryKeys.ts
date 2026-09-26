@@ -1,0 +1,20 @@
+// Centralized React Query key factory so cache reads/writes/invalidations stay consistent
+export const queryKeys = {
+  userCount: ["userCount"] as const,
+  currentUser: ["currentUser"] as const,
+  planUsage: ["planUsage"] as const,
+  email: (id?: string) => ["email", id] as const,
+  emailHistory: (userId?: string) => ["emailHistory", userId] as const,
+  paymentPlans: ["paymentPlans"] as const,
+  paymentHistory: ["paymentHistory"] as const,
+  communityTemplates: ["communityTemplates"] as const,
+  leads: (page?: number | string) => ["leads", page] as const,
+  leadsAll: ["leads"] as const,
+  lead: (id?: string) => ["lead", id] as const,
+  leadCategories: ["leadCategories"] as const,
+  leadTags: ["leadTags"] as const,
+  segments: ["segments"] as const,
+  segment: (id?: string) => ["segment", id] as const,
+  mailboxes: ["mailboxes"] as const,
+  mailbox: (id?: string) => ["mailbox", id] as const,
+};
