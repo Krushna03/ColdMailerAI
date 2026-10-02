@@ -17,4 +17,10 @@ export const queryKeys = {
   segment: (id?: string) => ["segment", id] as const,
   mailboxes: ["mailboxes"] as const,
   mailbox: (id?: string) => ["mailbox", id] as const,
+  sequences: ["sequences"] as const,
+  sequence: (id?: string) => ["sequence", id] as const,
+  sequenceEnrollments: (id?: string) => ["sequenceEnrollments", id] as const,
+  sendJobs: (params?: any) => ["sendJobs", params] as const,
+  sendJobStats: (id?: string) => ["sendJobStats", id] as const,
+  emailEvents: (params?: any) => ["emailEvents", params] as const,
 };

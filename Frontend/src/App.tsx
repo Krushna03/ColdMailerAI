@@ -19,6 +19,8 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const BatchHistory = lazy(() => import("./pages/BatchHistory"));
 const Mailboxes = lazy(() => import("./pages/Mailboxes"));
+const Sequences = lazy(() => import("./pages/Sequences"));
+const SequenceDetail = lazy(() => import("./pages/SequenceDetail"));
 const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
 
 const withSuspense = (element: React.ReactNode) => (
@@ -90,6 +92,14 @@ export default function App() {
         {
           path: "mailboxes",
           element: withSuspense(<Mailboxes />),
+        },
+        {
+          path: "sequences",
+          element: withSuspense(<Sequences />),
+        },
+        {
+          path: "sequences/:sequenceId",
+          element: withSuspense(<SequenceDetail />),
         },
       ],
     },

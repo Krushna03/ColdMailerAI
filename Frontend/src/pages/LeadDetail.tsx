@@ -20,6 +20,7 @@ import {
 import LeadDetailHeader from "../components/leads/LeadDetailHeader";
 import LeadStatsStrip from "../components/leads/LeadStatsStrip";
 import LeadDeliverabilityCard from "../components/leads/LeadDeliverabilityCard";
+import LeadSequencesCard from "../components/leads/LeadSequencesCard";
 import LeadProfileForm from "../components/leads/LeadProfileForm";
 import LeadTimeline from "../components/leads/LeadTimeline";
 import AddFollowUpDialog from "../components/leads/AddFollowUpDialog";
@@ -252,6 +253,11 @@ export default function LeadDetail() {
         lead={lead}
         onVerify={handleVerifyEmail}
         isVerifying={verifyEmail.isPending}
+      />
+
+      <LeadSequencesCard
+        leadId={leadId || ""}
+        sequenceEnrollments={(data as any)?.sequenceEnrollments || []}
       />
 
       <LeadProfileForm

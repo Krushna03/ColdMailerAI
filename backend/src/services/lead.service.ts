@@ -9,6 +9,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { assertCategoryAccessible } from "./leadCategory.service.js";
 import { leadRepository } from "../repositories/lead.repository.js";
 import { buildMongoQueryFromSegment } from "../utils/segmentQueryBuilder.js";
+import { SequenceEnrollment } from "../models/SequenceEnrollment.model.js";
+import { checkAndStopLeadSequencesService } from "./sequenceExecution.service.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -342,10 +344,11 @@ export const getLeadByIdService = async ({ leadId, userId, workspaceId }) => {
     throw new ApiError(404, "Lead not found");
   }
 
-  const [emails, followUps, activities] = await Promise.all([
+  const [emails, followUps, activities, sequenceEnrollments] = await Promise.all([
     Email.find({ leadId }).sort({ createdAt: -1 }).lean(),
     FollowUp.find({ leadId }).sort({ dueAt: 1 }).lean(),
-    Activity.find({ leadId }).sort({ createdAt: -1 }).lean()
+    Activity.find({ leadId }).sort({ createdAt: -1 }).lean(),
+    SequenceEnrollment.find({ leadId }).populate("sequenceId", "name status settings").sort({ createdAt: -1 }).lean()
   ]);
 
   const pendingFollowUps = followUps.filter((f) => f.status === "pending");
@@ -362,6 +365,7 @@ export const getLeadByIdService = async ({ leadId, userId, workspaceId }) => {
     },
     emails,
     activities,
+    sequenceEnrollments,
     stats: {
       emailsGenerated: emails.length,
       emailsSent: emails.filter((e) => e.sendStatus === "sent").length,
@@ -499,6 +503,17 @@ export const updateLeadService = async ({ leadId, userId, workspaceId, updates }
         title: "Meeting scheduled",
         metadata: { status: "meeting" }
       });
+    }
+
+    // Auto-stop active sequence enrollments if lead replied or status changed to excluded
+    try {
+      await checkAndStopLeadSequencesService(
+        leadId,
+        updates.status,
+        updates.status === "replied" ? "replied" : "lead_status_changed"
+      );
+    } catch (seqStopErr) {
+      console.error("[Sequence Auto-Stop Warning]", seqStopErr);
     }
   } else if (updates.notes !== undefined) {
     await logActivity({

@@ -3,8 +3,8 @@ import { logger } from "../utils/logger.js";
 
 // Middleware to log request start and completion with latency and status
 export const requestLoggerMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  // Avoid noisy logging for health check pings
-  if (req.path === "/health") {
+  // Avoid noisy logging for health check pings and CORS preflights
+  if (req.path === "/health" || req.method === "OPTIONS") {
     return next();
   }
 
