@@ -20,6 +20,7 @@ import WorkspaceRoute from "./routes/workspace.routes.js";
 import SegmentRoute from "./routes/segment.routes.js";
 import MailboxRoute from "./routes/mailbox.routes.js";
 import SequenceRoute from "./routes/sequence.routes.js";
+import InboundRoute from "./routes/inbound.routes.js";
 
 const app = express();
 
@@ -85,6 +86,7 @@ app.use("/api/v1/lead", LeadRoute);
 app.use("/api/v1/segments", SegmentRoute);
 app.use("/api/v1/mailboxes", MailboxRoute);
 app.use("/api/v1/sequences", SequenceRoute);
+app.use("/api/v1/inbound", InboundRoute);
 
 app.use(errorHandler);
 

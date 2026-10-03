@@ -2,6 +2,8 @@ import { Types } from "mongoose";
 import { Sequence, ISequenceDocument, SequenceStatus } from "../models/Sequence.model.js";
 import { SequenceStep, ISequenceStepDocument } from "../models/SequenceStep.model.js";
 import { SequenceEnrollment } from "../models/SequenceEnrollment.model.js";
+import { SendJob } from "../models/SendJob.model.js";
+import { InboundEmail } from "../models/InboundEmail.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { CreateSequenceInput, UpdateSequenceInput } from "../validators/sequence.validators.js";
 
@@ -83,12 +85,20 @@ export async function getSequenceByIdService(
     throw new ApiError(404, "Sequence not found");
   }
 
+  // Always ensure sequence and step stats are up to date
+  await recalculateSequenceStatsService(sequence._id);
+
+  const updatedSequence = await Sequence.findById(sequence._id).populate(
+    "settings.mailboxId",
+    "name email provider status healthScore"
+  );
+
   const steps = await SequenceStep.find({
     sequenceId: sequence._id,
   }).sort({ order: 1 });
 
   return {
-    ...sequence.toObject(),
+    ...(updatedSequence || sequence).toObject(),
     steps,
   };
 }
@@ -326,4 +336,30 @@ export async function recalculateSequenceStatsService(sequenceId: string | Types
   };
 
   await sequence.save();
+
+  // Recalculate repliedCount for each step in this sequence
+  const steps = await SequenceStep.find({ sequenceId: seqId });
+  for (const step of steps) {
+    if (step.type === "email") {
+      const stepJobIds = await SendJob.find({ stepId: step._id }).distinct("_id");
+      const repliedLeads = await InboundEmail.find({
+        $or: [
+          { sendJobId: { $in: stepJobIds } },
+          {
+            sequenceId: seqId,
+            leadId: {
+              $in: await SequenceEnrollment.find({
+                sequenceId: seqId,
+                stopReason: "replied",
+                currentStepId: step._id,
+              }).distinct("leadId"),
+            },
+          },
+        ],
+      }).distinct("leadId");
+
+      step.stats.repliedCount = repliedLeads.length;
+      await step.save();
+    }
+  }
 }

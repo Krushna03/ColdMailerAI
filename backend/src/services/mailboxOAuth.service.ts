@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/gmail.compose",
+  "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/userinfo.profile",
 ];
@@ -12,6 +13,7 @@ const GOOGLE_SCOPES = [
 const MICROSOFT_SCOPES = [
   "offline_access",
   "https://graph.microsoft.com/Mail.Send",
+  "https://graph.microsoft.com/Mail.Read",
   "https://graph.microsoft.com/User.Read",
 ];
 
@@ -161,8 +163,13 @@ export async function refreshGoogleTokens({
         : new Date(Date.now() + 3600 * 1000),
     };
   } catch (error: any) {
-    console.error("Google token refresh error:", error);
-    throw new ApiError(401, `Failed to refresh Google access token: ${error.message}`);
+    const errorDesc =
+      error.response?.data?.error_description ||
+      error.response?.data?.error ||
+      error.message ||
+      "Unknown token refresh error";
+    console.warn(`[Google OAuth] Token refresh failed: ${errorDesc}`);
+    throw new ApiError(401, `Failed to refresh Google access token: ${errorDesc}`);
   }
 }
 

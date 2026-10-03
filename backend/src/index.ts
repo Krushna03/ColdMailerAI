@@ -5,6 +5,7 @@ import { client } from "./config/google-client.js";
 import { recoverStaleImportJobs, triggerImportJobQueue } from "./services/importJob.service.js";
 import { processDueEnrollmentsService } from "./services/sequenceExecution.service.js";
 import { recoverStaleSendJobs, drainSendJobQueue } from "./services/sendJob.service.js";
+import { syncAllActiveMailboxesService } from "./services/mailboxInboundSync.service.js";
 
 export { client };
 
@@ -43,6 +44,15 @@ connectDB()
         console.error("[Sequence/Sending Background Engine Error]", seqErr);
       }
     }, 10000);
+
+    // Inbound Reply Poller: syncs active mailboxes for incoming replies (runs every 30s)
+    setInterval(async () => {
+      try {
+        await syncAllActiveMailboxesService();
+      } catch (syncErr) {
+        console.error("[Inbound Reply Sync Background Engine Error]", syncErr);
+      }
+    }, 30000);
 
     const port = process.env.PORT || 5000;
     app.listen(port, () => {

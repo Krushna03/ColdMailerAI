@@ -21,6 +21,7 @@ const BatchHistory = lazy(() => import("./pages/BatchHistory"));
 const Mailboxes = lazy(() => import("./pages/Mailboxes"));
 const Sequences = lazy(() => import("./pages/Sequences"));
 const SequenceDetail = lazy(() => import("./pages/SequenceDetail"));
+const InboxReplies = lazy(() => import("./pages/InboxReplies"));
 const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
 
 const withSuspense = (element: React.ReactNode) => (
@@ -100,6 +101,10 @@ export default function App() {
         {
           path: "sequences/:sequenceId",
           element: withSuspense(<SequenceDetail />),
+        },
+        {
+          path: "inbox",
+          element: withSuspense(<InboxReplies />),
         },
       ],
     },

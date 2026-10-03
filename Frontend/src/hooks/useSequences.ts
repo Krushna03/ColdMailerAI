@@ -241,7 +241,7 @@ export function useSequenceEnrollments(sequenceId?: string, params?: { status?: 
       return res.data?.data || { enrollments: [], pagination: { page: 1, limit: 20, total: 0, pages: 1 } };
     },
     enabled: Boolean(sequenceId),
-    refetchInterval: 10_000, // Live poll progress
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -329,8 +329,8 @@ export function useSendJobs(params?: {
       const res = await api.get("/api/v1/sequences/send-jobs", { params });
       return res.data?.data || { jobs: [], pagination: { page: 1, limit: 20, total: 0, pages: 1 } };
     },
-    refetchInterval: 10_000,
-    staleTime: 5_000,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
   });
 }
 
@@ -355,7 +355,8 @@ export function useSendJobStats(sequenceId?: string) {
         cancelled: 0,
       };
     },
-    refetchInterval: 6_000,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
   });
 }
 
@@ -398,8 +399,8 @@ export function useEmailEvents(params?: {
       const res = await api.get("/api/v1/sequences/email-events", { params });
       return res.data?.data?.events || [];
     },
-    refetchInterval: 10_000,
-    staleTime: 5_000,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
   });
 }
 

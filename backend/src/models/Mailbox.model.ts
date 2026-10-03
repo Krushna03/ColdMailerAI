@@ -59,6 +59,7 @@ export interface IMailbox {
   imapConfig?: IImapConfig;
   isDefault: boolean;
   warmupEnabled: boolean;
+  lastReplySyncAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -206,6 +207,11 @@ const MailboxSchema = new Schema<IMailbox, MailboxModelType, IMailboxMethods>(
     warmupEnabled: {
       type: Boolean,
       default: false,
+    },
+
+    lastReplySyncAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

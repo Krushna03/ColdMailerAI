@@ -237,7 +237,11 @@ export default function SequenceStepCard({
       )}
 
       {/* Step Stats Footer if available */}
-      {step.stats && (step.stats.deliveredCount > 0 || step.stats.openedCount > 0) && (
+      {step.stats &&
+        (step.stats.deliveredCount > 0 ||
+          step.stats.openedCount > 0 ||
+          step.stats.repliedCount > 0 ||
+          step.stats.sentCount > 0) && (
         <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-4 text-xs text-gray-400">
           <div>
             Sent: <span className="text-white font-medium">{step.stats.deliveredCount}</span>

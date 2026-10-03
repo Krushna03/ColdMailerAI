@@ -78,6 +78,8 @@ export interface ILead {
   emailsGeneratedCount: number;
   emailsSentCount: number;
   lastContactedAt?: Date | null;
+  lastRepliedAt?: Date | null;
+  repliesCount?: number;
   lastActivityAt?: Date | null;
   nextFollowUpAt?: Date | null;
   userId: Types.ObjectId;
@@ -280,6 +282,17 @@ const LeadSchema = new Schema<ILead, LeadModelType>(
     lastContactedAt: {
       type: Date,
       default: null,
+    },
+
+    lastRepliedAt: {
+      type: Date,
+      default: null,
+    },
+
+    repliesCount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     lastActivityAt: {

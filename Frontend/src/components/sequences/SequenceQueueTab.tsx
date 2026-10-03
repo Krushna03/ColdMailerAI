@@ -94,11 +94,19 @@ export const SequenceQueueTab: React.FC<SequenceQueueTabProps> = ({ sequenceId }
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [activeSubView, setActiveSubView] = useState<"jobs" | "events">("jobs");
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  const { data: stats, isLoading: isStatsLoading } = useSendJobStats(sequenceId);
+  const {
+    data: stats,
+    isLoading: isStatsLoading,
+    isFetching: isStatsFetching,
+    refetch: refetchStats,
+  } = useSendJobStats(sequenceId);
+
   const {
     data: jobsData,
     isLoading: isJobsLoading,
+    isFetching: isJobsFetching,
     refetch: refetchJobs,
   } = useSendJobs({
     sequenceId,
@@ -106,21 +114,41 @@ export const SequenceQueueTab: React.FC<SequenceQueueTabProps> = ({ sequenceId }
     limit: 50,
   });
 
-  const { data: events = [], isLoading: isEventsLoading } = useEmailEvents({
+  const {
+    data: events = [],
+    isLoading: isEventsLoading,
+    isFetching: isEventsFetching,
+    refetch: refetchEvents,
+  } = useEmailEvents({
     sequenceId,
     limit: 50,
   });
 
   const retryMutation = useRetrySendJob();
 
+  const handleManualRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await Promise.all([
+        refetchJobs(),
+        refetchStats(),
+        refetchEvents(),
+      ]);
+    } finally {
+      setTimeout(() => setIsManualRefreshing(false), 500);
+    }
+  };
+
+  const isRefreshing = isManualRefreshing || isJobsFetching || isStatsFetching || isEventsFetching;
+
   const jobs = jobsData?.jobs || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Metric Cards Banner */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <div className="bg-surface-900 border border-white/5 rounded-lg p-3">
-          <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider block">
+          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-wider block">
             Total Outbox
           </span>
           <span className="text-xl font-bold text-white mt-1 block">
@@ -128,58 +156,59 @@ export const SequenceQueueTab: React.FC<SequenceQueueTabProps> = ({ sequenceId }
           </span>
         </div>
 
-        <div className="bg-surface-900 border border-blue-500/10 rounded-lg p-3">
-          <span className="text-[11px] font-medium text-blue-400 uppercase tracking-wider block flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
+        <div className="bg-surface-900 border border-white/5 rounded-lg p-3">
+          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-wider block">
             Queued
           </span>
-          <span className="text-xl font-bold text-blue-200 mt-1 block">
+          <span className="text-xl font-bold text-white mt-1 block">
             {isStatsLoading ? "..." : stats?.queued || 0}
           </span>
         </div>
 
-        <div className="bg-surface-900 border border-amber-500/10 rounded-lg p-3">
-          <span className="text-[11px] font-medium text-amber-400 uppercase tracking-wider block flex items-center gap-1.5">
-            <RotateCw className="h-3 w-3 text-amber-400 animate-spin" />
+        <div className="bg-surface-900 border border-white/5 rounded-lg p-3">
+          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-wider block flex items-center gap-1.5">
+            {stats?.sending && stats.sending > 0 ? (
+              <RotateCw className="h-3 w-3 text-gray-400 animate-spin" />
+            ) : null}
             Sending
           </span>
-          <span className="text-xl font-bold text-amber-200 mt-1 block">
+          <span className="text-xl font-bold text-white mt-1 block">
             {isStatsLoading ? "..." : stats?.sending || 0}
           </span>
         </div>
 
-        <div className="bg-surface-900 border border-emerald-500/10 rounded-lg p-3">
-          <span className="text-[11px] font-medium text-emerald-400 uppercase tracking-wider block">
+        <div className="bg-surface-900 border border-white/5 rounded-lg p-3">
+          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-wider block">
             Sent / Delivered
           </span>
-          <span className="text-xl font-bold text-emerald-200 mt-1 block">
+          <span className="text-xl font-bold text-white mt-1 block">
             {isStatsLoading ? "..." : (stats?.sent || 0) + (stats?.delivered || 0)}
           </span>
         </div>
 
-        <div className="bg-surface-900 border border-orange-500/10 rounded-lg p-3">
-          <span className="text-[11px] font-medium text-orange-400 uppercase tracking-wider block">
+        <div className="bg-surface-900 border border-white/5 rounded-lg p-3">
+          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-wider block">
             Retrying
           </span>
-          <span className="text-xl font-bold text-orange-200 mt-1 block">
+          <span className="text-xl font-bold text-white mt-1 block">
             {isStatsLoading ? "..." : stats?.retry || 0}
           </span>
         </div>
 
-        <div className="bg-surface-900 border border-rose-500/10 rounded-lg p-3">
-          <span className="text-[11px] font-medium text-rose-400 uppercase tracking-wider block">
-            Dead Letter
+        <div className="bg-surface-900 border border-white/5 rounded-lg p-3">
+          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-wider block">
+            Failed / Dead Letter
           </span>
-          <span className="text-xl font-bold text-rose-200 mt-1 block">
-            {isStatsLoading ? "..." : stats?.dead_letter || 0}
+          <span className="text-xl font-bold text-white mt-1 block">
+            {isStatsLoading ? "..." : (stats?.dead_letter || 0)}
           </span>
         </div>
 
-        <div className="bg-surface-900 border border-red-500/10 rounded-lg p-3">
-          <span className="text-[11px] font-medium text-red-400 uppercase tracking-wider block">
+        <div className="bg-surface-900 border border-white/5 rounded-lg p-3">
+          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-wider block">
             Bounced
           </span>
-          <span className="text-xl font-bold text-red-200 mt-1 block">
+          <span className="text-xl font-bold text-white mt-1 block">
             {isStatsLoading ? "..." : stats?.bounced || 0}
           </span>
         </div>
@@ -213,38 +242,45 @@ export const SequenceQueueTab: React.FC<SequenceQueueTabProps> = ({ sequenceId }
           </button>
         </div>
 
-        {activeSubView === "jobs" && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">Filter status:</span>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-[145px] h-7 bg-surface-950 border-white/10 text-xs text-white focus:ring-0 focus:ring-offset-0">
-                <SelectValue placeholder="All States" />
-              </SelectTrigger>
-              <SelectContent className="bg-surface-950 border-white/10 text-white text-xs">
-                <SelectItem className="text-xs" value="all">All States</SelectItem>
-                <SelectItem className="text-xs" value="queued">Queued</SelectItem>
-                <SelectItem className="text-xs" value="scheduled">Scheduled</SelectItem>
-                <SelectItem className="text-xs" value="sending">Sending (Locked)</SelectItem>
-                <SelectItem className="text-xs" value="sent">Sent</SelectItem>
-                <SelectItem className="text-xs" value="delivered">Delivered</SelectItem>
-                <SelectItem className="text-xs" value="retry">Retrying</SelectItem>
-                <SelectItem className="text-xs" value="dead_letter">Dead Letter</SelectItem>
-                <SelectItem className="text-xs" value="bounced">Bounced</SelectItem>
-                <SelectItem className="text-xs" value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex items-center gap-2">
+          {activeSubView === "jobs" && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Filter status:</span>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[145px] h-7 bg-surface-950 border-white/10 text-xs text-white focus:ring-0 focus:ring-offset-0">
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-950 border-white/10 text-white text-xs">
+                  <SelectItem className="text-xs" value="all">All States</SelectItem>
+                  <SelectItem className="text-xs" value="queued">Queued</SelectItem>
+                  <SelectItem className="text-xs" value="scheduled">Scheduled</SelectItem>
+                  <SelectItem className="text-xs" value="sending">Sending (Locked)</SelectItem>
+                  <SelectItem className="text-xs" value="sent">Sent</SelectItem>
+                  <SelectItem className="text-xs" value="delivered">Delivered</SelectItem>
+                  <SelectItem className="text-xs" value="retry">Retrying</SelectItem>
+                  <SelectItem className="text-xs" value="dead_letter">Dead Letter</SelectItem>
+                  <SelectItem className="text-xs" value="bounced">Bounced</SelectItem>
+                  <SelectItem className="text-xs" value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => refetchJobs()}
-              className="h-7 px-2 border-white/10 text-gray-300 hover:text-white"
-            >
-              <RefreshCw className="h-3 w-3 text-gray-700" />
-            </Button>
-          </div>
-        )}
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            title="Refresh queue and stats"
+            className="h-7 w-7 p-0 border border-white/15 bg-surface-950 hover:bg-white/10 text-gray-300 hover:text-white transition-colors flex items-center justify-center shrink-0 shadow-none"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 transition-transform ${
+                isRefreshing ? "animate-spin text-brand" : "text-gray-300"
+              }`}
+            />
+          </Button>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -357,15 +393,6 @@ export const SequenceQueueTab: React.FC<SequenceQueueTabProps> = ({ sequenceId }
                       {job.lockedBy && (
                         <span>
                           Worker: <code className="text-amber-300 font-mono">{job.lockedBy}</code>
-                        </span>
-                      )}
-
-                      {job.providerResponse?.messageId && (
-                        <span>
-                          Provider ID:{" "}
-                          <code className="text-emerald-400 font-mono">
-                            {job.providerResponse.messageId}
-                          </code>
                         </span>
                       )}
 

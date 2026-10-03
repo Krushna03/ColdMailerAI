@@ -1,5 +1,5 @@
 import React from "react";
-import { CreditCard, LayoutDashboard, LogOut, UserRound, Users, History, Mail, X, LucideIcon, Workflow } from "lucide-react";
+import { CreditCard, LayoutDashboard, LogOut, UserRound, Users, History, Mail, X, LucideIcon, Workflow, Inbox } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "../ui/button";
@@ -17,6 +17,7 @@ const navigation: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
   { label: "Leads", to: "/dashboard/leads", icon: Users },
   { label: "Sequences", to: "/dashboard/sequences", icon: Workflow },
+  { label: "Inbox & Replies", to: "/dashboard/inbox", icon: Inbox },
   { label: "Mailboxes", to: "/dashboard/mailboxes", icon: Mail },
   { label: "Batch History", to: "/dashboard/batches", icon: History },
   { label: "Pricing", to: "/dashboard/pricing", icon: CreditCard },
