@@ -51,6 +51,7 @@ import {
 } from "../hooks/useInbound";
 import { useLeads } from "../hooks/useLeads";
 import { InboundEmail, ReplyCategory } from "../types/inbound";
+import { ContextualAIGeneratorModal } from "../components/email/ContextualAIGeneratorModal";
 
 const CATEGORY_CONFIG: Record<
   ReplyCategory,
@@ -122,6 +123,7 @@ export default function InboxReplies() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [simulateModalOpen, setSimulateModalOpen] = useState(false);
+  const [aiReplyModalOpen, setAiReplyModalOpen] = useState(false);
 
   // Simulation form state
   const [simLeadId, setSimLeadId] = useState("");
@@ -217,11 +219,11 @@ export default function InboxReplies() {
             size="sm"
             onClick={() => syncRepliesMutation.mutate()}
             disabled={syncRepliesMutation.isPending}
-            className="h-9 border-brand/40 bg-brand/10 text-brand-300 hover:bg-brand/20 hover:text-white transition-colors"
+            className="h-8 text-xs border-brand/40 bg-tranparent/10 text-white hover:bg-transparent over:text-white transition-colors"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 mr-1.5 ${
-                syncRepliesMutation.isPending ? "animate-spin text-brand" : "text-brand"
+              className={`h-3 w-3 ${
+                syncRepliesMutation.isPending ? "animate-spin text-white" : "text-white"
               }`}
             />
             {syncRepliesMutation.isPending ? "Syncing..." : "Sync Mailbox"}
@@ -233,9 +235,9 @@ export default function InboxReplies() {
             size="sm"
             onClick={handleRefresh}
             disabled={isEmailsFetching}
-            className="h-9 border-white/10 bg-surface-900 text-gray-300 hover:text-white"
+            className="h-9 text-xs border-white/10 bg-surface-900 text-gray-100 hover:text-white"
           >
-            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isEmailsFetching ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3 w-3 ${isEmailsFetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
 
@@ -243,9 +245,8 @@ export default function InboxReplies() {
             type="button"
             size="sm"
             onClick={() => setSimulateModalOpen(true)}
-            className="h-9 bg-brand text-white hover:bg-brand-400 font-medium"
+            className="h-8 text-[13px] bg-brand text-white hover:bg-brand-400 font-medium"
           >
-            <Plus className="h-3.5 w-3.5" />
             Simulate Reply
           </Button>
         </div>
@@ -559,15 +560,27 @@ export default function InboxReplies() {
                       <Sparkles className="h-3 w-3" />
                       Recommended Next Action
                     </span>
-                    <p className="text-xs sm:text-[12px] text-emerald-200 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20 leading-relaxed font-medium">
-                      {activeEmail.classification.suggestedAction}
-                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+                      <p className="text-xs sm:text-[12px] text-emerald-200 leading-relaxed font-medium">
+                        {activeEmail.classification.suggestedAction}
+                      </p>
+                      {activeEmail.leadId?._id && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setAiReplyModalOpen(true)}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs h-7 px-3 shrink-0 shadow-sm"
+                        >
+                          Generate Contextual Reply
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Card 2: Prospect Profile & Cadence Link */}
-              <div className="rounded-xl border border-white/10 bg-surface-900/90 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="rounded-xl border border-white/10 bg-surface-900/90 p-4 py-2 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-brand/20 border border-brand/30 flex items-center justify-center text-sm font-bold text-white shrink-0">
                     {(activeEmail.from.name || activeEmail.from.email || "L").charAt(0).toUpperCase()}
@@ -588,6 +601,18 @@ export default function InboxReplies() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {activeEmail.leadId?._id && (
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="sm"
+                      onClick={() => setAiReplyModalOpen(true)}
+                      className="h-7 text-xs border border-white/10 text-white hover:text-white"
+                    >
+                      7-Pillar AI Reply
+                    </Button>
+                  )}
+
                   {activeEmail.leadId?._id && (
                     <Button
                       asChild
@@ -819,6 +844,12 @@ export default function InboxReplies() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ContextualAIGeneratorModal
+        open={aiReplyModalOpen}
+        onOpenChange={setAiReplyModalOpen}
+        initialLeadId={activeEmail?.leadId?._id}
+      />
     </div>
   );
 }

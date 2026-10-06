@@ -3,6 +3,13 @@ import { Link } from "react-router-dom";
 import { Workflow, Plus, Play, Pause, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useSequences, useEnrollLeadsInSequence } from "../../hooks/useSequences";
 import { Button } from "../ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { useToast } from "../../hooks/use-toast";
 
 interface LeadSequencesCardProps {
@@ -36,9 +43,6 @@ export default function LeadSequencesCard({
     <div className="rounded-xl border border-white/10 bg-surface-900/90 p-5 shadow-lg backdrop-blur-sm space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 border border-brand/20 text-brand">
-            <Workflow className="h-4 w-4" />
-          </div>
           <div>
             <h3 className="text-sm font-bold text-white">Automated Cadence Sequences</h3>
             <p className="text-xs text-gray-400">
@@ -50,18 +54,21 @@ export default function LeadSequencesCard({
         {/* Quick enroll in sequence */}
         {activeSequences.length > 0 && (
           <div className="flex items-center gap-2">
-            <select
+            <Select
               value={selectedSequenceId}
-              onChange={(e) => setSelectedSequenceId(e.target.value)}
-              className="bg-surface-950 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand max-w-[200px] truncate"
+              onValueChange={setSelectedSequenceId}
             >
-              <option value="">Enroll in sequence...</option>
-              {activeSequences.map((seq) => (
-                <option key={seq._id} value={seq._id}>
-                  {seq.name} ({seq.stepsCount} steps)
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="bg-surface-950 border-white/10 text-xs text-white h-8 w-[200px] rounded-md focus:ring-brand">
+                <SelectValue placeholder="Enroll in sequence..." />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-950 border-white/15 text-white max-h-56">
+                {activeSequences.map((seq) => (
+                  <SelectItem key={seq._id} value={seq._id} className="text-xs">
+                    {seq.name} ({seq.stepsCount} steps)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               type="button"
               disabled={!selectedSequenceId || enrollMutation.isPending}
@@ -133,7 +140,7 @@ export default function LeadSequencesCard({
                     asChild
                     variant="outline"
                     size="sm"
-                    className="h-7 text-[11px] border-white/10 bg-white/5 text-gray-300 hover:text-white"
+                    className="h-7 text-[11px] border-white/10 bg-white/5 text-gray-100 hover:text-white hover:bg-transparent"
                   >
                     <Link to={`/dashboard/sequences/${seqId}`}>View Cadence</Link>
                   </Button>

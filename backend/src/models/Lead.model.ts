@@ -4,6 +4,7 @@ export const LEAD_STATUSES = [
   "new",
   "contacted",
   "replied",
+  "interested",
   "meeting",
   "closed",
   "archived",
@@ -13,8 +14,9 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
 export const STATUS_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
   new: ["contacted", "archived"],
-  contacted: ["replied", "archived"],
-  replied: ["meeting", "closed", "archived"],
+  contacted: ["replied", "interested", "meeting", "archived"],
+  replied: ["interested", "meeting", "closed", "archived"],
+  interested: ["meeting", "closed", "archived"],
   meeting: ["closed", "archived"],
   closed: ["archived"],
   archived: ["new"],

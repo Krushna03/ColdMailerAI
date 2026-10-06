@@ -17,6 +17,11 @@ import {
   deleteBatchJobService,
 } from "../services/email.service.js";
 import {
+  assembleLeadContextService,
+  generateContextualEmailService,
+  batchGenerateContextualEmailsService,
+} from "../services/aiIntelligence.service.js";
+import {
   validateUserAuth,
   validateEmailPrompt,
   validateEmailUpdate,
@@ -490,6 +495,109 @@ const sendGeneratedEmail = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Assemble 7-pillar AI Context for a lead
+ * GET /api/v1/email/ai-context/:leadId
+ */
+const getLeadAIContext = asyncHandler(async (req: Request, res: Response) => {
+  const { leadId } = req.params;
+  const workspaceId = (req as any).workspace?._id || (req.user as any).activeWorkspaceId;
+  const userId = req.user!._id;
+  const sequenceId = req.query.sequenceId as string | undefined;
+  const stepOrder = req.query.stepOrder ? parseInt(req.query.stepOrder as string, 10) : undefined;
+  const mailboxId = req.query.mailboxId as string | undefined;
+
+  const context = await assembleLeadContextService({
+    leadId,
+    workspaceId,
+    userId,
+    sequenceId,
+    stepOrder,
+    mailboxId,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: context,
+  });
+});
+
+/**
+ * Generate Contextual Email (7-pillar AI Intelligence)
+ * POST /api/v1/email/ai-contextual-generate
+ */
+const generateContextualEmail = asyncHandler(async (req: Request, res: Response) => {
+  const workspaceId = (req as any).workspace?._id || (req.user as any).activeWorkspaceId;
+  const userId = req.user!._id;
+
+  const {
+    leadId,
+    customContext,
+    overrideObjective,
+    overrideTone,
+    overrideSenderProfile,
+    sequenceId,
+    stepOrder,
+    customInstructions,
+  } = req.body;
+
+  const result = await generateContextualEmailService({
+    leadId,
+    workspaceId,
+    userId,
+    customContext,
+    overrideObjective,
+    overrideTone,
+    overrideSenderProfile,
+    sequenceId,
+    stepOrder,
+    customInstructions,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: result,
+  });
+});
+
+/**
+ * Batch Generate Contextual Emails (7-pillar AI Intelligence)
+ * POST /api/v1/email/ai-batch-contextual-generate
+ */
+const batchGenerateContextualEmails = asyncHandler(async (req: Request, res: Response) => {
+  const workspaceId = (req as any).workspace?._id || (req.user as any).activeWorkspaceId;
+  const userId = req.user!._id;
+
+  const {
+    leadIds,
+    objective,
+    tone,
+    senderProfile,
+    sequenceId,
+    stepOrder,
+  } = req.body;
+
+  if (!Array.isArray(leadIds) || leadIds.length === 0) {
+    throw new ApiError(400, "leadIds array is required");
+  }
+
+  const result = await batchGenerateContextualEmailsService({
+    leadIds,
+    workspaceId,
+    userId,
+    objective,
+    tone,
+    senderProfile,
+    sequenceId,
+    stepOrder,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: result,
+  });
+});
+
 export {
   generateEmail,
   generateBatchEmails,
@@ -506,4 +614,7 @@ export {
   getBatchJobs,
   deleteBatchJob,
   sendGeneratedEmail,
+  getLeadAIContext,
+  generateContextualEmail,
+  batchGenerateContextualEmails,
 };

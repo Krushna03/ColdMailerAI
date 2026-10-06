@@ -25,6 +25,7 @@ import LeadProfileForm from "../components/leads/LeadProfileForm";
 import LeadTimeline from "../components/leads/LeadTimeline";
 import AddFollowUpDialog from "../components/leads/AddFollowUpDialog";
 import AddCategoryDialog from "../components/leads/AddCategoryDialog";
+import { ContextualAIGeneratorModal } from "../components/email/ContextualAIGeneratorModal";
 import {
   Dialog,
   DialogClose,
@@ -46,6 +47,7 @@ export default function LeadDetail() {
 
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
+  const [contextualAIOpen, setContextualAIOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [instructions, setInstructions] = useState("");
 
@@ -234,13 +236,14 @@ export default function LeadDetail() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <Seo title={`${lead.name} · Lead`} path={`/dashboard/leads/${leadId}`} noIndex />
 
       <LeadDetailHeader
         lead={lead}
         onAddFollowUp={() => setFollowUpOpen(true)}
         onGenerate={() => setGenerateOpen(true)}
+        onOpenContextualAI={() => setContextualAIOpen(true)}
         onMarkLatestSent={() => latestUnsent && runMark(latestUnsent._id)}
         isGenerating={generateBatch.isPending}
         isMarkingSent={markSent.isPending}
@@ -388,6 +391,12 @@ export default function LeadDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ContextualAIGeneratorModal
+        open={contextualAIOpen}
+        onOpenChange={setContextualAIOpen}
+        initialLeadId={leadId}
+      />
     </div>
   );
 }

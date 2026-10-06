@@ -21,6 +21,7 @@ import SegmentRoute from "./routes/segment.routes.js";
 import MailboxRoute from "./routes/mailbox.routes.js";
 import SequenceRoute from "./routes/sequence.routes.js";
 import InboundRoute from "./routes/inbound.routes.js";
+import NotificationRoute from "./routes/notification.routes.js";
 
 const app = express();
 
@@ -87,6 +88,7 @@ app.use("/api/v1/segments", SegmentRoute);
 app.use("/api/v1/mailboxes", MailboxRoute);
 app.use("/api/v1/sequences", SequenceRoute);
 app.use("/api/v1/inbound", InboundRoute);
+app.use("/api/v1/notifications", NotificationRoute);
 
 app.use(errorHandler);
 

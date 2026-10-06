@@ -6,6 +6,7 @@ import DashboardSidebar from "./DashboardSidebar";
 import { useCurrentUser } from "../../hooks/useUser";
 import { Toaster } from "../ui/toaster";
 import { RootState } from "../../context/store";
+import NotificationBell from "../layout/NotificationBell";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -61,13 +62,18 @@ export default function DashboardLayout() {
               Welcome back{user?.username ? `, ${user.username}` : ""}
             </p>
           </div>
-          <NavLink
-            to="/dashboard/profile"
-            aria-label="Open profile"
-            className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-xs font-semibold transition hover:bg-white/10"
-          >
-            {(user?.username || user?.email || "U").charAt(0).toUpperCase()}
-          </NavLink>
+
+          <div className="ml-auto flex items-center gap-1 sm:gap-4">
+            <NotificationBell />
+
+            <NavLink
+              to="/dashboard/profile"
+              aria-label="Open profile"
+              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-xs font-semibold transition hover:bg-white/10"
+            >
+              {(user?.username || user?.email || "U").charAt(0).toUpperCase()}
+            </NavLink>
+          </div>
         </header>
 
         <main className="relative mx-auto w-full min-w-0 max-w-7xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">

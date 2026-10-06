@@ -16,12 +16,19 @@ import {
   getBatchJobs,
   deleteBatchJob,
   sendGeneratedEmail,
+  getLeadAIContext,
+  generateContextualEmail,
+  batchGenerateContextualEmails,
 } from "../controllers/email.controller.js";
 import { uploadImage, handleMulterError } from "../middlewares/upload.middleware.js";
 
 const router: Router = express.Router();
 
 router.route("/generate-email").post(verifyJWT, uploadImage, handleMulterError, generateEmail);
+
+router.route("/ai-context/:leadId").get(verifyJWT, getLeadAIContext);
+router.route("/ai-contextual-generate").post(verifyJWT, generateContextualEmail);
+router.route("/ai-batch-contextual-generate").post(verifyJWT, batchGenerateContextualEmails);
 
 router.route("/generate-batch").post(verifyJWT, generateBatchEmails);
 

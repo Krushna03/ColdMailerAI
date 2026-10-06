@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, CalendarPlus, Mail, Send } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Mail, Send, Sparkles } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   statusBadgeClass,
@@ -20,6 +20,7 @@ interface LeadDetailHeaderProps {
   };
   onAddFollowUp?: () => void;
   onGenerate?: () => void;
+  onOpenContextualAI?: () => void;
   onMarkLatestSent?: () => void;
   isGenerating?: boolean;
   isMarkingSent?: boolean;
@@ -30,6 +31,7 @@ export default function LeadDetailHeader({
   lead,
   onAddFollowUp,
   onGenerate,
+  onOpenContextualAI,
   onMarkLatestSent,
   isGenerating,
   isMarkingSent,
@@ -91,6 +93,16 @@ export default function LeadDetailHeader({
               <Send className="h-2 w-2" />
               {isMarkingSent ? "Marking..." : "Mark latest sent"}
             </Button>
+            {onOpenContextualAI && (
+              <Button
+                type="button"
+                onClick={onOpenContextualAI}
+                className="bg-gradient-to-r from-purple-600 via-indigo-600 to-brand hover:from-purple-500 hover:to-brand-400 text-white text-xs sm:text-[12.5px] px-3 shadow-sm border border-purple-500/30 font-medium"
+              >
+                <Sparkles className="h-3 w-3 mr-1 text-purple-200" />
+                AI Intelligence
+              </Button>
+            )}
             <Button
               type="button"
               disabled={isGenerating}

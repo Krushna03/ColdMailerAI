@@ -17,6 +17,7 @@ import { classifyEmailReplyService } from "./replyClassification.service.js";
 import { checkAndStopLeadSequencesService } from "./sequenceExecution.service.js";
 import { recordEmailEvent } from "./sendJob.service.js";
 import { logActivity } from "./activity.service.js";
+import { createNotificationService } from "./notification.service.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export interface ProcessInboundEmailParams {
@@ -200,10 +201,102 @@ export async function processInboundEmailService(
     outboundBody,
   });
 
-  // Action based on classification
-  if (classification.category === "meeting_request") {
+  const leadCompanyName =
+    (typeof lead.company === "object" ? lead.company?.name : lead.company) || "Prospect";
+  const salespersonUserId = lead.assignedTo || userId;
+  const prospectDisplayName = params.from.name || lead.name || fromEmail;
+
+  // Automated Action & Routing based on Phase 7 AI Intelligence
+  if (classification.category === "interested") {
+    if (!lead.tags) lead.tags = [];
+    if (!lead.tags.includes("interested")) {
+      lead.tags.push("interested");
+    }
+    await lead.save();
+
+    // Ensure sequences and queued jobs are stopped immediately
+    await checkAndStopLeadSequencesService(lead._id, "replied", "replied");
+    sequenceStopped = true;
+
+    // Automatically Notify Salesperson
+    await createNotificationService({
+      workspaceId,
+      userId: salespersonUserId,
+      leadId: lead._id,
+      sequenceId: matchedSequenceId,
+      type: "lead_interested",
+      title: `🔥 Hot Lead Interested: ${prospectDisplayName} (${leadCompanyName})`,
+      message: `${prospectDisplayName} replied with positive interest: "${classification.summary || subject}". Sequence automatically stopped.`,
+      priority: "urgent",
+      suggestedAction: classification.suggestedAction || "Reach out to prospect within 15 minutes to secure a discovery call.",
+      metadata: {
+        category: classification.category,
+        sentiment: classification.sentiment,
+        confidence: classification.confidence,
+        fromEmail,
+        subject,
+      },
+    });
+  } else if (classification.category === "meeting_request") {
     lead.status = "meeting";
     await lead.save();
+
+    await checkAndStopLeadSequencesService(lead._id, "meeting", "meeting_booked");
+    sequenceStopped = true;
+
+    // Automatically Notify Salesperson
+    await createNotificationService({
+      workspaceId,
+      userId: salespersonUserId,
+      leadId: lead._id,
+      sequenceId: matchedSequenceId,
+      type: "meeting_request",
+      title: `📅 Meeting Request: ${prospectDisplayName} (${leadCompanyName})`,
+      message: `${prospectDisplayName} requested a meeting or provided scheduling availability!`,
+      priority: "urgent",
+      suggestedAction: classification.suggestedAction || "Confirm calendar invite immediately and review company profile.",
+      metadata: {
+        category: classification.category,
+        sentiment: classification.sentiment,
+        confidence: classification.confidence,
+        fromEmail,
+        subject,
+      },
+    });
+  } else if (classification.category === "objection") {
+    await createNotificationService({
+      workspaceId,
+      userId: salespersonUserId,
+      leadId: lead._id,
+      sequenceId: matchedSequenceId,
+      type: "prospect_objection",
+      title: `⚠️ Prospect Objection: ${prospectDisplayName} (${leadCompanyName})`,
+      message: `${prospectDisplayName} raised an objection: "${classification.summary || subject}".`,
+      priority: "high",
+      suggestedAction: classification.suggestedAction || "Review objection and consider a soft follow-up or rebuttal.",
+      metadata: {
+        category: classification.category,
+        fromEmail,
+        subject,
+      },
+    });
+  } else if (classification.category === "wrong_person") {
+    await createNotificationService({
+      workspaceId,
+      userId: salespersonUserId,
+      leadId: lead._id,
+      sequenceId: matchedSequenceId,
+      type: "wrong_person",
+      title: `🔄 Wrong Person / Referral: ${prospectDisplayName}`,
+      message: `${prospectDisplayName} indicated they are not the appropriate stakeholder.`,
+      priority: "medium",
+      suggestedAction: classification.suggestedAction || "Identify referred contact and reassign lead.",
+      metadata: {
+        category: classification.category,
+        fromEmail,
+        subject,
+      },
+    });
   } else if (classification.category === "unsubscribe") {
     if (!lead.tags) lead.tags = [];
     if (!lead.tags.includes("unsubscribed")) {
@@ -439,6 +532,40 @@ export async function reclassifyInboundEmailService(
 
   email.classification = classification;
   await email.save();
+
+  if (classification.category === "interested" && email.leadId) {
+    await Lead.findByIdAndUpdate(email.leadId, { status: "interested" });
+    await checkAndStopLeadSequencesService(email.leadId, "interested", "replied");
+
+    await createNotificationService({
+      workspaceId,
+      userId: email.userId,
+      leadId: email.leadId,
+      inboundEmailId: email._id,
+      sequenceId: email.sequenceId,
+      type: "lead_interested",
+      title: `🔥 Reclassified as Interested: ${email.from.name || email.from.email}`,
+      message: `Reply was reclassified as Interested: "${classification.summary || email.subject}".`,
+      priority: "urgent",
+      suggestedAction: classification.suggestedAction || "Reach out to prospect within 15 minutes.",
+    });
+  } else if (classification.category === "meeting_request" && email.leadId) {
+    await Lead.findByIdAndUpdate(email.leadId, { status: "meeting" });
+    await checkAndStopLeadSequencesService(email.leadId, "meeting", "meeting_booked");
+
+    await createNotificationService({
+      workspaceId,
+      userId: email.userId,
+      leadId: email.leadId,
+      inboundEmailId: email._id,
+      sequenceId: email.sequenceId,
+      type: "meeting_request",
+      title: `📅 Reclassified as Meeting Request: ${email.from.name || email.from.email}`,
+      message: `Reply was reclassified as Meeting Request.`,
+      priority: "urgent",
+      suggestedAction: classification.suggestedAction || "Confirm calendar invite.",
+    });
+  }
 
   return email;
 }

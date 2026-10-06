@@ -23,4 +23,7 @@ export const queryKeys = {
   sendJobs: (params?: any) => ["sendJobs", params] as const,
   sendJobStats: (id?: string) => ["sendJobStats", id] as const,
   emailEvents: (params?: any) => ["emailEvents", params] as const,
+  notifications: (params?: any) => ["notifications", params] as const,
+  unreadNotificationCount: ["unreadNotificationCount"] as const,
+  aiContext: (leadId?: string) => ["aiContext", leadId] as const,
 };

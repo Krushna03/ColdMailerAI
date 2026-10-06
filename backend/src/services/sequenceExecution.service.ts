@@ -15,6 +15,7 @@ import {
 import { logActivity } from "./activity.service.js";
 import { recalculateSequenceStatsService } from "./sequence.service.js";
 import { generateAIContent } from "./ai.service.js";
+import { generateContextualEmailService } from "./aiIntelligence.service.js";
 import { ApiError } from "../utils/ApiError.js";
 
 
@@ -385,14 +386,31 @@ export async function executeEnrollmentStep(
         executedSubject = subject;
         let body = interpolateTemplate(step.template?.body || "", lead, enrollment.customVariables);
 
-        // If template has AI prompt, generate personalized content
+        // If template has AI prompt, generate personalized content using 7-pillar intelligence
         if (step.template?.aiPrompt) {
-          const aiPrompt = interpolateTemplate(step.template.aiPrompt, lead, enrollment.customVariables);
           try {
-            const aiContent = await generateAIContent(aiPrompt);
-            if (aiContent?.data) body = aiContent.data;
+            const aiGenerated = await generateContextualEmailService({
+              leadId: lead._id,
+              workspaceId: sequence.workspaceId,
+              userId: sequence.userId,
+              sequenceId: sequence._id,
+              stepOrder: step.order,
+              customInstructions: step.template.aiPrompt,
+            });
+            if (aiGenerated.body) body = aiGenerated.body;
+            if (aiGenerated.subject && !step.template?.subject) {
+              subject = aiGenerated.subject;
+              executedSubject = subject;
+            }
           } catch (aiErr) {
-            console.warn("[Sequence AI Prompt warning]", aiErr);
+            console.warn("[Sequence AI Contextual warning, using fallback]", aiErr);
+            const aiPrompt = interpolateTemplate(step.template.aiPrompt, lead, enrollment.customVariables);
+            try {
+              const aiContent = await generateAIContent(aiPrompt);
+              if (aiContent?.data) body = aiContent.data;
+            } catch (fallbackErr) {
+              console.warn("[Sequence AI Prompt fallback error]", fallbackErr);
+            }
           }
         }
 
@@ -580,9 +598,9 @@ export async function checkAndStopLeadSequencesService(
     const seq = enrollment.sequenceId;
     if (!seq) continue;
 
-    const stopStatuses = seq.enrollmentRules?.stopIfLeadStatus || ["replied", "meeting", "closed", "archived"];
+    const stopStatuses = seq.enrollmentRules?.stopIfLeadStatus || ["replied", "interested", "meeting", "closed", "archived"];
     const shouldStop =
-      (seq.settings.stopOnReply && newStatus === "replied") ||
+      (seq.settings.stopOnReply && (newStatus === "replied" || newStatus === "interested" || newStatus === "meeting")) ||
       stopStatuses.includes(newStatus);
 
     if (shouldStop) {
