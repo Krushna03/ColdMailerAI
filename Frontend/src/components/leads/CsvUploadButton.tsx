@@ -56,7 +56,7 @@ export default function CsvUploadButton({
 
   return (
     <>
-      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+      <div className="flex items-center">
         <Input
           ref={inputRef}
           type="file"
@@ -66,12 +66,11 @@ export default function CsvUploadButton({
         />
         <Button
           type="button"
-          variant="outline"
           disabled={isImporting}
           onClick={() => inputRef.current?.click()}
-          className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white text-xs"
+          className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[13px] px-3 h-8 rounded-md shadow-none flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Upload className="h-3 w-3" />
+          <Upload className="h-4 w-4" />
           Upload CSV
         </Button>
       </div>

@@ -15,10 +15,10 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
+  { label: "Mailboxes", to: "/dashboard/mailboxes", icon: Mail },
   { label: "Leads", to: "/dashboard/leads", icon: Users },
   { label: "Sequences", to: "/dashboard/sequences", icon: Workflow },
   { label: "Inbox & Replies", to: "/dashboard/inbox", icon: Inbox },
-  { label: "Mailboxes", to: "/dashboard/mailboxes", icon: Mail },
   { label: "Batch History", to: "/dashboard/batches", icon: History },
   { label: "Pricing", to: "/dashboard/pricing", icon: CreditCard },
   { label: "Profile", to: "/dashboard/profile", icon: UserRound },

@@ -41,6 +41,7 @@ import {
   useGenerateContextualEmail,
   GeneratedContextualResult,
 } from "../../hooks/useAIIntelligence";
+import { useMailboxes, useSendGeneratedEmail } from "../../hooks/useMailboxes";
 import { useToast } from "../../hooks/use-toast";
 
 interface ContextualAIGeneratorModalProps {
@@ -141,6 +142,57 @@ export function ContextualAIGeneratorModal({
   }, [contextData]);
 
   const generateMutation = useGenerateContextualEmail();
+  const { data: mailboxesData } = useMailboxes();
+  const sendEmailMutation = useSendGeneratedEmail();
+  const mailboxes = mailboxesData || [];
+  const [selectedMailboxId, setSelectedMailboxId] = useState<string>("");
+
+  const handleSendViaMailbox = async () => {
+    if (!generatedResult?.emailId) {
+      toast({
+        title: "Draft Not Ready",
+        description: "Please generate email before sending.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const targetMailboxId = selectedMailboxId || mailboxes[0]?._id;
+    if (!targetMailboxId) {
+      toast({
+        title: "No Mailbox Selected",
+        description: "Please connect and select an active mailbox in Mailboxes to send directly.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!leadEmail) {
+      toast({
+        title: "Missing Recipient Email",
+        description: "Please specify the prospect's email address in Pillar 1.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await sendEmailMutation.mutateAsync({
+        emailId: generatedResult.emailId,
+        mailboxId: targetMailboxId,
+        to: leadEmail,
+        subject: generatedResult.subject,
+        text: generatedResult.body,
+        body: generatedResult.body,
+        leadId: selectedLeadId || initialLeadId || undefined,
+      });
+      onOpenChange(false);
+    } catch (err: any) {
+      toast({
+        title: "Dispatch Failed",
+        description: err.response?.data?.message || err.message || "Failed to send email.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleGenerate = async () => {
     if (!leadName || !companyName) {
@@ -613,6 +665,64 @@ export function ContextualAIGeneratorModal({
                   </div>
                   <div className="rounded-lg bg-surface-900 border border-white/10 p-4 text-sm text-gray-100 whitespace-pre-wrap leading-relaxed font-sans">
                     {generatedResult.body}
+                  </div>
+                </div>
+
+                {/* Direct Mailbox Dispatch Strip */}
+                <div className="rounded-xl border border-brand/30 bg-gradient-to-r from-brand/10 via-surface-900 to-indigo-950/40 p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-9 w-9 rounded-xl bg-brand/20 border border-brand/30 flex items-center justify-center text-brand shrink-0">
+                        <Send className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">Direct Mailbox Dispatch</h4>
+                        <p className="text-[11px] text-gray-400">
+                          Send this AI outreach to <strong className="text-gray-200">{leadEmail || "prospect"}</strong> via connected mailbox.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {mailboxes.length > 0 ? (
+                        <Select
+                          value={selectedMailboxId || mailboxes[0]?._id}
+                          onValueChange={setSelectedMailboxId}
+                        >
+                          <SelectTrigger className="h-8 w-44 bg-surface-950 border-white/15 text-xs text-white">
+                            <SelectValue placeholder="Select mailbox..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-surface-950 border-white/15 text-white max-h-56">
+                            {mailboxes.map((mb: any) => (
+                              <SelectItem key={mb._id} value={mb._id} className="text-xs">
+                                {mb.email} ({mb.provider.toUpperCase()})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="text-[11px] text-amber-300">No mailbox connected</span>
+                      )}
+
+                      <Button
+                        type="button"
+                        onClick={handleSendViaMailbox}
+                        disabled={sendEmailMutation.isPending || mailboxes.length === 0 || !leadEmail}
+                        className="h-8 bg-brand text-white hover:bg-brand-400 text-xs font-semibold px-3 shadow-md gap-1.5"
+                      >
+                        {sendEmailMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Dispatching...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-3.5 w-3.5" />
+                            Send via Mailbox
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

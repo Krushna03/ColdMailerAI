@@ -7,6 +7,7 @@ import { SequenceEnrollment } from "../models/SequenceEnrollment.model.js";
 import { Lead } from "../models/Lead.model.js";
 import { Mailbox } from "../models/Mailbox.model.js";
 import { Email } from "../models/Email.model.js";
+import { Activity } from "../models/Activity.model.js";
 import { sendEmailViaMailbox } from "./mailboxSender.service.js";
 import { recalculateSequenceStatsService } from "./sequence.service.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -231,6 +232,58 @@ export async function processSendJob(job: ISendJobDocument): Promise<{
   messageId?: string;
   error?: string;
 }> {
+  // Verify lead compliance (unsubscribed / bounced) and enrollment status
+  const [lead, enrollment] = await Promise.all([
+    Lead.findById(job.leadId),
+    SequenceEnrollment.findById(job.enrollmentId),
+  ]);
+
+  if (!lead) {
+    job.status = "cancelled";
+    job.lastError = "Lead not found or was deleted";
+    job.lockedAt = null;
+    job.lockedBy = null;
+    await job.save();
+    return { success: false, status: "cancelled", error: job.lastError };
+  }
+
+  const isUnsubscribed = lead.tags?.includes("unsubscribed");
+  const isBounced = lead.status === "bounced";
+  const isLeadDisallowed = ["replied", "meeting", "closed", "archived"].includes(lead.status);
+  const isEnrollmentHalted = enrollment && enrollment.status !== "active";
+
+  if (isUnsubscribed || isBounced || isLeadDisallowed || isEnrollmentHalted) {
+    const reason = isUnsubscribed
+      ? "Lead is unsubscribed"
+      : isBounced
+      ? "Lead previously bounced"
+      : isLeadDisallowed
+      ? `Lead status changed to '${lead.status}'`
+      : `Enrollment status is '${enrollment?.status}'`;
+
+    job.status = "cancelled";
+    job.lastError = `Compliance check: ${reason}`;
+    job.lockedAt = null;
+    job.lockedBy = null;
+    await job.save();
+
+    await recordEmailEvent({
+      workspaceId: job.workspaceId,
+      userId: job.userId,
+      type: "cancelled",
+      leadId: job.leadId,
+      sendJobId: job._id,
+      sequenceId: job.sequenceId,
+      stepId: job.stepId,
+      stepOrder: job.stepOrder,
+      enrollmentId: job.enrollmentId,
+      mailboxId: job.mailboxId,
+      metadata: { reason },
+    });
+
+    return { success: false, status: "cancelled", error: job.lastError };
+  }
+
   let mailbox = await Mailbox.findById(job.mailboxId);
   if (!mailbox || mailbox.status !== "active") {
     // If assigned mailbox was deleted or is not active, fallback to an active mailbox in the workspace
@@ -358,6 +411,23 @@ export async function processSendJob(job: ISendJobDocument): Promise<{
       lead.emailsSentCount = (lead.emailsSentCount || 0) + 1;
       lead.lastContactedAt = new Date();
       await lead.save();
+
+      // Log activity to lead timeline for complete visibility
+      await Activity.create({
+        userId: job.userId,
+        workspaceId: job.workspaceId,
+        leadId: job.leadId,
+        type: "EMAIL_SENT",
+        title: `Cadence email sent: "${job.messagePayload.subject}" (Step ${job.stepOrder})`,
+        metadata: {
+          sequenceId: job.sequenceId,
+          stepId: job.stepId,
+          stepOrder: job.stepOrder,
+          mailboxId: job.mailboxId,
+          subject: job.messagePayload.subject,
+          messageId,
+        },
+      });
     }
 
     // Advance sequence enrollment to next step

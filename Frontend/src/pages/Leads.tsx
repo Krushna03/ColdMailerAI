@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Plus, Trash2, Search, X, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Plus, Trash2, Search, X, Clock, CheckCircle2, Loader2, AlertCircle, Workflow } from "lucide-react";
 import Seo from "../components/common/Seo";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -38,6 +38,7 @@ import ConfirmDeleteDialog from "../components/common/ConfirmDeleteDialog";
 import CategorySelect, { getCategoryName } from "../components/leads/CategorySelect";
 import { LEAD_STATUS_OPTIONS, EMAIL_VERIFICATION_STATUS_OPTIONS } from "../components/leads/leadUtils";
 import SavedSegmentsBar from "../components/leads/SavedSegmentsBar";
+import EnrollSelectedLeadsModal from "../components/leads/EnrollSelectedLeadsModal";
 import { Lead, LeadCategory } from "../types/lead";
 
 export default function Leads() {
@@ -50,6 +51,7 @@ export default function Leads() {
   const [addOpen, setAddOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
+  const [enrollModalOpen, setEnrollModalOpen] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [progressOpen, setProgressOpen] = useState(false);
   const [confirmDeleteBatchOpen, setConfirmDeleteBatchOpen] = useState(false);
@@ -324,7 +326,7 @@ export default function Leads() {
   return (
     <div className="space-y-4 font-sans">
       <Seo title="Leads" path="/dashboard/leads" noIndex />
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2 -mt-[8px]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2 -mt-[2px]">
         <div>
           <h1 className="text-2xl font-semibold text-white tracking-tight sm:text-3xl">Leads</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-400">
@@ -332,49 +334,57 @@ export default function Leads() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          {selectedLeadIds.size > 0 && (
-            <Button
-              type="button"
-              disabled={bulkDelete.isPending || deleteLead.isPending || isJobActive}
-              onClick={() => setConfirmBulkDeleteOpen(true)}
-              title={isJobActive ? "Cannot delete leads while a batch generation is active" : ""}
-              className="border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs sm:text-sm px-3 h-9 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Trash2 className="h-4 w-4" />
-              {bulkDelete.isPending
-                ? "Deleting..."
-                : `Delete (${selectedLeadIds.size})`}
-            </Button>
+          {selectedLeadIds.size > 0 ? (
+            <>
+              <Button
+                type="button"
+                disabled={generateBatch.isPending || isJobActive}
+                onClick={() => setGenerateOpen(true)}
+                title={isJobActive ? "A batch job is currently in progress. Please wait for it to complete." : ""}
+                className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[13px] px-3 h-9 rounded-md shadow-none flex items-center gap-1.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isJobActive
+                  ? "Batch in progress..."
+                  : `Generate emails (${selectedLeadIds.size})`}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setEnrollModalOpen(true)}
+                className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[13px] px-3 h-9 rounded-md shadow-none flex items-center gap-1.5 font-semibold"
+              >
+                Enroll in Sequence ({selectedLeadIds.size})
+              </Button>
+              <Button
+                type="button"
+                disabled={bulkDelete.isPending || deleteLead.isPending || isJobActive}
+                onClick={() => setConfirmBulkDeleteOpen(true)}
+                title={isJobActive ? "Cannot delete leads while a batch generation is active" : ""}
+                className="border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 text-xs sm:text-sm px-3 h-9 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {bulkDelete.isPending
+                  ? "Deleting..."
+                  : `Delete (${selectedLeadIds.size})`}
+              </Button>
+            </>
+          ) : (
+            <>
+              <CsvUploadButton
+                onImport={handleBulkImport}
+                isImporting={bulkCreate.isPending}
+                categories={categories}
+                existingLeads={leads}
+                onAddCategory={() => setCategoryOpen(true)}
+              />
+              <Button
+                type="button"
+                onClick={() => setAddOpen(true)}
+                className="border border-white/15 bg-surface-900 text-white hover:bg-white/5 text-xs sm:text-[14px] px-3 h-8 rounded-md flex items-center gap-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                Add lead
+              </Button>
+            </>
           )}
-          <Button
-            type="button"
-            disabled={selectedLeadIds.size === 0 || generateBatch.isPending || isJobActive}
-            onClick={() => setGenerateOpen(true)}
-            title={isJobActive ? "A batch job is currently in progress. Please wait for it to complete." : ""}
-            className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[13px] px-3.5 h-9 rounded-md shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Mail className="h-4 w-4" />
-            {isJobActive
-              ? "Batch in progress..."
-              : selectedLeadIds.size > 0
-              ? `Generate (${selectedLeadIds.size})`
-              : "Generate emails"}
-          </Button>
-          <CsvUploadButton
-            onImport={handleBulkImport}
-            isImporting={bulkCreate.isPending}
-            categories={categories}
-            existingLeads={leads}
-            onAddCategory={() => setCategoryOpen(true)}
-          />
-          <Button
-            type="button"
-            onClick={() => setAddOpen(true)}
-            className="border border-white/15 bg-surface-900 text-white hover:bg-white/5 text-xs sm:text-sm font-medium px-3 h-9 rounded-md"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add lead
-          </Button>
         </div>
       </div>
 
@@ -473,11 +483,10 @@ export default function Leads() {
           <Button
             type="button"
             onClick={() => setOverdueOnly(!overdueOnly)}
-            className={`h-8 px-3 text-xs rounded-lg border transition-all duration-200 flex items-center gap-1.5 font-normal ${
-              overdueOnly
+            className={`h-8 px-3 text-xs rounded-lg border transition-all duration-200 flex items-center gap-1.5 font-normal ${overdueOnly
                 ? "bg-red-500/10 border-red-500/30 text-red-200 hover:bg-red-500/20 hover:text-red-100"
                 : "border-white/15 bg-surface-900 text-gray-400 hover:bg-white/5 hover:text-white"
-            }`}
+              }`}
           >
             <Clock className={`h-3.5 w-3.5 transition-colors ${overdueOnly ? "text-red-400" : "text-gray-400"}`} />
             <span>Overdue</span>
@@ -497,13 +506,12 @@ export default function Leads() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0 pr-6 sm:pr-0">
               <div
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                  activeImportJob.status === "completed" || activeImportJob.status === "completed_with_errors"
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${activeImportJob.status === "completed" || activeImportJob.status === "completed_with_errors"
                     ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
                     : activeImportJob.status === "failed"
-                    ? "bg-red-500/10 border border-red-500/30 text-red-400"
-                    : "bg-brand/10 border border-brand/30 text-brand"
-                }`}
+                      ? "bg-red-500/10 border border-red-500/30 text-red-400"
+                      : "bg-brand/10 border border-brand/30 text-brand"
+                  }`}
               >
                 {activeImportJob.status === "completed" || activeImportJob.status === "completed_with_errors" ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
@@ -519,10 +527,10 @@ export default function Leads() {
                     {activeImportJob.status === "completed"
                       ? "Lead import & deliverability check complete!"
                       : activeImportJob.status === "completed_with_errors"
-                      ? "Import completed with some errors"
-                      : activeImportJob.status === "failed"
-                      ? "Import job failed"
-                      : "Verifying email deliverability & importing..."}
+                        ? "Import completed with some errors"
+                        : activeImportJob.status === "failed"
+                          ? "Import job failed"
+                          : "Verifying email deliverability & importing..."}
                   </h4>
                   <span className="text-xs font-mono font-medium text-emerald-400">
                     {activeImportJob.processedRows || 0}/{activeImportJob.totalRows || 0} ({Math.round(((activeImportJob.processedRows || 0) / (activeImportJob.totalRows || 1)) * 100)}%)
@@ -576,9 +584,8 @@ export default function Leads() {
 
           <div className="mt-3 w-full overflow-hidden rounded-full bg-surface-800 h-1.5">
             <div
-              className={`h-full transition-all duration-300 ${
-                activeImportJob.status === "failed" ? "bg-red-500" : "bg-emerald-500"
-              }`}
+              className={`h-full transition-all duration-300 ${activeImportJob.status === "failed" ? "bg-red-500" : "bg-emerald-500"
+                }`}
               style={{ width: `${Math.round(((activeImportJob.processedRows || 0) / (activeImportJob.totalRows || 1)) * 100)}%` }}
             />
           </div>
@@ -589,13 +596,12 @@ export default function Leads() {
         <div className="relative rounded-xl border border-brand/30 bg-surface-900 p-4 shadow-lg transition-all duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0 pr-6 sm:pr-0">
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                activeJob.status === "completed" || activeJob.status === "completed_with_errors"
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${activeJob.status === "completed" || activeJob.status === "completed_with_errors"
                   ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
                   : activeJob.status === "failed"
-                  ? "bg-red-500/10 border border-red-500/30 text-red-400"
-                  : "bg-brand/10 border border-brand/30 text-brand"
-              }`}>
+                    ? "bg-red-500/10 border border-red-500/30 text-red-400"
+                    : "bg-brand/10 border border-brand/30 text-brand"
+                }`}>
                 {activeJob.status === "completed" || activeJob.status === "completed_with_errors" ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                 ) : activeJob.status === "failed" ? (
@@ -610,10 +616,10 @@ export default function Leads() {
                     {activeJob.status === "completed"
                       ? "Batch generation complete!"
                       : activeJob.status === "completed_with_errors"
-                      ? "Batch completed with errors"
-                      : activeJob.status === "failed"
-                      ? "Batch generation failed"
-                      : "Generating outreach emails..."}
+                        ? "Batch completed with errors"
+                        : activeJob.status === "failed"
+                          ? "Batch generation failed"
+                          : "Generating outreach emails..."}
                   </h4>
                   <span className="text-xs font-mono font-medium text-brand">
                     {activeJob.processedLeads || 0}/{activeJob.totalLeads || 0} ({Math.round(((activeJob.processedLeads || 0) / (activeJob.totalLeads || 1)) * 100)}%)
@@ -674,11 +680,10 @@ export default function Leads() {
 
           <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-800">
             <div
-              className={`h-full transition-all duration-500 ease-out ${
-                activeJob.status === "completed_with_errors" || activeJob.status === "failed"
+              className={`h-full transition-all duration-500 ease-out ${activeJob.status === "completed_with_errors" || activeJob.status === "failed"
                   ? "bg-amber-500"
                   : "bg-brand"
-              }`}
+                }`}
               style={{
                 width: `${Math.round(((activeJob.processedLeads || 0) / (activeJob.totalLeads || 1)) * 100)}%`,
               }}
@@ -801,6 +806,14 @@ export default function Leads() {
             setLeadToDeleteId(null);
           }
         }}
+      />
+
+      <EnrollSelectedLeadsModal
+        open={enrollModalOpen}
+        onOpenChange={setEnrollModalOpen}
+        selectedLeadIds={Array.from(selectedLeadIds)}
+        leads={leads}
+        onSuccess={() => setSelectedLeadIds(new Set())}
       />
     </div>
   );

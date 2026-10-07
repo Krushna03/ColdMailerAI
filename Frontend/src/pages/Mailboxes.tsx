@@ -389,7 +389,7 @@ export default function Mailboxes() {
               {totalMailboxes}
             </p>
             {totalMailboxes > 0 && (
-              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/30 font-sans">
+              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
                 {activeCount} active
               </span>
             )}
@@ -442,24 +442,10 @@ export default function Mailboxes() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p
-              className={`text-xl sm:text-xl font-semibold tracking-tight font-mono ${avgHealth >= 90
-                ? "text-emerald-400"
-                : avgHealth >= 70
-                  ? "text-amber-400"
-                  : "text-rose-400"
-                }`}
-            >
+            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
               {avgHealth}%
             </p>
-            <span
-              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset font-sans ${avgHealth >= 90
-                ? "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30"
-                : avgHealth >= 70
-                  ? "bg-amber-500/15 text-amber-300 ring-amber-500/30"
-                  : "bg-rose-500/15 text-rose-300 ring-rose-500/30"
-                }`}
-            >
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
               {avgHealth >= 90 ? "Optimal" : avgHealth >= 70 ? "Good" : "Action Needed"}
             </span>
           </div>
@@ -482,7 +468,7 @@ export default function Mailboxes() {
             <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
               AES-256-GCM
             </p>
-            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-purple-500/15 text-purple-300 ring-1 ring-inset ring-purple-500/30 font-sans">
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
               Encrypted
             </span>
           </div>

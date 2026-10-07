@@ -129,7 +129,7 @@ export interface VerificationOption {
 }
 
 export const EMAIL_VERIFICATION_STATUS_OPTIONS: VerificationOption[] = [
-  { value: "all", label: "All Deliverability" },
+  { value: "all", label: "All" },
   { value: "valid", label: "Valid" },
   { value: "risky", label: "Risky" },
   { value: "catch_all", label: "Catch-All" },

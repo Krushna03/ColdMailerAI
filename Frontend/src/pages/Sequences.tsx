@@ -270,7 +270,7 @@ export default function Sequences() {
               {totalSequences}
             </p>
             {activeSequences > 0 && (
-              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/30 font-sans">
+              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
                 {activeSequences} active
               </span>
             )}
@@ -294,7 +294,7 @@ export default function Sequences() {
             <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
               {activeSequences}
             </p>
-            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/30 font-sans">
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
               Running
             </span>
           </div>
@@ -318,7 +318,7 @@ export default function Sequences() {
               {totalEnrolled}
             </p>
             {totalReplied > 0 && (
-              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-blue-500/15 text-blue-300 ring-1 ring-inset ring-blue-500/30 font-sans">
+              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
                 {totalReplied} replies
               </span>
             )}
@@ -342,7 +342,7 @@ export default function Sequences() {
             <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
               {replyRate}%
             </p>
-            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-purple-500/15 text-purple-300 ring-1 ring-inset ring-purple-500/30 font-sans">
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
               Stop on reply
             </span>
           </div>
