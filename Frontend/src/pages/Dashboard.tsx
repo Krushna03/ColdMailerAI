@@ -100,7 +100,7 @@ export default function Dashboard() {
         </div>
         <NavLink
           to="/generate-email"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-400 shadow-none"
+          className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-400 shadow-none"
         >
           Generate Email
         </NavLink>
@@ -112,7 +112,7 @@ export default function Dashboard() {
           return (
             <article
               key={card.label}
-              className="rounded-lg border border-white/10 bg-surface-900 p-4"
+              className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2"
             >
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{card.label}</p>
@@ -120,7 +120,7 @@ export default function Dashboard() {
                   <SummaryIcon className="h-3.5 w-3.5" />
                 </span>
               </div>
-              <p className="mt-2 text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">{card.value}</p>
+              <p className="mt-2 text-xl sm:text-base font-semibold text-white tracking-tight font-mono">{card.value}</p>
               <p className="mt-1 text-xs text-gray-400">{card.detail}</p>
             </article>
           );

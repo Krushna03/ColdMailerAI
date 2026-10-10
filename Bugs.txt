@@ -1,0 +1,2 @@
+1. updating the email address in the leads or for a lead does not does not update the email in the sequence, I mean invalidate, I guess.
+

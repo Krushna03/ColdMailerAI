@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Sun, Moon } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import DashboardSidebar from "./DashboardSidebar";
@@ -7,25 +7,42 @@ import { useCurrentUser } from "../../hooks/useUser";
 import { Toaster } from "../ui/toaster";
 import { RootState } from "../../context/store";
 import NotificationBell from "../layout/NotificationBell";
+import { ThemeProvider, useTheme } from "../../context/ThemeContext";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
+  "/dashboard/mailboxes": "Mailboxes",
   "/dashboard/leads": "Leads",
-  "/dashboard/mailboxes": "Mailbox",
-  "/dashboard/pricing": "Pricing & billing",
-  "/dashboard/profile": "Profile",
-  "/dashboard/batches": "Batch history",
+  "/dashboard/sequences": "Sequences",
+  "/dashboard/inbox": "Inbox & Replies",
+  "/dashboard/batches": "Batch History",
+  "/dashboard/pricing": "Pricing & Billing",
+  "/dashboard/profile": "Profile & Settings",
 };
 
-export default function DashboardLayout() {
+const getPageTitle = (pathname: string): string => {
+  if (pageTitles[pathname]) return pageTitles[pathname];
+  if (pathname.startsWith("/dashboard/sequences/")) return "Sequence Details";
+  if (pathname.startsWith("/dashboard/leads/")) return "Lead Details";
+  return "Workspace";
+};
+
+function DashboardLayoutContent() {
   useCurrentUser();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.userData);
-  const title = pageTitles[location.pathname] || "Workspace";
+  const title = getPageTitle(location.pathname);
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="flex min-h-[100dvh] w-full overflow-x-clip bg-surface-950 text-white font-sans">
+    <div
+      className={`flex min-h-[100dvh] w-full overflow-x-clip font-sans transition-colors duration-150 ${
+        theme === "light"
+          ? "dashboard-light bg-surface-950 text-slate-900"
+          : "bg-surface-950 text-white"
+      }`}
+    >
       <Toaster />
 
       <div className="sticky top-0 z-40 hidden h-[100dvh] shrink-0 self-start lg:block">
@@ -63,13 +80,28 @@ export default function DashboardLayout() {
             </p>
           </div>
 
-          <div className="ml-auto flex items-center gap-1 sm:gap-4">
+          <div className="ml-auto flex items-center gap-1 sm:gap-3">
+            {/* White / Dark Theme Switcher Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={theme === "light" ? "Switch to Dark theme" : "Switch to White theme"}
+              aria-label="Toggle theme"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            >
+              {theme === "light" ? (
+                <Moon className="h-4 w-4 text-slate-700 hover:text-slate-900" />
+              ) : (
+                <Sun className="h-4 w-4 text-amber-300 hover:text-amber-200" />
+              )}
+            </button>
+
             <NotificationBell />
 
             <NavLink
               to="/dashboard/profile"
               aria-label="Open profile"
-              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-xs font-semibold transition hover:bg-white/10"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-xs font-semibold transition hover:bg-white/10"
             >
               {(user?.username || user?.email || "U").charAt(0).toUpperCase()}
             </NavLink>
@@ -81,5 +113,13 @@ export default function DashboardLayout() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout() {
+  return (
+    <ThemeProvider>
+      <DashboardLayoutContent />
+    </ThemeProvider>
   );
 }

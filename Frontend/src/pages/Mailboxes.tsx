@@ -324,11 +324,11 @@ export default function Mailboxes() {
       : 100;
 
   return (
-    <div className="min-w-0 max-w-full space-y-6 font-sans">
+    <div className="min-w-0 max-w-full space-y-4 font-sans">
       <Seo title="Mailboxes" path="/dashboard/mailboxes" noIndex />
 
       {/* Standard Header Section matching Leads and Dashboard */}
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2">
         <div>
           <h1 className="text-2xl font-semibold text-white tracking-tight sm:text-3xl">
             Mailbox
@@ -344,9 +344,9 @@ export default function Mailboxes() {
             variant="outline"
             onClick={handleConnectGmail}
             disabled={isOAuthRedirecting}
-            className="h-9 px-3 text-xs sm:text-[13px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors hover:text-white"
+            className="h-8.5 px-3 text-xs sm:text-[12px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors hover:text-white"
           >
-            <GoogleIcon className="h-3 w-3 mr-0.5" />
+            <GoogleIcon className="h-3 w-3" />
             Connect Gmail
           </Button>
 
@@ -355,16 +355,16 @@ export default function Mailboxes() {
             variant="outline"
             onClick={handleConnectOutlook}
             disabled={isOAuthRedirecting}
-            className="h-9 px-3 text-xs sm:text-[13px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors hover:text-white"
+            className="h-8.5 px-3 text-xs sm:text-[12px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors hover:text-white"
           >
-            <OutlookIcon className="h-3 w-3 mr-0.5" />
+            <OutlookIcon className="h-3 w-3" />
             Connect Outlook
           </Button>
 
           <Button
             type="button"
             onClick={() => setSmtpModalOpen(true)}
-            className="h-9 px-3.5 text-xs sm:text-[13px] rounded-md bg-brand text-white hover:bg-brand-400 font-medium shadow-none transition-colors flex items-center gap-1.5 hover:text-white"
+            className="h-8.5 px-3.5 text-xs sm:text-[12px] rounded-md bg-brand text-white hover:bg-brand-400 font-medium shadow-none transition-colors flex items-center gap-1.5 hover:text-white"
           >
             <Server className="h-3 w-3" />
             Connect SMTP
@@ -375,7 +375,7 @@ export default function Mailboxes() {
       {/* Overview Stat Cards matching Dashboard.jsx */}
       <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         {/* Connected mailboxes */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2 mb-1">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Connected mailboxes
@@ -385,7 +385,7 @@ export default function Mailboxes() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-sm sm:text-base font-semibold text-white tracking-tight font-mono">
               {totalMailboxes}
             </p>
             {totalMailboxes > 0 && (
@@ -400,7 +400,7 @@ export default function Mailboxes() {
         </article>
 
         {/* Daily Send Capacity */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2 mb-1">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Daily send capacity
@@ -410,7 +410,7 @@ export default function Mailboxes() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-1.5">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-sm sm:text-base font-semibold text-white tracking-tight font-mono">
               {totalSentToday}{" "}
               <span className="text-sm font-normal text-gray-400 font-mono">
                 / {totalDailyCapacity}
@@ -432,7 +432,7 @@ export default function Mailboxes() {
         </article>
 
         {/* Deliverability Health */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2 mb-1">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Deliverability health
@@ -442,7 +442,7 @@ export default function Mailboxes() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-sm sm:text-base font-semibold text-white tracking-tight font-mono">
               {avgHealth}%
             </p>
             <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
@@ -455,7 +455,7 @@ export default function Mailboxes() {
         </article>
 
         {/* Credential Security */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2 mb-1">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Credential security
@@ -465,7 +465,7 @@ export default function Mailboxes() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-sm sm:text-base font-semibold text-white tracking-tight font-mono">
               AES-256-GCM
             </p>
             <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">

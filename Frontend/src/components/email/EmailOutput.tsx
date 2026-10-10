@@ -21,6 +21,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { RootState } from '../../context/store';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const MAX_TEXTAREA_HEIGHT = 100;
 
@@ -342,9 +343,9 @@ export function EmailOutput({
                 onClick={handleOpenSendModal}
                 disabled={!!error || !email}
                 aria-label="Send via Mailbox"
-                className="h-7 px-2 flex items-center gap-1 text-[11px] font-semibold text-brand bg-brand/15 border border-brand/30 rounded-full active:scale-95 transition-transform disabled:opacity-50"
+                className="h-7 px-2.5 flex items-center gap-1 text-xs text-gray-300 bg-surface-900 border border-gray-700 rounded-full active:scale-95 transition-transform disabled:opacity-50"
               >
-                <Send className="h-2.5 w-2.5" />
+                <Send className="h-3 w-3" />
                 Send
               </button>
               <button
@@ -485,37 +486,37 @@ export function EmailOutput({
           <div className="flex justify-start items-center">
             <Button 
               onClick={() => handleCopyToClipboard(email)} 
-              className="px-2 bg-none text-base" 
+              className="px-2 bg-none text-[12px]" 
               disabled={!!error || !email}
               size="sm"
             >
               {copied ? (
                 <>
-                  Copied <CopyCheckIcon className="mt-1 w-4 h-4 text-gray-200" />
+                  Copied <CopyCheckIcon className="mt-0.5 w-3 h-3 text-gray-200" />
                 </>
               ) : (
                 <>
-                  Copy <Copy className="mt-1 w-4 h-4 p-0" />
+                  Copy <Copy className="mt-0.5 w-1 h-1 p-0" />
                 </>
               )}
             </Button>
 
             <Button 
               onClick={handleGmailCompose} 
-              className="px-2 bg-none text-base" 
+              className="px-2 bg-none text-[12px]" 
               disabled={!!error || !email}
               size="sm"
             >
-              Gmail <MailOpen className="mt-1 w-4 h-4 p-0" />
+              Gmail <MailOpen className="mt-0.5 w-3 h-3 p-0" />
             </Button>
 
             <Button 
               onClick={handleOpenSendModal} 
-              className="ml-2 px-3 bg-brand/20 hover:bg-brand/30 text-brand text-xs font-semibold rounded-md border border-brand/30 h-8 gap-1.5" 
+              className="px-2 bg-none text-[12px]" 
               disabled={!!error || !email}
               size="sm"
             >
-              Send via Mailbox <Send className="w-3.5 h-3.5" />
+              Send via Mailbox <Send className="mt-0.5 w-3 h-3 p-0" />
             </Button>
           </div>
 
@@ -655,10 +656,9 @@ export function EmailOutput({
 
       {/* Send Email via Connected Mailbox Dialog */}
       <Dialog open={sendModalOpen} onOpenChange={setSendModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-brand" />
               Dispatch via Connected Mailbox
             </DialogTitle>
             <DialogDescription>
@@ -669,17 +669,21 @@ export function EmailOutput({
           <form onSubmit={handleDispatchEmail} className="space-y-3.5 mt-2">
             <div>
               <label className="text-xs font-medium text-gray-300">Sending Mailbox</label>
-              <select
+              <Select
                 value={sendMailboxId}
-                onChange={(e) => setSendMailboxId(e.target.value)}
-                className="mt-1 w-full rounded-md border border-white/10 bg-surface-950 px-3 py-2 text-sm text-white focus:outline-none"
+                onValueChange={(value) => setSendMailboxId(value)}
               >
-                {mailboxes.map((mb: any) => (
-                  <option key={mb._id} value={mb._id}>
-                    {mb.email} ({mb.provider.toUpperCase()}) — {mb.sentToday || 0}/{mb.dailyLimit} sent today
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="mt-1 w-full bg-surface-950 border-white/10 text-[12px] md:text-[13px] text-white">
+                  <SelectValue placeholder="Select a connected mailbox" />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-950 border-white/15 text-white text-[12px] md:text-[13px]">
+                  {mailboxes.map((mb: any) => (
+                    <SelectItem className="text-[12px] md:text-[13px]" key={mb._id} value={mb._id}>
+                      {mb.email} ({mb.provider?.toUpperCase()}) — {mb.sentToday || 0}/{mb.dailyLimit} sent today
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -692,7 +696,7 @@ export function EmailOutput({
                 placeholder="prospect@targetcompany.com"
                 value={sendToEmail}
                 onChange={(e) => setSendToEmail(e.target.value)}
-                className="mt-1 bg-surface-950 border-white/10 text-sm"
+                className="mt-1 bg-surface-950 border-white/10 md:text-[13px]"
               />
             </div>
 
@@ -703,13 +707,13 @@ export function EmailOutput({
                 placeholder="Email Subject"
                 value={sendSubject}
                 onChange={(e) => setSendSubject(e.target.value)}
-                className="mt-1 bg-surface-950 border-white/10 text-sm"
+                className="mt-1 bg-surface-950 border-white/10 md:text-[13px]"
               />
             </div>
 
             <div className="rounded-lg border border-white/5 bg-surface-950 p-3">
               <p className="text-xs font-medium text-gray-400 mb-1">Preview Body Snippet</p>
-              <p className="text-xs text-gray-300 line-clamp-3 font-mono">
+              <p className="text-[12px] text-gray-300 line-clamp-3 font-mono">
                 {body || email}
               </p>
             </div>
@@ -719,16 +723,15 @@ export function EmailOutput({
                 type="button"
                 variant="ghost"
                 onClick={() => setSendModalOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white border border-gray-800 bg-surface-900"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={sendGeneratedEmailMutation.isPending}
-                className="bg-brand hover:bg-brand-400 text-white font-semibold text-xs gap-1.5"
+                className="bg-brand hover:bg-brand-400 text-white font-semibold text-xs py-1 gap-1.5"
               >
-                <Send className="h-3.5 w-3.5" />
                 {sendGeneratedEmailMutation.isPending ? "Dispatching..." : "Send Email Now"}
               </Button>
             </DialogFooter>

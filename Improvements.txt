@@ -1,0 +1,4 @@
+1. Hey everything currently is I guess not aligned properly. 
+
+2. Each module is seperate & not connected & there is no sense for having these much things. I mean they should be connected.
+

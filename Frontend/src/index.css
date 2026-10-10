@@ -161,3 +161,235 @@ html, body, #root {
   background: linear-gradient(to bottom, #e3dee7, #b2b2b6);
   border-radius: 4px;
 }
+
+/* ==========================================================================
+   DASHBOARD LIGHT / WHITE THEME SCOPED STYLES
+   Applies exclusively to all routes within DashboardLayout
+   ========================================================================== */
+
+.dashboard-light {
+  --surface-950: #f8fafc;
+  --surface-900: #ffffff;
+  --surface-850: #f1f5f9;
+  --surface-800: #f1f5f9;
+  --surface-700: #e2e8f0;
+  --surface-600: #cbd5e1;
+  --surface-500: #94a3b8;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Surfaces & Containers */
+.dashboard-light .bg-surface-950 {
+  background-color: #f8fafc !important;
+}
+
+.dashboard-light .bg-surface-900 {
+  background-color: #ffffff !important;
+}
+
+.dashboard-light .bg-surface-850 {
+  background-color: #f1f5f9 !important;
+}
+
+.dashboard-light .bg-surface-800 {
+  background-color: #f1f5f9 !important;
+}
+
+/* Primary and muted text colors */
+.dashboard-light .text-white {
+  color: #0f172a !important;
+}
+
+.dashboard-light .text-gray-100,
+.dashboard-light .text-gray-200 {
+  color: #1e293b !important;
+}
+
+.dashboard-light .text-gray-300 {
+  color: #334155 !important;
+}
+
+.dashboard-light .text-gray-400 {
+  color: #64748b !important;
+}
+
+.dashboard-light .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+/* Brand links on light mode (high-contrast electric purple) */
+.dashboard-light .text-brand-300 {
+  color: #6f34ed !important;
+}
+
+.dashboard-light .text-brand-200 {
+  color: #5b21b6 !important;
+}
+
+.dashboard-light .text-brand-400 {
+  color: #6f34ed !important;
+}
+
+/* High contrast hover states on links */
+.dashboard-light a.text-brand-300:hover,
+.dashboard-light button.text-brand-300:hover {
+  color: #4f23af !important;
+}
+
+/* Borders & Separators */
+.dashboard-light .border-white\/10,
+.dashboard-light .border-white\/15,
+.dashboard-light .border-white\/20 {
+  border-color: #e2e8f0 !important;
+}
+
+.dashboard-light .border-white\/5 {
+  border-color: #f1f5f9 !important;
+}
+
+.dashboard-light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #f1f5f9 !important;
+}
+
+.dashboard-light .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+.dashboard-light .hover\:border-white\/20:hover {
+  border-color: #cbd5e1 !important;
+}
+
+/* Background overlays & hovers */
+.dashboard-light .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+.dashboard-light .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+.dashboard-light .bg-white\/15 {
+  background-color: rgba(15, 23, 42, 0.09) !important;
+}
+
+.dashboard-light .bg-white\/20 {
+  background-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+.dashboard-light .hover\:bg-white\/5:hover {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+.dashboard-light .hover\:bg-white\/10:hover {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* CRITICAL: Brand primary buttons and badges MUST retain white text */
+.dashboard-light .bg-brand,
+.dashboard-light .bg-brand *,
+.dashboard-light .bg-brand.text-white,
+.dashboard-light button.bg-brand,
+.dashboard-light a.bg-brand {
+  color: #ffffff !important;
+}
+
+.dashboard-light .bg-brand {
+  background-color: #6f34ed !important;
+}
+
+.dashboard-light .hover\:bg-brand-400:hover,
+.dashboard-light .bg-brand:hover {
+  background-color: #7c3ffc !important;
+}
+
+/* Light mode cards slight crisp elevation */
+.dashboard-light article,
+.dashboard-light aside {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Input, Textarea, Select in light mode */
+.dashboard-light input:not([type="checkbox"]):not([type="radio"]),
+.dashboard-light textarea,
+.dashboard-light select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.dashboard-light input:focus,
+.dashboard-light textarea:focus,
+.dashboard-light select:focus {
+  border-color: #6f34ed !important;
+}
+
+.dashboard-light input::placeholder,
+.dashboard-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Status pills & Badges in light mode */
+.dashboard-light .ring-white\/20,
+.dashboard-light .ring-white\/10 {
+  --tw-ring-color: #cbd5e1 !important;
+}
+
+.dashboard-light .bg-emerald-500\/10 {
+  background-color: #ecfdf5 !important;
+  color: #059669 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.dashboard-light .text-emerald-300,
+.dashboard-light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+.dashboard-light .bg-red-500\/10 {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+}
+
+.dashboard-light .text-red-300,
+.dashboard-light .text-red-400 {
+  color: #dc2626 !important;
+}
+
+.dashboard-light .bg-amber-400\/10,
+.dashboard-light .bg-yellow-400\/10 {
+  background-color: #fefce8 !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+/* Sidebar Navigation Items in Light Mode */
+.dashboard-light aside nav a.bg-white\/10 {
+  background-color: #f1f5f9 !important;
+  color: #6f34ed !important;
+}
+
+.dashboard-light aside nav a:not(.bg-white\/10) {
+  color: #475569 !important;
+}
+
+.dashboard-light aside nav a:not(.bg-white\/10):hover {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Scrollbar in Light Mode */
+.dashboard-light ::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.dashboard-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+/* White Logo adapted for Light Mode */
+.dashboard-light aside img[src*="white-logo"],
+.dashboard-light img[src*="white-logo"] {
+  filter: brightness(0);
+}

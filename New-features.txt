@@ -1,0 +1,655 @@
+PHASE 1 — Enterprise Lead Data [COMPLETED]
+
+Priority: 🔴 Critical
+Status: ✅ Fully Implemented and Verified
+
+- Flexible Enterprise Lead Schema (Lead.model.ts):
+  ├── Multi-tenant isolation: workspaceId, userId, assignedTo tracking
+  ├── Core contact identity: firstName, lastName, email, phone, jobTitle, linkedinUrl, location, timezone, source
+  ├── Structured Company Profile: { name, domain, industry, size, revenue }
+  ├── Dynamic customFields: Key-value JSON storage for arbitrary enterprise attributes (e.g., companyTech, employeeCount, fundingStage)
+  └── Activity & Cadence Tracking: status, lastActivityAt, nextFollowUpAt, emailsSentCount, repliesCount
+
+- Tagging & Classification Architecture (1.1):
+  ├── Category (LeadCategory): Macro segmentation (e.g., "Client Sales", "Investor Outreach", "Partnership")
+  └── Multi-dimensional Tags (tags: string[]): Fine-grained labels (e.g., "Enterprise", "SaaS", "Decision Maker", "Series B", "unsubscribed")
+
+- Dynamic Saved Segments Engine (1.2 - Segment.model.ts & segmentQueryBuilder.ts):
+  ├── Stores declarative query filters rather than static lead IDs, guaranteeing real-time segment evaluation
+  ├── Comprehensive Filter Matrix: jobTitle, industry, status, company size, tags, email verification status, and arbitrary nested customFields (customFields.xxx)
+  └── Sequence Enrollment Integration: Single-click dynamic segment enrollment resolving all matching leads on-the-fly
+
+- Complete Unit & Integration Test Suite:
+  └── 6/6 tests passing in lead.phase1.test.js covering enterprise lead creation, flexible company fields, nested customFields merging, and segment query resolution
+
+
+----------------------------------------------------------------------------
+
+PHASE 2 — Email Verification & Deliverability [COMPLETED]
+
+Priority: 🔴 Critical
+
+Status: ✅ Fully Implemented and Verified
+
+- High-Throughput Verification Pipeline (emailVerification.service.ts):
+  ├── Syntax Validation: Strict RFC 5322 compliance check with domain format validation
+  ├── Disposable Email Detection: Blacklist validation against 50+ known burner domains (mailinator, tempmail, guerrillamail, 10minutemail, etc.)
+  ├── Asynchronous MX Record Resolution: Node.js dns.promises.resolveMx verifying live mail exchange hosts with timeout fallback
+  └── Deliverability Health Scoring: 0–100 numerical score evaluating syntax, disposable status, and MX record presence
+
+- Granular Verification States & Metadata (Lead.model.ts):
+  ├── Comprehensive States: "valid", "risky", "invalid", "disposable", "catch_all", "unknown"
+  └── Metadata Snapshot: emailVerification: { status, score, reason, checkedAt, provider } indexed by workspaceId
+
+- Non-Blocking Background Queue Architecture (importJob.service.ts):
+  ├── Zero HTTP Timeout Risk: Asynchronous ImportJob worker processing leads via background job queue
+  ├── Batch Processing: Multi-lead CSV file parser with chunked verification and DB updates
+  └── Progress & Status Tracking: Real-time processed/failed counters, error summaries, and status endpoint (GET /api/v1/lead/import-jobs/:id)
+
+- Complete Test Suite & Verification:
+  └── 8/8 tests passing in emailVerification.test.js validating RFC syntax, disposable detection, MX checking, and background CSV import flow
+
+
+-------------------------------------------------------------------
+
+PHASE 3 — Mailbox Infrastructure [COMPLETED]
+
+Priority: 🔴 Critical
+
+Status: ✅ Fully Implemented and Verified
+- Separation of Mailbox (Identity) from MailboxCredential (Credentials) across distinct collections.
+- AES-256-GCM hardware-grade AEAD encryption at rest with randomized IVs and authentication tags.
+- Multi-provider support:
+  ├── Gmail OAuth2 (consent URL, code exchange, token refresh, and send)
+  ├── Microsoft Outlook OAuth2 (MS Graph OAuth v2.0 token exchange, /me/sendMail)
+  └── Custom SMTP/IMAP (Nodemailer transport with pre-verification check)
+- Daily send limits with automatic calendar day rollover/reset.
+- Deliverability health scoring (100-point scale, failure degradation, consecutive failure recovery).
+- Direct email dispatching integrated with Email and Lead models (POST /api/v1/email/:id/send).
+- Comprehensive test coverage: 8 new unit/integration tests; full suite 72/72 passing.
+- Frontend Mailbox Hub (/dashboard/mailboxes) with real-time quota progress, health indicators, connect modals, and "Send via Mailbox" dialog in EmailOutput.
+
+
+------------------------------------------------------------
+
+PHASE 4 — Sequence Engine [COMPLETED]
+
+Priority: 🔴 THE MOST IMPORTANT
+
+Status: ✅ Fully Implemented and Verified
+
+- Sales Engagement Workflow Engine with modular steps architecture:
+  ├── Sequence (Steps, Settings, Enrollment Rules, Aggregate Stats)
+  ├── SequenceStep (Order, Type: email, wait, condition, task, webhook, ai_action, Delay, Template, Conditions)
+  └── SequenceEnrollment (Cadence tracking, current step, next scheduled run, step execution logs, stop reasons)
+
+- Complete Step Types Implemented:
+  ├── EMAIL: Dynamic template interpolation ({{firstName|there}}, {{company}}, {{jobTitle}}, {{customFields.xxx}}), Mailbox send integration
+  ├── WAIT: Precision delays in minutes, hours, or days
+  ├── CONDITION: Evaluates lead status, tags, custom fields with branching (stop, skip, jump_to)
+  ├── TASK: Generates internal actionable CRM follow-up items
+  ├── WEBHOOK: Real-time outbound HTTP webhooks with lead payload delivery
+  └── AI_ACTION: Dynamic LLM instructions for context enrichment and tailored outreach
+
+- Automatic Stop Mechanisms:
+  ├── Stop on Reply (auto-pauses/stops cadence when lead status switches to replied)
+  ├── Stop on Meeting (halts cadence when meeting is scheduled or status becomes meeting/closed/archived)
+  └── Automatic lead status hooks in lead service
+
+- Schedular & Background Dispatcher:
+  ├── processDueEnrollmentsService integrated into central workerRunner and main server polling loop (every 10s)
+  ├── Sending window compliance (start/end hour) and configured sending days (Mon-Sun)
+
+- Comprehensive Unit & Integration Test Suite:
+  ├── Backend sequence tests (6/6 passing)
+  └── Complete test suite (78/78 passing across all 12 test files)
+
+- Full Frontend Workflow Visualizer & Manager:
+  ├── Sequence Hub (/dashboard/sequences) with quick templates (SaaS Outreach 4-step cadence, Investor Pitch, Blank)
+  ├── Interactive Visual Step Builder with drag/reorder, delay visualizer, step editors, and variable chips
+  ├── Lead Enrollment Modal supporting single/batch manual enrollment and dynamic Saved Segments
+  ├── Real-time Cadence execution history timeline drawer
+  └── Lead Detail 1-click sequence enrollment integration (/dashboard/leads/:leadId)
+
+
+----------------------------------------------------------------
+
+PHASE 5 — Sending Engine [COMPLETED]
+
+Priority: 🔴 Critical
+
+Status: ✅ Fully Implemented and Verified
+
+- Decoupled Asynchronous Sending Architecture:
+  ├── Asynchronous Dispatch: Sequence scheduler creates SendJob; zero synchronous sendEmail() inside HTTP requests
+  ├── Worker Execution Loop: High-performance atomic queue claiming with distributed locking (claimNextSendJobs)
+  ├── Multi-Worker Concurrency: Worker ID claiming, lock expiration, and graceful timeout recovery
+  └── Mailbox Provider Integration: Dispatches through Gmail OAuth2, Outlook Graph, or SMTP with health and quota verification
+
+- Robust Finite State Machine (FSM):
+  ├── Happy Path: scheduled ➔ queued ➔ sending ➔ sent ➔ delivered
+  ├── Transient Failure & Exponential Backoff: sending ➔ failed ➔ retry (30s * 2^(attempt-1))
+  ├── Dead-Letter Queue (DLQ): moves to dead_letter upon exhausting maxAttempts (default: 3)
+  ├── Hard Bounce Handling: Detects recipient/SMTP 550 errors, marks job bounced, stops sequence cadence, and flags lead as bounced
+  └── Automatic Cancellation: Immediately marks pending/queued jobs as cancelled when lead replies, books a meeting, or cadence is halted
+
+- Comprehensive Audit Logging & Event Tracking:
+  ├── Dedicated EmailEvent collection tracking all lifecycle transitions (scheduled, queued, sending, sent, delivered, failed, retry, bounced, cancelled)
+  ├── Full metadata recording: attempt count, worker ID, error code/message, provider message IDs, timestamps
+  └── Lead & Step Analytics: Automatic real-time increments to SequenceStep stats and Lead sent counts
+
+- Queue Management & Admin Control REST APIs:
+  ├── GET /api/v1/sequences/send-jobs (filter by status, sequenceId, leadId, with pagination)
+  ├── GET /api/v1/sequences/send-jobs/stats (aggregate counters across all 10 sending states)
+  ├── POST /api/v1/sequences/send-jobs/:id/retry (manual single-click requeue of failed or dead-letter jobs)
+  └── GET /api/v1/sequences/email-events (full workspace audit log stream with lead/sequence metadata)
+
+- Full Frontend Outbox & Queue Dashboard:
+  ├── Dedicated Outbox & Queue tab inside Sequence Detail (/dashboard/sequences/:id)
+  ├── Real-time metric cards for all sending states with live color-coded indicators
+  ├── Dual-view toggle: Send Jobs Queue Table vs. Email Lifecycle Event Stream
+  ├── Detailed Job Inspector: Recipient payload, HTML/text preview, error history, worker locks, provider message ID
+  └── Single-click "Retry Job" button for failed/dead-letter items
+
+- Complete Test Suite & Verification:
+  ├── 10/10 dedicated sending engine unit and integration tests passing in sendingEngine.test.js
+  └── 88/88 passing tests across all 13 test files in backend test suite
+
+Never do:
+await sendEmail()
+inside a normal HTTP request for sequence sending.
+
+Instead:
+
+Sequence Scheduler
+       ↓
+Create SendJob
+       ↓
+     Queue
+       ↓
+Email Worker
+       ↓
+Mailbox Provider
+       ↓
+Provider response
+       ↓
+Update EmailEvent
+
+You'll need concepts such as:
+
+EmailMessage
+EmailEvent
+SendJob
+Mailbox
+SequenceEnrollment
+SequenceStep
+Sending states
+
+Think carefully about state machines.
+
+For example:
+
+scheduled
+ ↓
+queued
+ ↓
+sending
+ ↓
+sent
+ ↓
+delivered
+
+Failure:
+
+sending
+ ↓
+failed
+ ↓
+retry
+ ↓
+dead-letter
+
+And:
+
+sent
+ ↓
+bounced
+
+This connects nicely with the retry-queue architecture you've already been studying.
+
+
+------------------------------------------------------------------------
+
+
+PHASE 6 — Reply Detection [COMPLETED]
+
+Priority: 🔴 Critical
+
+Status: ✅ Fully Implemented and Verified
+
+- Inbound Email Ingestion Architecture:
+  ├── InboundEmail Model: Complete message capture with headers, inReplyTo, references, bodyText, bodyHtml, and thread IDs
+  ├── Universal Webhook Parser: POST /api/v1/inbound/webhook (supports SendGrid, Mailgun, Postmark, and raw JSON payloads)
+  ├── Mailbox-Scoped Webhooks: POST /api/v1/inbound/webhook/:mailboxId
+  └── Testing & Simulation API: POST /api/v1/inbound/simulate for automated integration and UI testing
+
+- Intelligent Conversation & Lead Matching:
+  ├── Case-insensitive email resolution scoped to workspace
+  ├── In-Reply-To and References header tracking against previous SendJob & EmailEvent records
+  └── Automatic fallback to active SequenceEnrollments if threading headers are omitted by email clients
+
+- Automated Sequence Halting & Cancellation:
+  ├── Immediate halt of active SequenceEnrollments (status: stopped, stopReason: replied, nextRunAt: null)
+  ├── Cascading cancellation of pending/queued SendJobs in the queue for the replying prospect
+  └── Lead record updates: status ➔ "replied", repliesCount increment, and lastRepliedAt tracking
+
+- AI-Powered Reply Classification & Intent Analysis:
+  ├── Gemini LLM-driven classification with JSON structured parsing and resilient heuristic fallback
+  ├── Classification Categories: Interested, Meeting Request, Objection, Out of Office, Wrong Person, Not Interested, Unsubscribe, Neutral
+  ├── Sentiment scoring, confidence metrics, concise intent synopsis, and recommended actionable sales next steps
+  └── Automatic tagging: Meeting requests set lead status to "meeting"; unsubscribes add "unsubscribed" tag
+
+- Complete Audit Trail:
+  ├── REPLY_RECEIVED activity logged in Lead timeline
+  └── EmailEvent audit record created with classification metadata
+
+- Frontend Smart Inbox & Reply Manager:
+  ├── Dedicated Inbox & Replies view (/dashboard/inbox) in DashboardSidebar
+  ├── Aggregate metric cards for all reply categories with live intent indicators
+  ├── Two-pane email client layout: searchable reply stream on left, full message + AI card on right
+  ├── AI Intent card showing sentiment, confidence meter, summary, and suggested next steps
+  └── In-app Reply Simulation modal for instant testing and sales training
+
+- Test Suite Verification:
+  ├── 13/13 unit and integration tests passing in replyDetection.test.js
+  └── Full test suite 101/101 passing across all 14 test files in backend
+
+This is what makes automation intelligent.
+
+Example:
+
+ColdMailer sends Email #1
+        ↓
+Lead replies
+        ↓
+Webhook / IMAP
+        ↓
+InboundEmail
+        ↓
+Find conversation
+        ↓
+Find lead
+        ↓
+Stop sequence
+        ↓
+Activity created
+        ↓
+AI classification
+
+
+------------------------------------------------------------------------
+
+
+PHASE 7 — AI Intelligence [COMPLETED]
+
+Priority: 🟠 High
+Status: ✅ Fully Implemented and Verified
+
+- 7-Pillar Contextual AI Email Generator (aiIntelligence.service.ts & aiEmailIntelligence.prompts.ts):
+  ├── Multi-Dimensional Synthesis: Lead data + Company profile + Campaign objective + Tone + Sender profile + Previous conversation history + Sequence cadence context
+  ├── Structured Output Schema: Generates primary subject, 2 alternative subjects, preheader preview, body copy, strong call-to-action (CTA), delay recommendations, and personalization insight explanations
+  ├── Sequence Engine Integration: Directly powers AI_ACTION sequence steps and on-the-fly step copy generation
+  └── Frontend Contextual AI Generator Modal (ContextualAIGeneratorModal.tsx): Interactive UI allowing sales reps to customize objective, tone, and sender identity with instant draft insertion
+
+- Enterprise AI Reply Classification & Intent Analysis (replyClassification.service.ts):
+  ├── Multi-Category Intent Engine: "interested", "meeting_request", "objection", "out_of_office", "wrong_person", "not_interested", "unsubscribe", "neutral"
+  ├── Sentiment & Confidence Metrics: Evaluates sentiment (positive, neutral, negative), confidence score (0.0-1.0), and generates a concise 1-sentence intent summary
+  └── Actionable Sales Recommendations: Suggests concrete next steps (e.g., "Contact prospect within 15 minutes to book a meeting")
+
+- Automated Sales Workflows & Real-Time Notifications (notification.service.ts):
+  ├── Automated Cadence Halting: Automatically halts sequence cadence and cancels pending SendJobs on positive replies or meeting requests
+  ├── Lead Record Status Transitions: Automatically sets lead status to "meeting" on calendar requests and appends "unsubscribed" tag on opt-out
+  ├── In-App Notification Center: Creates high-priority notification records for sales reps upon receiving interested replies or meeting requests
+  └── Frontend Notification Bell (NotificationBell.tsx): Live badge counter, audio/visual cues, dropdown stream, and 1-click mark-as-read
+
+- Complete Unit & Integration Test Suite:
+  └── 10/10 tests passing in aiIntelligence.phase7.test.js validating 7-pillar email generation, multi-intent classification, sequence halting, and notification creation
+
+
+------------------------------------------------------------------------
+
+
+PHASE 8 — Compliance & Global Suppression Engine
+
+Priority: 🔴 Critical before public automated sending
+Status: ⏳ Specification Ready — Pending Implementation
+
+What's Already in Place:
+- Mailbox-level quota enforcement: Mailbox.canSend() checks daily limit and health score.
+- Inbound unsubscribe detection: replyClassification.service tags lead with "unsubscribed" and halts sequence enrollment.
+- Hard bounce handling: sendingEngine marks lead as "bounced" and cancels remaining jobs.
+
+How It Should Be Implemented:
+
+1. Data Architecture — Suppression Model (models/Suppression.model.ts):
+   Suppression {
+     workspaceId: ObjectId | null,     // null = global system-wide suppression
+     type: "email" | "domain",          // target email address or entire company domain
+     value: string,                     // lowercase sanitized email or domain (e.g., "competitor.com")
+     reason: "unsubscribe" | "hard_bounce" | "manual_dnc" | "complaint" | "spam_report",
+     source: "lead_reply" | "admin_upload" | "bounce_webhook" | "api",
+     notes?: string,
+     expiresAt?: Date,                  // null = permanent, or temporary cooldown date
+     createdBy?: ObjectId,
+     createdAt: Date
+   }
+   Indexes:
+   - { workspaceId: 1, type: 1, value: 1 } (unique compound index)
+   - { value: 1 } (fast global suppression lookup)
+
+2. Central Compliance Gateway (services/compliance.service.ts):
+   export async function canSend(params: {
+     leadId: string | ObjectId;
+     workspaceId: string | ObjectId;
+     mailboxId: string | ObjectId;
+   }): Promise<{ allowed: boolean; reason?: string }>
+   
+   Enforces the 7-Point Compliance Checklist before any SendJob leaves the queue:
+   ① Is lead.email or lead.company.domain in the workspace or global Suppression list?
+   ② Is lead tagged with "unsubscribed" or status === "bounced"?
+   ③ Is lead emailVerification.status === "invalid" or "disposable"?
+   ④ Has this lead been contacted within the workspace cooldown window (e.g., max 1 touch per 24 hours)?
+   ⑤ Is the associated SequenceEnrollment still active (not stopped/completed)?
+   ⑥ Is the Mailbox active, healthy (healthScore > 50), and within daily quota?
+   ⑦ Does the lead reside in an active Do-Not-Contact (DNC) list?
+
+3. Send Engine Integration (services/sendJob.service.ts):
+   Inside processSendJob(), call canSend() immediately prior to transport dispatch:
+   const complianceCheck = await canSend({ leadId: job.leadId, workspaceId: job.workspaceId, mailboxId: job.mailboxId });
+   if (!complianceCheck.allowed) {
+     job.status = "cancelled";
+     job.lastError = `Compliance check failed: ${complianceCheck.reason}`;
+     await job.save();
+     return { success: false, status: "cancelled", error: job.lastError };
+   }
+
+4. Unsubscribe Headers & 1-Click Opt-Out (RFC 8058):
+   - Inject List-Unsubscribe: <https://api.coldmailer.ai/v1/compliance/unsubscribe?token=...>, <mailto:unsub@domain.com?subject=unsubscribe>
+   - Inject List-Unsubscribe-Post: List-Unsubscribe=One-Click into all outbound MIME headers.
+   - Public Unsubscribe Controller: GET /api/v1/compliance/unsubscribe verifies HMAC token, inserts into Suppression collection, tags lead, and shows clean confirmation page.
+
+5. REST API Endpoints (routes/compliance.routes.ts):
+   - GET    /api/v1/compliance/suppressions        (filter by type, search, pagination)
+   - POST   /api/v1/compliance/suppressions        (manually add email/domain to DNC)
+   - POST   /api/v1/compliance/suppressions/bulk   (CSV upload of DNC list)
+   - DELETE /api/v1/compliance/suppressions/:id    (remove entry with audit trail)
+   - POST   /api/v1/compliance/gdpr-export/:leadId (export all personal data as JSON)
+   - DELETE /api/v1/compliance/gdpr-delete/:leadId (right-to-be-forgotten hard purge)
+
+
+------------------------------------------------------------------------
+
+
+PHASE 9 — Workspace + Role-Based Access Control (RBAC)
+
+Priority: 🔴 Critical for multi-user enterprise teams
+Status: ⏳ Specification Ready — Pending Implementation
+
+What's Already in Place:
+- Workspace model with members array ({ userId, role: "owner" | "admin" | "member" | "viewer" }).
+- workspace.middleware.ts resolves active workspace and attaches req.workspaceRole.
+- Workspace CRUD endpoints and default workspace auto-provisioning.
+
+How It Should Be Implemented:
+
+1. Unified Role Hierarchy:
+   - owner: Full control, billing, workspace deletion, transfers, all actions.
+   - admin: Manages team members, mailboxes, integrations, and all outreach assets.
+   - manager: Creates and launches sequences, assigns leads, views all analytics, manages templates.
+   - sales_rep: Manages assigned leads, sends 1-to-1 emails, creates drafts, views own stats.
+   - viewer: Read-only access across leads, sequences, analytics, and activity logs.
+
+2. Centralized Permission Matrix (constants/permissions.ts):
+   export const PERMISSIONS = {
+     // Leads
+     "lead.read": ["owner", "admin", "manager", "sales_rep", "viewer"],
+     "lead.create": ["owner", "admin", "manager", "sales_rep"],
+     "lead.update": ["owner", "admin", "manager", "sales_rep"],
+     "lead.delete": ["owner", "admin", "manager"],
+     "lead.assign": ["owner", "admin", "manager"],
+     "lead.export": ["owner", "admin"],
+
+     // Sequences
+     "sequence.read": ["owner", "admin", "manager", "sales_rep", "viewer"],
+     "sequence.create": ["owner", "admin", "manager"],
+     "sequence.edit": ["owner", "admin", "manager"],
+     "sequence.launch": ["owner", "admin", "manager"],
+     "sequence.pause": ["owner", "admin", "manager"],
+     "sequence.delete": ["owner", "admin"],
+
+     // Mailboxes
+     "mailbox.view": ["owner", "admin", "manager", "sales_rep"],
+     "mailbox.connect": ["owner", "admin"],
+     "mailbox.disconnect": ["owner", "admin"],
+     "mailbox.send": ["owner", "admin", "manager", "sales_rep"],
+
+     // Analytics
+     "analytics.view": ["owner", "admin", "manager", "sales_rep", "viewer"],
+     "analytics.export": ["owner", "admin", "manager"],
+
+     // Workspace & Settings
+     "workspace.invite": ["owner", "admin"],
+     "workspace.remove_member": ["owner", "admin"],
+     "workspace.billing": ["owner"]
+   } as const;
+
+3. Declarative Authorization Middleware (middlewares/rbac.middleware.ts):
+   Never hardcode `if (user.role === "admin")` inside controllers.
+   Implement a reusable, declarative middleware:
+   ```ts
+   export const authorize = (permission: keyof typeof PERMISSIONS) => {
+     return (req: Request, _res: Response, next: NextFunction) => {
+       const role = req.workspaceRole || "viewer";
+       const allowedRoles = PERMISSIONS[permission];
+
+       if (!allowedRoles.includes(role)) {
+         throw new ApiError(403, `Forbidden: You do not have permission '${permission}'`);
+       }
+       next();
+     };
+   };
+   ```
+
+4. Route Protection Integration:
+   router.post("/sequences/:id/launch", authMiddleware, workspaceMiddleware, authorize("sequence.launch"), launchSequenceController);
+   router.delete("/leads/:id", authMiddleware, workspaceMiddleware, authorize("lead.delete"), deleteLeadController);
+   router.post("/mailboxes/connect-smtp", authMiddleware, workspaceMiddleware, authorize("mailbox.connect"), connectMailboxController);
+
+5. Frontend Permission Guard (hooks/usePermissions.ts):
+   Hook returning `{ can: (perm) => boolean, role }` to dynamically disable/hide action buttons (e.g., Launch Sequence button disabled for `sales_rep` or `viewer`).
+
+
+------------------------------------------------------------------------
+
+
+PHASE 10 — Enterprise Outbound Analytics & Conversion Funnel
+
+Priority: 🟠 High
+Status: ⏳ Specification Ready — Pending Implementation
+
+How It Should Be Implemented:
+
+1. End-to-End Conversion Funnel:
+   Sent ➔ Delivered ➔ Opened ➔ Clicked ➔ Replied ➔ Interested ➔ Meeting Booked ➔ Won
+
+2. Key Metrics & Formulae:
+   - Delivery Rate:           Delivered / Sent (%)
+   - Hard Bounce Rate:        Bounced / Sent (%)
+   - Open Rate:               Unique Opens / Delivered (%)
+   - Click-Through Rate:      Unique Clicks / Delivered (%)
+   - Reply Rate:              Total Inbound Replies / Delivered (%)
+   - Positive Sentiment Rate: (Interested + Meeting Requests) / Total Replies (%)
+   - Meeting Conversion Rate: Meetings Scheduled / Delivered (%)
+   - Opportunity Win Rate:    Closed Won / Meetings Scheduled (%)
+
+3. Multi-Dimensional Breakdown Capabilities:
+   - By Sequence & Step: Drop-off waterfall analysis showing step-by-step attrition across 1st touch vs 2nd touch vs follow-ups.
+   - By Mailbox Provider: Compare inbox placement and deliverability between Gmail OAuth, Outlook Graph, and Custom SMTP.
+   - By Sales Rep: Performance league table comparing volume, reply speeds, and conversion rates across reps.
+   - By AI Prompt / Tone / Subject Variant: Conversion data across tone styles (Casual vs Formal vs Direct) and subject line variants.
+
+4. Data Aggregation Architecture (services/analytics.service.ts):
+   - Pre-aggregated daily rollups via MongoDB Aggregation Pipelines on EmailEvent and InboundEmail collections.
+   - Time-series metric snapshots cached in Redis or high-efficiency MongoDB aggregate collections.
+
+5. REST API Contracts (routes/analytics.routes.ts):
+   - GET /api/v1/analytics/overview          (Time-range KPIs: totalSent, deliverabilityRate, replyRate, meetingCount)
+   - GET /api/v1/analytics/funnel            (Step-by-step conversion waterfall counts and percentage drop-offs)
+   - GET /api/v1/analytics/sequence/:id      (Per-step performance: open, click, reply, stop breakdown)
+   - GET /api/v1/analytics/mailbox-health    (Quota utilization, bounce rates, reputation scores per mailbox)
+   - GET /api/v1/analytics/export            (CSV/JSON export of aggregated campaign reporting)
+
+6. Frontend Outbound Intelligence Hub (/dashboard/analytics):
+   - Recharts / Chart.js powered visualization: Area conversion funnels, time-series line charts, and comparison bar charts.
+   - Date range selector: "Today", "Last 7 Days", "Last 30 Days", "Quarter to Date", "Custom Range".
+
+
+------------------------------------------------------------------------
+
+
+PHASE 11 — Bi-Directional CRM Integrations (HubSpot, Salesforce, Pipedrive)
+
+Priority: 🟡 After core platform works
+Status: ⏳ Specification Ready — Pending Implementation
+
+How It Should Be Implemented:
+
+1. Integration Data Architecture (models/CRMIntegration.model.ts):
+   CRMIntegration {
+     workspaceId: ObjectId,
+     provider: "hubspot" | "salesforce" | "pipedrive",
+     status: "active" | "error" | "disconnected",
+     credentials: {
+       accessToken: string (AES-256 encrypted),
+       refreshToken: string (AES-256 encrypted),
+       expiresAt: Date,
+       instanceUrl?: string
+     },
+     syncSettings: {
+       syncLeadsToCRM: boolean,           // Sync newly created leads
+       syncRepliesToCRM: boolean,         // Create CRM notes/activities on reply
+       syncMeetingsToCRM: boolean,        // Create CRM Deals on meeting booked
+       syncCRMContactsToColdMailer: boolean, // Import CRM lists into ColdMailer
+       pollIntervalMinutes: number
+     },
+     fieldMappings: Map<string, string>, // e.g., { "company.name": "company", "jobTitle": "jobtitle" }
+     lastSyncAt: Date
+   }
+
+2. Sync Engine & Job Worker (services/crmSync.service.ts):
+   - Event-Driven Outbound Sync:
+     ├── On Lead Replied: Automatically logs email activity / note under matching CRM Contact.
+     ├── On Meeting Request: Automatically creates or updates Deal/Opportunity with assigned sales rep.
+     └── On Unsubscribe / Bounce: Updates CRM Contact opt-out status.
+   - Scheduled Inbound Polling:
+     └── Queries CRM for new contacts matching configured list/tag, transforms via field mappings, and creates ColdMailer leads.
+
+3. Resilience & Idempotency:
+   - Dedicated CRMSyncJob queue with exponential backoff on provider 429 rate limits.
+   - Idempotency key tracking ensuring zero duplicate contacts or activities created in external CRMs.
+   - Audit Log Collection (models/CRMSyncLog.model.ts) tracking every synced entity, status, and error payload.
+
+4. REST API Endpoints (routes/crm.routes.ts):
+   - GET  /api/v1/crm/integrations           (list connected CRM providers)
+   - GET  /api/v1/crm/connect/:provider       (initiates OAuth consent URL)
+   - GET  /api/v1/crm/callback/:provider      (exchanges authorization code and stores encrypted tokens)
+   - PUT  /api/v1/crm/mappings/:provider      (updates field mapping definitions)
+   - POST /api/v1/crm/sync-now/:provider      (triggers manual immediate sync run)
+   - POST /api/v1/crm/disconnect/:provider    (revokes tokens and disables integration)
+
+
+------------------------------------------------------------------------
+
+
+PHASE 12 — Developer Platform & Public REST API
+
+Priority: 🟡 High for programmatic scale & ecosystem
+Status: ⏳ Specification Ready — Pending Implementation
+
+How It Should Be Implemented:
+
+1. Authentication & API Key Management:
+   - Model (models/ApiKey.model.ts):
+     ApiKey {
+       workspaceId: ObjectId,
+       name: string,
+       keyPrefix: string,                 // e.g., "cm_live_..."
+       hashedKey: string,                 // SHA-256 hash of raw API secret
+       scopes: ("leads:read" | "leads:write" | "sequences:enroll" | "mailboxes:send")[],
+       rateLimitPerMinute: number,        // default: 120 req/min
+       lastUsedAt: Date,
+       expiresAt?: Date
+     }
+   - Middleware (middlewares/apiKeyAuth.middleware.ts):
+     Validates `Authorization: Bearer cm_live_...` or `X-API-Key: cm_live_...` with Redis-backed token bucket rate limiting.
+
+2. Core Public REST Endpoints (/api/public/v1):
+   - POST /api/public/v1/leads
+     Body: { email, firstName, lastName, company: { name }, customFields }
+     Response: { success: true, lead: { id, email, status } }
+   - GET  /api/public/v1/leads?email=...
+     Response: { lead, sequences: [...], emailHistory: [...] }
+   - POST /api/public/v1/sequences/:id/enroll
+     Body: { leadIds: [...], segmentId?: string, mailboxId?: string }
+     Response: { enrolledCount: number, skippedCount: number }
+   - GET  /api/public/v1/sequences
+     Response: { sequences: [{ id, name, status, stepsCount, stats }] }
+
+3. Outbound Webhook Subscriptions (models/WebhookSubscription.model.ts):
+   - Workspace-configurable endpoints listening to real-time events:
+     ├── `lead.created`
+     ├── `lead.replied` (includes classification category, sentiment, and summary)
+     ├── `email.sent`
+     ├── `email.bounced`
+     ├── `sequence.completed`
+     └── `meeting.booked`
+   - Security: Payload signed with HMAC-SHA256 signature in `X-ColdMailer-Signature` header using secret key.
+   - Retry Policy: 5 retry attempts with exponential backoff on HTTP 5xx or connection timeout.
+
+
+------------------------------------------------------------------------
+
+
+PHASE 13 — Data Enrichment Engine
+
+Priority: 🟡 Later — Post-Core Scalability
+Status: ⏳ Specification Ready — Pending Implementation
+
+How It Should Be Implemented:
+
+1. Multi-Provider Abstraction Architecture (services/enrichment.service.ts):
+   - Adapter pattern unifying disparate provider APIs (Clearbit, Apollo.io, Hunter, Lusha):
+     ```ts
+     interface IEnrichmentProvider {
+       enrichCompany(domain: string): Promise<CompanyEnrichmentData>;
+       enrichPerson(email: string, domain?: string): Promise<PersonEnrichmentData>;
+     }
+     ```
+
+2. 4-Stage Enrichment Pipeline:
+   Stage 1 — Domain Extraction: Parse domain from lead email or company website.
+   Stage 2 — Cache Verification: Check `EnrichmentCache` collection (30-day TTL) to prevent duplicate API credit burn.
+   Stage 3 — Provider Dispatch: Query primary provider (e.g. Apollo), falling back to secondary (e.g. Clearbit) on miss.
+   Stage 4 — Lead Schema Merging:
+     - Company: industry, employee count, estimated revenue, founded year, tech stack, funding round.
+     - Person: verified job title, LinkedIn profile URL, phone number, location, timezone.
+     - Merges clean attributes into `lead.company` and `lead.customFields`.
+
+3. Cost & Credit Protection:
+   - Workspace-level credit quota controls preventing unexpected third-party provider billing overages.
+   - Automatic domain deduplication so 10 leads from "acme.com" only consume 1 company enrichment credit.
+
+4. REST API & UI Trigger:
+   - POST /api/v1/leads/:id/enrich (Single lead enrichment on demand)
+   - POST /api/v1/leads/bulk-enrich (Batch enrichment for selected leads or dynamic saved segment)
+   - Lead Detail UI: "Enrich Lead Data" action button with live loading spinner and updated badge indicators.
