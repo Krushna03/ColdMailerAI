@@ -99,6 +99,9 @@ export default function LeadDetail() {
   const emails = data?.emails ?? [];
   const activities = data?.activities ?? [];
   const stats = data?.stats;
+  const sequenceEnrollments = (data as any)?.sequenceEnrollments || [];
+  const hasActiveSequence = sequenceEnrollments.some((e: any) => e.status === "active");
+  const isReplied = lead?.status === "replied";
 
   const latestUnsent = useMemo(
     () => emails.find((email: any) => email.sendStatus !== "sent"),
@@ -111,8 +114,8 @@ export default function LeadDetail() {
 
   if (isError || !lead) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 bg-surface-800/40 px-6 py-16 text-center">
-        <p className="text-xl font-semibold text-gray-200">Lead not found</p>
+      <div className="rounded-lg border border-dashed border-white/15 bg-surface-900 px-6 py-16 text-center">
+        <p className="text-xl font-semibold text-white">Lead not found</p>
         <p className="mt-2 text-sm text-gray-400">
           {(error as any)?.response?.data?.message ||
             "This lead may have been deleted or you don’t have access."}
@@ -260,7 +263,8 @@ export default function LeadDetail() {
 
       <LeadSequencesCard
         leadId={leadId || ""}
-        sequenceEnrollments={(data as any)?.sequenceEnrollments || []}
+        leadStatus={lead?.status}
+        sequenceEnrollments={sequenceEnrollments}
       />
 
       <LeadProfileForm
@@ -337,6 +341,8 @@ export default function LeadDetail() {
         onOpenChange={setFollowUpOpen}
         onSubmit={handleAddFollowUp}
         isSubmitting={addFollowUp.isPending}
+        isReplied={isReplied}
+        hasActiveSequence={hasActiveSequence}
       />
 
       <AddCategoryDialog
@@ -351,30 +357,30 @@ export default function LeadDetail() {
         const isJobRunning = !!activeJobId && !terminalStatuses.includes(jobStatus || "");
         if (!isJobRunning) setGenerateOpen(val);
       }}>
-        <DialogContent className="max-w-xl border-white/20 bg-surface-900 p-0 text-white sm:rounded-3xl [&>button]:text-slate-400 [&>button]:hover:text-white">
-          <DialogHeader className="space-y-1 border-b border-white/10 px-6 pb-4 pt-6 pr-12 text-left">
-            <DialogTitle className="text-xl font-semibold text-white">
+        <DialogContent className="max-w-xl border border-white/10 bg-surface-900 p-0 text-white sm:rounded-lg">
+          <DialogHeader className="space-y-1 border-b border-white/10 px-6 pb-4 pt-5 pr-12 text-left bg-surface-950/60">
+            <DialogTitle className="text-lg font-semibold text-white">
               Generate email for {lead.name}
             </DialogTitle>
-            <DialogDescription className="text-sm text-gray-400">
+            <DialogDescription className="text-xs text-gray-400">
               Optional instructions are combined with this lead&apos;s profile.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 px-4 pt-0 py-5">
+          <div className="space-y-4 px-6 pt-0 py-5">
             <Textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               disabled={generateBatch.isPending || !!activeJobId}
               placeholder="Mention our new pricing, ask for a 15-min intro…"
-              className="min-h-[160px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-white/20 focus-visible:ring-1 focus-visible:ring-white/10 focus-visible:ring-offset-0 md:text-sm"
+              className="min-h-[160px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20 focus-visible:ring-offset-0 text-xs sm:text-sm"
             />
-            <DialogFooter className="gap-3 border-t border-white/10 px-0 pb-0 pt-4 sm:space-x-0">
+            <DialogFooter className="gap-2 border-t border-white/10 px-0 pb-0 pt-4 sm:space-x-0">
               <DialogClose asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   disabled={generateBatch.isPending || !!activeJobId}
-                  className="text-gray-300 hover:bg-white/10 hover:text-white"
+                  className="h-9 px-3 text-xs sm:text-sm text-gray-400 hover:bg-white/5 hover:text-white"
                 >
                   Cancel
                 </Button>
@@ -383,7 +389,7 @@ export default function LeadDetail() {
                 type="button"
                 disabled={generateBatch.isPending || !!activeJobId}
                 onClick={handleGenerate}
-                className="bg-brand text-white hover:bg-brand-400"
+                className="h-9 px-4 bg-brand text-white hover:bg-brand-400 text-xs sm:text-sm font-semibold"
               >
                 {generateBatch.isPending || !!activeJobId ? "Generating..." : "Generate"}
               </Button>

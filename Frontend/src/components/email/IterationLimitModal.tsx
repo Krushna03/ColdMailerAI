@@ -57,7 +57,7 @@ const IterationLimitModal = ({
             <Button
               onClick={onCreateNew}
               variant="outline"
-              className="flex-1 cursor-pointer border-white/20 text-black transition hover:bg-white/10 hover:text-white"
+              className="flex-1 cursor-pointer border-white/20 text-white transition hover:bg-white/10"
             >
               Create new email
             </Button>

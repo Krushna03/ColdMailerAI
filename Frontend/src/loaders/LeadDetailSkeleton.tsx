@@ -31,11 +31,11 @@ export default function LeadDetailSkeleton() {
       </div>
 
       {/* Stats Strip Skeleton */}
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="rounded-2xl border border-white/10 bg-surface-800/50 p-4 space-y-2"
+            className="rounded-lg border border-white/10 bg-surface-900 p-4 space-y-2"
           >
             <div className={`${bone} h-3 w-24`} />
             <div className={`${bone} h-7 w-16`} />
@@ -44,33 +44,33 @@ export default function LeadDetailSkeleton() {
       </section>
 
       {/* Profile Form Skeleton */}
-      <section className="rounded-2xl border border-white/10 bg-surface-800/50 p-5 space-y-4">
+      <section className="rounded-lg border border-white/10 bg-surface-900 p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div className={`${bone} h-6 w-24`} />
-          <div className={`${bone} h-8 w-28 rounded-lg`} />
+          <div className={`${bone} h-8 w-28 rounded-md`} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="space-y-2">
               <div className={`${bone} h-4 w-20`} />
-              <div className={`${bone} h-11 w-full rounded-lg`} />
+              <div className={`${bone} h-10 w-full rounded-md`} />
             </div>
           ))}
         </div>
         <div className="space-y-2">
           <div className={`${bone} h-4 w-16`} />
-          <div className={`${bone} h-24 w-full rounded-lg`} />
+          <div className={`${bone} h-24 w-full rounded-md`} />
         </div>
       </section>
 
       {/* Timeline Skeleton */}
-      <section className="rounded-2xl border border-white/10 bg-surface-800/50 p-5 space-y-4">
+      <section className="rounded-lg border border-white/10 bg-surface-900 p-4 sm:p-5 space-y-4">
         <div className={`${bone} h-6 w-36`} />
         <div className="space-y-3">
           {[...Array(2)].map((_, i) => (
             <div
               key={i}
-              className="rounded-xl border border-white/10 bg-surface-900/60 p-4 space-y-3"
+              className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

@@ -214,6 +214,11 @@ export function useEnrollLeadsInSequence() {
       queryClient.invalidateQueries({ queryKey: queryKeys.sequenceEnrollments(vars.sequenceId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.sequences });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadsAll });
+      if (vars.leadIds && vars.leadIds.length > 0) {
+        vars.leadIds.forEach((lid) => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.lead(lid) });
+        });
+      }
       toast({
         title: "Enrollment Complete",
         description: `Enrolled ${data.enrolledCount} lead(s). ${data.skippedCount ? `(${data.skippedCount} skipped)` : ""}`,

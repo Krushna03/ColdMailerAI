@@ -39,6 +39,8 @@ interface AddFollowUpDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: { dueAt: string; note: string }) => Promise<void> | void;
   isSubmitting?: boolean;
+  isReplied?: boolean;
+  hasActiveSequence?: boolean;
 }
 
 interface FormValues {
@@ -52,6 +54,8 @@ export default function AddFollowUpDialog({
   onOpenChange,
   onSubmit,
   isSubmitting,
+  isReplied,
+  hasActiveSequence,
 }: AddFollowUpDialogProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const {
@@ -94,21 +98,32 @@ export default function AddFollowUpDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-xl border-white/20 bg-surface-900 p-0 text-white sm:rounded-3xl [&>button]:text-slate-400 [&>button]:hover:text-white">
-        <DialogHeader className="space-y-1 border-b border-white/10 px-6 pb-4 pt-6 pr-12 text-left">
-          <DialogTitle className="text-xl font-semibold text-white">
+      <DialogContent className="max-w-xl border border-white/10 bg-surface-900 p-0 text-white sm:rounded-lg">
+        <DialogHeader className="space-y-1 border-b border-white/10 px-6 pb-4 pt-5 pr-12 text-left bg-surface-950/60">
+          <DialogTitle className="text-lg font-semibold text-white">
             Schedule follow-up
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-400">
-            Set a reminder date and an optional note. No notifications yet,
-            this stays on the lead timeline.
+          <DialogDescription className="text-xs text-gray-400">
+            Set a reminder date and an optional note. This stays on the lead timeline.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="space-y-4 px-6 pt-0 py-5">
+          {hasActiveSequence && !isReplied && (
+            <div className="rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+              <strong>Note:</strong> Automated emails are already running. Use this reminder for tasks like a phone call or LinkedIn message.
+            </div>
+          )}
+
+          {isReplied && (
+            <div className="rounded-md border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
+              <strong>Prospect replied:</strong> Automated emails are paused. Set a reminder below for your next step, like a call or demo.
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-[1.4fr,0.8fr]">
             <div>
-              <label className="mb-1.5 block text-sm text-gray-300">
+              <label className="mb-1.5 block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Due date <span className="text-red-400">*</span>
               </label>
               <Controller
@@ -122,12 +137,11 @@ export default function AddFollowUpDialog({
                         type="button"
                         variant="outline"
                         className={cn(
-                          fieldClass,
-                          "w-full justify-start text-left font-normal hover:bg-surface-800 hover:text-white",
+                          "h-9 w-full justify-start text-left font-normal border border-white/15 bg-surface-900 text-white hover:bg-white/5 text-xs sm:text-sm rounded-md",
                           !field.value && "text-gray-500"
                         )}
                       >
-                        <CalendarIcon className="h-4 w-4 text-gray-400" />
+                        <CalendarIcon className="h-4 w-4 text-gray-400 mr-2" />
                         {field.value
                           ? format(field.value, "PPP")
                           : "Pick a date"}
@@ -135,7 +149,7 @@ export default function AddFollowUpDialog({
                     </PopoverTrigger>
                     <PopoverContent
                       align="start"
-                      className="w-auto border-white/15 bg-surface-900 p-0"
+                      className="w-auto border border-white/15 bg-surface-900 p-0 rounded-lg shadow-xl"
                     >
                       <Calendar
                         mode="single"
@@ -158,36 +172,36 @@ export default function AddFollowUpDialog({
             </div>
 
             <div>
-              <label htmlFor="followup-time" className="mb-1.5 block text-sm text-gray-300">
+              <label htmlFor="followup-time" className="mb-1.5 block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Time
               </label>
               <Input
                 id="followup-time"
                 type="time"
-                className={fieldClass}
+                className="h-9 border border-white/15 bg-surface-900 text-white focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20 text-xs sm:text-sm rounded-md"
                 {...register("dueTime")}
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="followup-note" className="mb-1.5 block text-sm text-gray-300">
+            <label htmlFor="followup-note" className="mb-1.5 block text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Note
             </label>
             <Textarea
               id="followup-note"
               placeholder="Ask about pricing, share case study…"
-              className="min-h-[90px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-white/20 focus-visible:ring-1 focus-visible:ring-white/10 focus-visible:ring-offset-0 md:text-sm"
+              className="min-h-[90px] border border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20 focus-visible:ring-offset-0 text-xs md:text-sm rounded-md"
               {...register("note")}
             />
           </div>
 
-          <DialogFooter className="gap-3 border-t border-white/10 px-0 pb-0 pt-4 sm:space-x-0">
+          <DialogFooter className="gap-2 border-t border-white/10 px-0 pb-0 pt-4 sm:space-x-0">
             <DialogClose asChild>
               <Button
                 type="button"
                 variant="ghost"
-                className="text-gray-300 hover:bg-white/10 hover:text-white"
+                className="h-9 px-3 text-xs sm:text-sm text-gray-400 hover:bg-white/5 hover:text-white"
               >
                 Cancel
               </Button>
@@ -195,7 +209,7 @@ export default function AddFollowUpDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-brand text-white hover:bg-brand-400"
+              className="h-9 px-4 bg-brand text-white hover:bg-brand-400 text-xs sm:text-[13px] font-semibold rounded-md"
             >
               {isSubmitting ? "Saving..." : "Add follow-up"}
             </Button>

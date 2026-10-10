@@ -105,7 +105,7 @@ export default function Profile() {
     try {
       const saved = localStorage.getItem("coldmailer_preferences");
       if (saved) return { ...DEFAULT_PREFERENCES, ...JSON.parse(saved) };
-    } catch {}
+    } catch { }
     return DEFAULT_PREFERENCES;
   });
   const [isSavingPrefs, setIsSavingPrefs] = useState(false);
@@ -127,8 +127,8 @@ export default function Profile() {
   const authLabel = isGoogle
     ? "Google OAuth"
     : user?.authProvider
-    ? String(user.authProvider)
-    : "Email & Password";
+      ? String(user.authProvider)
+      : "Email & Password";
 
   // Quota metrics
   const monthly = planUsage?.usage?.monthlyEmailGenerations;
@@ -143,9 +143,9 @@ export default function Profile() {
   const resetDate = monthly?.windowEnd ? new Date(monthly.windowEnd) : null;
   const resetLabel = resetDate
     ? `Resets on ${resetDate.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })}`
+      month: "short",
+      day: "numeric",
+    })}`
     : "Recurring monthly cycle";
 
   const copyToClipboard = async (text: string, key: string, label: string) => {
@@ -256,11 +256,10 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("profile")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "profile"
+          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "profile"
               ? "text-white font-semibold"
               : "text-gray-400 hover:text-gray-200"
-          }`}
+            }`}
         >
           <UserRound className="h-4 w-4" />
           Profile & Identity
@@ -272,11 +271,10 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("preferences")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "preferences"
+          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "preferences"
               ? "text-white font-semibold"
               : "text-gray-400 hover:text-gray-200"
-          }`}
+            }`}
         >
           <Sliders className="h-4 w-4" />
           Outreach & AI Preferences
@@ -288,11 +286,10 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("security")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "security"
+          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "security"
               ? "text-white font-semibold"
               : "text-gray-400 hover:text-gray-200"
-          }`}
+            }`}
         >
           <Shield className="h-4 w-4" />
           Security & Access
@@ -304,11 +301,10 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("billing")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "billing"
+          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "billing"
               ? "text-white font-semibold"
               : "text-gray-400 hover:text-gray-200"
-          }`}
+            }`}
         >
           <CreditCard className="h-4 w-4" />
           Subscription & Quota
@@ -591,11 +587,10 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setTheme("light")}
-                    className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${
-                      theme === "light"
+                    className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "light"
                         ? "border-brand bg-brand/10 text-white"
                         : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
-                    }`}
+                      }`}
                   >
                     <div className="rounded-md bg-white/5 p-2 text-gray-300 border border-white/5 shrink-0">
                       <Sun className="h-4 w-4 text-amber-300" />
@@ -616,11 +611,10 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setTheme("dark")}
-                    className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${
-                      theme === "dark"
+                    className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "dark"
                         ? "border-brand bg-brand/10 text-white"
                         : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
-                    }`}
+                      }`}
                   >
                     <div className="rounded-md bg-white/5 p-2 text-gray-300 border border-white/5 shrink-0">
                       <Moon className="h-4 w-4 text-purple-300" />
@@ -651,11 +645,10 @@ export default function Profile() {
                       key={t.id}
                       type="button"
                       onClick={() => setPreferences({ ...preferences, defaultTone: t.id })}
-                      className={`text-left rounded-lg p-3.5 border transition-all ${
-                        preferences.defaultTone === t.id
+                      className={`text-left rounded-lg p-3.5 border transition-all ${preferences.defaultTone === t.id
                           ? "border-brand bg-brand/10 text-white"
                           : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
-                      }`}
+                        }`}
                     >
                       <p className="text-xs font-semibold">{t.title}</p>
                       <p className="mt-1 text-[11px] text-gray-400">{t.desc}</p>
@@ -900,8 +893,8 @@ export default function Profile() {
                     {usageLoading
                       ? "Loading quota..."
                       : typeof limit === "number"
-                      ? `${used} / ${limit} emails generated`
-                      : `${used} emails generated (Unlimited plan)`}
+                        ? `${used} / ${limit} emails generated`
+                        : `${used} emails generated (Unlimited plan)`}
                   </p>
                 </div>
                 <div className="text-left sm:text-right">
@@ -915,9 +908,8 @@ export default function Profile() {
                 <div className="space-y-1.5">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        percentUsed >= 85 ? "bg-amber-400" : "bg-brand"
-                      }`}
+                      className={`h-full rounded-full transition-all duration-300 ${percentUsed >= 85 ? "bg-amber-400" : "bg-brand"
+                        }`}
                       style={{ width: `${percentUsed}%` }}
                     />
                   </div>
@@ -991,11 +983,10 @@ export default function Profile() {
                     <p className="truncate text-xs text-gray-400">Payment processor state</p>
                   </div>
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      user?.isPaidUser
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${user?.isPaidUser
                         ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20"
                         : "bg-white/10 text-white ring-1 ring-inset ring-white/20"
-                    }`}
+                      }`}
                   >
                     {user?.isPaidUser ? "Active Subscription" : "Free Starter"}
                   </span>
@@ -1091,46 +1082,6 @@ export default function Profile() {
           </section>
         </div>
       )}
-
-      {/* 4. Quick Actions Panels (Universal at Bottom) */}
-      <section className="pt-2">
-        <h2 className="mb-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Quick actions
-        </h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            {
-              title: "Manage subscription & billing",
-              description: "Review invoice records, upgrade limits, and explore tier pricing.",
-              to: "/dashboard/pricing",
-            },
-            {
-              title: "Outreach sender mailboxes",
-              description: "Configure SMTP, Google, or Outlook mailboxes for automated sending pools.",
-              to: "/dashboard/mailboxes",
-            },
-            {
-              title: "AI email generation studio",
-              description: "Open the focused outreach editor to tailor personalized cold pitches.",
-              to: "/generate-email",
-            },
-          ].map((action) => (
-            <NavLink
-              key={action.to}
-              to={action.to}
-              className="group rounded-lg border border-white/10 bg-surface-900 p-5 transition hover:border-white/20 hover:bg-white/5"
-            >
-              <p className="mt-1 text-base font-semibold text-white">{action.title}</p>
-              <p className="mt-1 text-xs sm:text-sm leading-relaxed text-gray-400">
-                {action.description}
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-brand-300 group-hover:text-white">
-                Open <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
-              </span>
-            </NavLink>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

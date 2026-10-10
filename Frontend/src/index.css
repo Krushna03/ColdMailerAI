@@ -196,6 +196,67 @@ html, body, #root {
   background-color: #f1f5f9 !important;
 }
 
+.dashboard-light .bg-surface-900\/95,
+.dashboard-light .bg-surface-900\/90,
+.dashboard-light .bg-surface-900\/80,
+.dashboard-light .bg-surface-900\/70,
+.dashboard-light .bg-surface-900\/60,
+.dashboard-light .bg-surface-900\/50,
+.dashboard-light .bg-surface-900\/40,
+body.dashboard-light .bg-surface-900\/95,
+body.dashboard-light .bg-surface-900\/90,
+body.dashboard-light .bg-surface-900\/80,
+body.dashboard-light .bg-surface-900\/70,
+body.dashboard-light .bg-surface-900\/60,
+body.dashboard-light .bg-surface-900\/50,
+body.dashboard-light .bg-surface-900\/40 {
+  background-color: #ffffff !important;
+}
+
+.dashboard-light .bg-surface-950\/95,
+.dashboard-light .bg-surface-950\/90,
+.dashboard-light .bg-surface-950\/80,
+.dashboard-light .bg-surface-950\/70,
+.dashboard-light .bg-surface-950\/60,
+.dashboard-light .bg-surface-950\/50,
+.dashboard-light .bg-surface-950\/40,
+.dashboard-light .bg-surface-950\/30,
+body.dashboard-light .bg-surface-950\/95,
+body.dashboard-light .bg-surface-950\/90,
+body.dashboard-light .bg-surface-950\/80,
+body.dashboard-light .bg-surface-950\/70,
+body.dashboard-light .bg-surface-950\/60,
+body.dashboard-light .bg-surface-950\/50,
+body.dashboard-light .bg-surface-950\/40,
+body.dashboard-light .bg-surface-950\/30 {
+  background-color: #f8fafc !important;
+}
+
+.dashboard-light .bg-surface-850\/60,
+.dashboard-light .bg-surface-850\/40,
+body.dashboard-light .bg-surface-850\/60,
+body.dashboard-light .bg-surface-850\/40 {
+  background-color: #f1f5f9 !important;
+}
+
+.dashboard-light .bg-surface-800\/60,
+.dashboard-light .bg-surface-800\/50,
+.dashboard-light .bg-surface-800\/40,
+.dashboard-light .bg-surface-800\/30,
+body.dashboard-light .bg-surface-800\/60,
+body.dashboard-light .bg-surface-800\/50,
+body.dashboard-light .bg-surface-800\/40,
+body.dashboard-light .bg-surface-800\/30 {
+  background-color: #f1f5f9 !important;
+}
+
+.dashboard-light .bg-surface-700\/60,
+.dashboard-light .bg-surface-700\/40,
+body.dashboard-light .bg-surface-700\/60,
+body.dashboard-light .bg-surface-700\/40 {
+  background-color: #e2e8f0 !important;
+}
+
 /* Primary and muted text colors */
 .dashboard-light .text-white {
   color: #0f172a !important;
@@ -390,6 +451,220 @@ html, body, #root {
 
 /* White Logo adapted for Light Mode */
 .dashboard-light aside img[src*="white-logo"],
-.dashboard-light img[src*="white-logo"] {
+.dashboard-light img[src*="white-logo"],
+body.dashboard-light aside img[src*="white-logo"],
+body.dashboard-light img[src*="white-logo"] {
   filter: brightness(0);
 }
+
+/* ==========================================================================
+   RADIX PORTALS, MODALS & DIALOGS IN LIGHT THEME
+   Applies to all DialogContent, SelectContent, PopoverContent, Dropdowns
+   ========================================================================== */
+
+/* Dialog Backdrops / Overlays */
+.dashboard-light [data-radix-dialog-overlay],
+body.dashboard-light [data-radix-dialog-overlay],
+.dashboard-light .bg-black\/80,
+body.dashboard-light .bg-black\/80,
+.dashboard-light .bg-black\/70,
+body.dashboard-light .bg-black\/70 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Dialog, Select & Popover Container Surfaces */
+.dashboard-light [data-radix-dialog-content],
+body.dashboard-light [data-radix-dialog-content],
+.dashboard-light [data-radix-select-content],
+body.dashboard-light [data-radix-select-content],
+.dashboard-light [data-radix-popover-content],
+body.dashboard-light [data-radix-popover-content] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Inner headers, footers & panels inside modals */
+.dashboard-light [data-radix-dialog-content] .bg-surface-950,
+body.dashboard-light [data-radix-dialog-content] .bg-surface-950,
+.dashboard-light [data-radix-dialog-content] .bg-surface-950\/60,
+body.dashboard-light [data-radix-dialog-content] .bg-surface-950\/60,
+.dashboard-light [data-radix-dialog-content] .bg-surface-950\/80,
+body.dashboard-light [data-radix-dialog-content] .bg-surface-950\/80,
+.dashboard-light [data-radix-dialog-content] .bg-surface-800\/40,
+body.dashboard-light [data-radix-dialog-content] .bg-surface-800\/40,
+.dashboard-light [data-radix-dialog-content] .bg-surface-850,
+body.dashboard-light [data-radix-dialog-content] .bg-surface-850 {
+  background-color: #f8fafc !important;
+}
+
+.dashboard-light [data-radix-dialog-content] .bg-surface-900,
+body.dashboard-light [data-radix-dialog-content] .bg-surface-900 {
+  background-color: #ffffff !important;
+}
+
+/* Modal Close Buttons & Icons */
+.dashboard-light [data-radix-dialog-content] > button,
+body.dashboard-light [data-radix-dialog-content] > button,
+.dashboard-light [data-radix-dialog-content] button.absolute,
+body.dashboard-light [data-radix-dialog-content] button.absolute,
+.dashboard-light [data-radix-dialog-content] button[class*="absolute"],
+body.dashboard-light [data-radix-dialog-content] button[class*="absolute"] {
+  color: #64748b !important;
+}
+
+.dashboard-light [data-radix-dialog-content] button.absolute svg,
+body.dashboard-light [data-radix-dialog-content] button.absolute svg,
+.dashboard-light [data-radix-dialog-content] > button svg,
+body.dashboard-light [data-radix-dialog-content] > button svg {
+  color: #64748b !important;
+}
+
+.dashboard-light [data-radix-dialog-content] > button:hover,
+body.dashboard-light [data-radix-dialog-content] > button:hover,
+.dashboard-light [data-radix-dialog-content] button.absolute:hover,
+body.dashboard-light [data-radix-dialog-content] button.absolute:hover,
+.dashboard-light [data-radix-dialog-content] button[class*="absolute"]:hover,
+body.dashboard-light [data-radix-dialog-content] button[class*="absolute"]:hover {
+  color: #0f172a !important;
+}
+
+.dashboard-light [data-radix-dialog-content] button.absolute:hover svg,
+body.dashboard-light [data-radix-dialog-content] button.absolute:hover svg,
+.dashboard-light [data-radix-dialog-content] > button:hover svg,
+body.dashboard-light [data-radix-dialog-content] > button:hover svg {
+  color: #0f172a !important;
+}
+
+/* Radix Select Trigger & Items */
+.dashboard-light [data-radix-select-trigger],
+body.dashboard-light [data-radix-select-trigger] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.dashboard-light [data-radix-select-item],
+body.dashboard-light [data-radix-select-item] {
+  color: #0f172a !important;
+}
+
+.dashboard-light [data-radix-select-item][data-highlighted],
+body.dashboard-light [data-radix-select-item][data-highlighted] {
+  background-color: #f1f5f9 !important;
+  color: #6f34ed !important;
+}
+
+/* Calendar in Popover / Light Mode */
+.dashboard-light [data-slot="calendar"],
+body.dashboard-light [data-slot="calendar"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.dashboard-light [data-slot="calendar"] .caption_label,
+body.dashboard-light [data-slot="calendar"] .caption_label,
+.dashboard-light [data-slot="calendar"] [class*="caption_label"],
+body.dashboard-light [data-slot="calendar"] [class*="caption_label"] {
+  color: #0f172a !important;
+}
+
+.dashboard-light [data-slot="calendar"] button,
+body.dashboard-light [data-slot="calendar"] button {
+  color: #0f172a !important;
+}
+
+.dashboard-light [data-slot="calendar"] button:hover,
+body.dashboard-light [data-slot="calendar"] button:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.dashboard-light [data-slot="calendar"] button[data-selected-single="true"],
+body.dashboard-light [data-slot="calendar"] button[data-selected-single="true"],
+.dashboard-light [data-slot="calendar"] button[data-selected-single="true"] *,
+body.dashboard-light [data-slot="calendar"] button[data-selected-single="true"] * {
+  background-color: #6f34ed !important;
+  color: #ffffff !important;
+}
+
+.dashboard-light [data-slot="calendar"] [class*="weekday"],
+body.dashboard-light [data-slot="calendar"] [class*="weekday"] {
+  color: #64748b !important;
+}
+
+.dashboard-light [data-slot="calendar"] [class*="outside"],
+body.dashboard-light [data-slot="calendar"] [class*="outside"],
+.dashboard-light [data-slot="calendar"] [class*="disabled"],
+body.dashboard-light [data-slot="calendar"] [class*="disabled"] {
+  color: #94a3b8 !important;
+}
+
+/* Tables inside modals & pages */
+.dashboard-light th,
+body.dashboard-light th {
+  color: #64748b !important;
+  background-color: #f8fafc !important;
+}
+
+.dashboard-light td,
+body.dashboard-light td {
+  color: #0f172a !important;
+}
+
+/* Timeline vertical connecting line */
+.timeline-connecting-line {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+.dashboard-light .timeline-connecting-line,
+body.dashboard-light .timeline-connecting-line {
+  background-color: #cbd5e1 !important;
+}
+
+/* Fix light theme link and ghost button hover states */
+.dashboard-light .hover\:text-white:hover:not(.bg-brand):not(button.bg-brand):not(a.bg-brand):not(.bg-red-600),
+body.dashboard-light .hover\:text-white:hover:not(.bg-brand):not(button.bg-brand):not(a.bg-brand):not(.bg-red-600),
+.dashboard-light .group:hover .group-hover\:text-white:not(.bg-brand),
+body.dashboard-light .group:hover .group-hover\:text-white:not(.bg-brand) {
+  color: #0f172a !important;
+}
+
+/* ==========================================================================
+   HIGH CONTRAST BADGE & PILL ACCENTS IN LIGHT THEME
+   Ensures crystal clarity for status chips, tags, and timeline nodes
+   ========================================================================== */
+
+.dashboard-light .text-purple-300,
+body.dashboard-light .text-purple-300 { color: #7e22ce !important; }
+
+.dashboard-light .text-blue-300,
+body.dashboard-light .text-blue-300 { color: #1d4ed8 !important; }
+
+.dashboard-light .text-cyan-300,
+body.dashboard-light .text-cyan-300 { color: #0e7490 !important; }
+
+.dashboard-light .text-amber-300,
+body.dashboard-light .text-amber-300 { color: #b45309 !important; }
+
+.dashboard-light .text-rose-300,
+body.dashboard-light .text-rose-300 { color: #be123c !important; }
+
+.dashboard-light .text-sky-300,
+body.dashboard-light .text-sky-300 { color: #0369a1 !important; }
+
+.dashboard-light .text-indigo-300,
+body.dashboard-light .text-indigo-300 { color: #4338ca !important; }
+
+.dashboard-light .text-violet-300,
+body.dashboard-light .text-violet-300 { color: #6d28d9 !important; }
+
+.dashboard-light .text-fuchsia-300,
+body.dashboard-light .text-fuchsia-300 { color: #a21caf !important; }
+
+.dashboard-light .text-zinc-300,
+body.dashboard-light .text-zinc-300 { color: #334155 !important; }
+
+.dashboard-light .text-zinc-400,
+body.dashboard-light .text-zinc-400 { color: #64748b !important; }

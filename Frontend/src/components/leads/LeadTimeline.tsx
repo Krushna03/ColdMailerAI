@@ -233,8 +233,8 @@ export default function LeadTimeline({
 
   if (groupedTimeline.length === 0) {
     return (
-      <section className="rounded-2xl border border-dashed border-white/15 bg-surface-800/40 px-6 py-12 text-center">
-        <p className="text-lg font-semibold text-gray-200">No activity yet</p>
+      <section className="rounded-lg border border-dashed border-white/15 bg-surface-900 px-6 py-12 text-center">
+        <p className="text-lg font-semibold text-white">No activity yet</p>
         <p className="mt-2 text-sm text-gray-400">
           Generate an email or schedule a follow-up to start this lead&apos;s activity timeline.
         </p>
@@ -246,15 +246,19 @@ export default function LeadTimeline({
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">Lead Activity Timeline</h2>
-        <span className="text-xs font-mono text-gray-400">Single Source of Truth</span>
       </div>
 
-      <div className="relative space-y-6 before:absolute before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-white/10">
+      <div className="relative space-y-6">
+        {/* Continuous vertical connecting line */}
+        <div
+          className="pointer-events-none absolute left-4 top-4 bottom-4 w-0.5 -translate-x-1/2 bg-white/15 [body.dashboard-light_&]:bg-slate-300 timeline-connecting-line"
+          aria-hidden="true"
+        />
         {groupedTimeline.map((group) => (
           <div key={group.dateLabel} className="relative pl-10 space-y-3">
             {/* Date Node Badge */}
-            <div className="absolute left-0 top-0 flex items-center justify-center">
-              <div className="h-8 w-8 rounded-full border border-brand/40 bg-surface-900 flex items-center justify-center shadow-md">
+            <div className="absolute left-0 top-0 z-10 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-full border border-brand/40 bg-surface-900 flex items-center justify-center shadow-sm">
                 <Clock className="h-4 w-4 text-brand" />
               </div>
             </div>
@@ -289,12 +293,12 @@ export default function LeadTimeline({
                 return (
                   <div
                     key={item.id}
-                    className="relative rounded-2xl border border-white/10 bg-surface-900/40 p-4 backdrop-blur-md transition-all duration-200 hover:border-white/20"
+                    className="relative rounded-lg border border-white/10 bg-surface-900 p-4 transition-all duration-200 hover:border-white/20"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0 flex-1">
                         <div
-                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border ${config.color}`}
+                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${config.color}`}
                         >
                           <Icon className="h-4 w-4" />
                         </div>
@@ -317,21 +321,21 @@ export default function LeadTimeline({
 
                           {/* Email Content Preview */}
                           {email?.generatedEmail && (
-                            <p className="mt-2 text-xs text-gray-300 line-clamp-2 bg-surface-950/40 p-2 rounded-xl border border-white/5 font-sans">
+                            <p className="mt-2 text-xs text-gray-300 line-clamp-2 bg-surface-950 p-2.5 rounded-md border border-white/5 font-sans">
                               {emailPreview(email.generatedEmail)}
                             </p>
                           )}
 
                           {/* Follow-up Note */}
                           {followUp?.note && (
-                            <p className="mt-2 text-xs text-gray-300 bg-surface-950/40 p-2 rounded-xl border border-white/5">
+                            <p className="mt-2 text-xs text-gray-300 bg-surface-950 p-2.5 rounded-md border border-white/5 font-sans">
                               {followUp.note}
                             </p>
                           )}
 
                           {/* Activity metadata detail if note or status */}
                           {item.metadata?.notes && (
-                            <p className="mt-2 text-xs text-gray-300 bg-surface-950/40 p-2 rounded-xl border border-white/5">
+                            <p className="mt-2 text-xs text-gray-300 bg-surface-950 p-2.5 rounded-md border border-white/5 font-sans">
                               {item.metadata.notes}
                             </p>
                           )}
@@ -345,8 +349,8 @@ export default function LeadTimeline({
                             <Button
                               asChild
                               size="sm"
-                              variant="ghost"
-                              className="h-8 text-xs text-gray-300 hover:bg-white/10 hover:text-white"
+                              variant="outline"
+                              className="h-8 px-3 text-xs border border-white/15 bg-surface-900 text-white hover:bg-white/5 hover:text-gray-100"
                             >
                               <Link to={`/email/${email._id}`}>Open</Link>
                             </Button>
@@ -354,12 +358,12 @@ export default function LeadTimeline({
                               <Button
                                 type="button"
                                 size="sm"
-                                variant="ghost"
+                                variant="outline"
                                 disabled={isEmailBusy}
                                 onClick={() => onUnmarkSent?.(email._id)}
-                                className="h-8 text-xs text-gray-300 hover:bg-white/10 hover:text-white"
+                                className="h-8 px-3 text-xs border border-white/15 bg-surface-900 text-white hover:bg-white/5"
                               >
-                                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                                <RotateCcw className="h-3 w-3" />
                                 Undo
                               </Button>
                             ) : (
@@ -368,7 +372,7 @@ export default function LeadTimeline({
                                 size="sm"
                                 disabled={isEmailBusy}
                                 onClick={() => onMarkSent?.(email._id)}
-                                className="h-8 text-xs bg-brand text-white hover:bg-brand-400"
+                                className="h-8 px-3 text-xs bg-brand text-white hover:bg-brand-400 font-semibold"
                               >
                                 {isEmailBusy ? "Saving..." : "Mark sent"}
                               </Button>
@@ -383,28 +387,28 @@ export default function LeadTimeline({
                               size="sm"
                               disabled={isFollowUpBusy}
                               onClick={() => onCompleteFollowUp?.(followUp._id)}
-                              className="h-8 text-xs bg-brand text-white hover:bg-brand-400"
+                              className="h-8 px-3 text-xs bg-brand text-white hover:bg-brand-400 font-semibold"
                             >
-                              <Check className="h-3.5 w-3.5 mr-1" />
+                              <Check className="h-3.5 w-3.5" />
                               Done
                             </Button>
                             <Button
                               type="button"
                               size="sm"
-                              variant="ghost"
+                              variant="outline"
                               disabled={isFollowUpBusy}
                               onClick={() => onSkipFollowUp?.(followUp._id)}
-                              className="h-8 text-xs text-gray-300 hover:bg-white/10 hover:text-white"
+                              className="h-8 px-3 text-xs border border-white/15 bg-surface-900 text-white hover:bg-white/5"
                             >
                               Skip
                             </Button>
                             <Button
                               type="button"
                               size="sm"
-                              variant="ghost"
+                              variant="outline"
                               disabled={isFollowUpBusy}
                               onClick={() => onDeleteFollowUp?.(followUp._id)}
-                              className="h-8 text-xs text-red-300 hover:bg-white/10 hover:text-red-200"
+                              className="h-8 px-2.5 text-xs border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>

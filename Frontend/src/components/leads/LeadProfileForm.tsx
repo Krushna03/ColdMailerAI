@@ -189,11 +189,11 @@ export default function LeadProfileForm({
   const canSave = isDirty || hasTagChanges || hasCustomFieldChanges;
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-surface-800/50 p-5 space-y-6">
+    <section className="rounded-lg border border-white/10 bg-surface-900 p-4 sm:p-5 space-y-6">
       <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
         <div>
           <h2 className="text-base font-semibold text-white">Lead Profile</h2>
-          <p className="text-xs text-gray-400">Enterprise contact, company data, tags & custom fields</p>
+          <p className="mt-0.5 text-xs text-gray-400">Enterprise contact, company data, tags & custom fields</p>
         </div>
         {canSave && (
           <Button
@@ -201,7 +201,7 @@ export default function LeadProfileForm({
             size="sm"
             disabled={isSaving}
             onClick={submit}
-            className="bg-brand text-white hover:bg-brand-400 text-xs px-4"
+            className="bg-brand text-white hover:bg-brand-400 text-xs px-4 h-8 font-semibold"
           >
             {isSaving ? "Saving..." : "Save changes"}
           </Button>
@@ -343,13 +343,14 @@ export default function LeadProfileForm({
         </div>
 
         {/* Company card */}
-        <div className="rounded-xl border border-white/10 bg-surface-900/40 p-3.5 space-y-3">
+        {/* Company card */}
+        <div className="rounded-lg border border-white/10 bg-surface-950 p-3.5 space-y-3">
           <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
             Company Details
           </p>
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <label htmlFor="company-name" className="mb-1 block text-xs text-gray-300">
+              <label htmlFor="company-name" className="mb-1 block text-xs text-gray-400">
                 Company Name
               </label>
               <Input
@@ -360,7 +361,7 @@ export default function LeadProfileForm({
               />
             </div>
             <div>
-              <label htmlFor="company-domain" className="mb-1 block text-xs text-gray-300">
+              <label htmlFor="company-domain" className="mb-1 block text-xs text-gray-400">
                 Domain
               </label>
               <Input
@@ -371,7 +372,7 @@ export default function LeadProfileForm({
               />
             </div>
             <div>
-              <label htmlFor="company-industry" className="mb-1 block text-xs text-gray-300">
+              <label htmlFor="company-industry" className="mb-1 block text-xs text-gray-400">
                 Industry
               </label>
               <Input
@@ -384,7 +385,7 @@ export default function LeadProfileForm({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="company-size" className="mb-1 block text-xs text-gray-300">
+              <label htmlFor="company-size" className="mb-1 block text-xs text-gray-400">
                 Company Size
               </label>
               <Input
@@ -395,7 +396,7 @@ export default function LeadProfileForm({
               />
             </div>
             <div>
-              <label htmlFor="company-revenue" className="mb-1 block text-xs text-gray-300">
+              <label htmlFor="company-revenue" className="mb-1 block text-xs text-gray-400">
                 Revenue
               </label>
               <Input
@@ -409,13 +410,13 @@ export default function LeadProfileForm({
         </div>
 
         {/* Tags */}
-        <div className="rounded-xl border border-white/10 bg-surface-900/40 p-3.5 space-y-2.5">
+        <div className="rounded-lg border border-white/10 bg-surface-950 p-3.5 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
               <Tag className="h-3 w-3 text-brand-300" />
               Tags
             </span>
-            <span className="text-[11px] text-gray-500">Multi-tagging support</span>
+            <span className="text-[11px] text-gray-400">Multi-tagging support</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 min-h-[32px]">
@@ -430,14 +431,14 @@ export default function LeadProfileForm({
                 <button
                   type="button"
                   onClick={() => handleRemoveTag(tag)}
-                  className="hover:text-red-300 transition-colors"
+                  className="hover:text-red-400 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </span>
             ))}
             {tagsList.length === 0 && (
-              <span className="text-xs text-gray-500 italic">No tags assigned yet</span>
+              <span className="text-xs text-gray-400 italic">No tags assigned yet</span>
             )}
           </div>
 
@@ -452,14 +453,14 @@ export default function LeadProfileForm({
                 }
               }}
               placeholder="Add a tag (e.g. Decision Maker)"
-              className="h-8 bg-surface-950 border-white/10 text-xs"
+              className="h-8 bg-surface-900 border-white/15 text-xs text-white"
             />
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={handleAddTag}
-              className="h-8 border-white/15 border hover:bg-white/5 text-xs text-gray-300 shrink-0"
+              className="h-8 border border-white/15 bg-surface-900 hover:bg-white/5 text-xs text-white shrink-0 rounded-md"
             >
               <Plus className="h-3.5 w-3.5" />
               Add
@@ -468,36 +469,36 @@ export default function LeadProfileForm({
         </div>
 
         {/* Custom Fields */}
-        <div className="rounded-xl border border-white/10 bg-surface-900/40 p-3.5 space-y-2.5">
+        <div className="rounded-lg border border-white/10 bg-surface-950 p-3.5 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
               <Sliders className="h-3 w-3 text-brand-300" />
               Custom Fields (Metadata)
             </span>
-            <span className="text-[11px] text-gray-500">Flexible key-value attributes</span>
+            <span className="text-[11px] text-gray-400">Flexible key-value attributes</span>
           </div>
 
           <div className="space-y-1.5">
             {Object.entries(customFieldsState).map(([k, v]) => (
               <div
                 key={k}
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-surface-950/70 border border-white/5 text-xs"
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-surface-900 border border-white/10 text-xs"
               >
                 <div className="flex items-center gap-2 truncate">
                   <span className="font-mono text-brand-300">{k}:</span>
-                  <span className="text-gray-300">{String(v)}</span>
+                  <span className="text-white">{String(v)}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleRemoveCustomField(k)}
-                  className="text-gray-500 hover:text-red-400 transition-colors ml-2"
+                  className="text-gray-400 hover:text-red-400 transition-colors ml-2"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}
             {Object.keys(customFieldsState).length === 0 && (
-              <p className="text-xs text-gray-500 italic">
+              <p className="text-xs text-gray-400 italic">
                 No custom fields defined (e.g. companyTech, fundingStage).
               </p>
             )}
@@ -508,20 +509,20 @@ export default function LeadProfileForm({
               value={newFieldKey}
               onChange={(e) => setNewFieldKey(e.target.value)}
               placeholder="Field name (e.g. companyTech)"
-              className="h-8 bg-surface-950 border-white/10 text-xs w-1/2"
+              className="h-8 bg-surface-900 border-white/15 text-xs text-white w-1/2"
             />
             <Input
               value={newFieldValue}
               onChange={(e) => setNewFieldValue(e.target.value)}
               placeholder="Value (e.g. React)"
-              className="h-8 bg-surface-950 border-white/10 text-xs w-1/2"
+              className="h-8 bg-surface-900 border-white/15 text-xs text-white w-1/2"
             />
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={handleAddCustomField}
-              className="h-8 border-white/15 border hover:bg-white/5 text-xs text-gray-300 shrink-0"
+              className="h-8 border border-white/15 bg-surface-900 hover:bg-white/5 text-xs text-white shrink-0 rounded-md"
             >
               <Plus className="h-3.5 w-3.5" />
               Add

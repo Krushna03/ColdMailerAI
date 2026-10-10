@@ -42,7 +42,7 @@ export default function LeadDetailHeader({
 
   return (
     <>
-      <div className="-mt-3.5 -mb-3">
+      <div className="-mb-4">
         <Link
           to="/dashboard/leads"
           className="inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
@@ -76,30 +76,30 @@ export default function LeadDetailHeader({
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={onAddFollowUp}
-              className="border border-white/10 text-gray-200 hover:bg-white/10 hover:text-white text-xs sm:text-[12.5px] px-3"
+              className="border border-white/15 bg-surface-900 text-white hover:bg-white/5 hover:text-gray-100 text-xs sm:text-[12px] px-3 h-8 rounded-md"
             >
-              <CalendarPlus className="h-2 w-2" />
+              <CalendarPlus className="h-3 w-3" />
               Add follow-up
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               disabled={!canMarkLatestSent || isMarkingSent}
               onClick={onMarkLatestSent}
-              className="border border-white/10 text-gray-200 hover:bg-white/10 hover:text-white disabled:opacity-40 text-xs sm:text-[12.5px] px-3"
+              className="border border-white/15 bg-surface-900 text-white hover:bg-white/5 disabled:opacity-40 hover:text-gray-100 text-xs sm:text-[12.5px] px-3 h-8 rounded-md"
             >
-              <Send className="h-2 w-2" />
+              <Send className="h-3.5 w-3.5" />
               {isMarkingSent ? "Marking..." : "Mark latest sent"}
             </Button>
             {onOpenContextualAI && (
               <Button
                 type="button"
                 onClick={onOpenContextualAI}
-                className="bg-gradient-to-r from-purple-600 via-indigo-600 to-brand hover:from-purple-500 hover:to-brand-400 text-white text-xs sm:text-[12.5px] px-3 shadow-sm border border-purple-500/30 font-medium"
+                className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[12.5px] px-3 h-8 rounded-md font-semibold shadow-none flex items-center"
               >
-                <Sparkles className="h-3 w-3 mr-1 text-purple-200" />
+                <Sparkles className="h-3.5 w-3.5" />
                 AI Intelligence
               </Button>
             )}
@@ -107,9 +107,9 @@ export default function LeadDetailHeader({
               type="button"
               disabled={isGenerating}
               onClick={onGenerate}
-              className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[12.5px] px-3"
+              className="bg-brand text-white hover:bg-brand-400 text-xs sm:text-[12.5px] px-3 h-8 rounded-md font-semibold shadow-none"
             >
-              <Mail className="h-2 w-2" />
+              <Mail className="h-3.5 w-3.5" />
               {isGenerating ? "Generating..." : "Generate email"}
             </Button>
           </div>

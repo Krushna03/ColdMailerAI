@@ -61,25 +61,25 @@ export default function AddCategoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg border-white/20 bg-surface-900 p-0 text-white sm:rounded-3xl [&>button]:text-slate-400 [&>button]:hover:text-white">
-        <DialogHeader className="space-y-2 border-b border-white/10 px-6 pb-4 pt-5 pr-12 text-left">
-          <DialogTitle className="text-xl font-semibold text-white">
+      <DialogContent className="max-w-lg border border-white/10 bg-surface-900 p-0 text-white sm:rounded-lg">
+        <DialogHeader className="space-y-1 border-b border-white/10 px-6 pb-4 pt-5 pr-12 text-left bg-surface-950/60">
+          <DialogTitle className="text-lg font-semibold text-white">
             Add category
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-400">
+          <DialogDescription className="text-xs text-gray-400">
             Create a custom outreach category for your leads only.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4 px-6 pb-5">
+        <form onSubmit={submit} className="space-y-4 px-6 pt-0 py-5">
           <div>
-            <label htmlFor="category-name" className="mb-1.5 block text-sm text-gray-300">
+            <label htmlFor="category-name" className="mb-1.5 block text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Name <span className="text-red-400">*</span>
             </label>
             <Input
               id="category-name"
               placeholder="e.g. Investor Outreach"
-              className={fieldClass}
+              className="h-9 border border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20 text-xs sm:text-sm rounded-md"
               {...register("name", {
                 required: "Category name is required",
                 minLength: {
@@ -96,24 +96,24 @@ export default function AddCategoryDialog({
           <div>
             <label
               htmlFor="category-description"
-              className="mb-1.5 block text-sm text-gray-300"
+              className="mb-1.5 block text-xs font-semibold text-gray-400 uppercase tracking-wider"
             >
               Description
             </label>
             <Textarea
               id="category-description"
               placeholder="Optional short note about when to use this category"
-              className="min-h-[80px] border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-white/20 focus-visible:ring-1 focus-visible:ring-white/10 focus-visible:ring-offset-0 md:text-sm"
+              className="min-h-[80px] border border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20 focus-visible:ring-offset-0 text-xs sm:text-sm rounded-md"
               {...register("description")}
             />
           </div>
 
-          <DialogFooter className="gap-3 border-t border-white/10 px-0 pb-0 pt-4 sm:space-x-0">
+          <DialogFooter className="gap-2 border-t border-white/10 px-0 pb-0 pt-4 sm:space-x-0">
             <DialogClose asChild>
               <Button
                 type="button"
                 variant="ghost"
-                className="text-gray-300 hover:bg-white/10 hover:text-white"
+                className="h-9 px-3 text-xs sm:text-sm text-gray-400 hover:bg-white/5 hover:text-white"
               >
                 Cancel
               </Button>
@@ -121,7 +121,7 @@ export default function AddCategoryDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-brand text-white hover:bg-brand-400"
+              className="h-9 px-4 bg-brand text-white hover:bg-brand-400 text-xs sm:text-sm font-semibold rounded-md"
             >
               {isSubmitting ? "Saving..." : "Add category"}
             </Button>

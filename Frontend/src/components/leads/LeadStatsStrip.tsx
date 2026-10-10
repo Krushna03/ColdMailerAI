@@ -22,21 +22,23 @@ export default function LeadStatsStrip({ stats }: LeadStatsStripProps) {
   ];
 
   return (
-    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => (
-        <div
+        <article
           key={item.label}
-          className="rounded-2xl border border-white/10 bg-surface-800/50 px-4 py-3"
+          className="rounded-lg border border-white/10 bg-surface-900 p-4"
         >
-          <p className="text-xs uppercase tracking-wide text-gray-500">{item.label}</p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            {item.label}
+          </p>
           <p
-            className={`mt-1 font-semibold text-white ${
-              item.wide ? "text-sm" : "text-xl"
+            className={`mt-2 font-semibold text-white tracking-tight ${
+              item.wide ? "text-xs sm:text-sm font-sans" : "text-xl sm:text-lg font-mono"
             }`}
           >
             {item.value}
           </p>
-        </div>
+        </article>
       ))}
     </section>
   );

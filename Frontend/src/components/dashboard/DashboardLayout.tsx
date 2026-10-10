@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu, Sun, Moon } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -34,6 +34,17 @@ function DashboardLayoutContent() {
   const user = useSelector((state: RootState) => state.auth.userData);
   const title = getPageTitle(location.pathname);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.body.classList.add("dashboard-light");
+    } else {
+      document.body.classList.remove("dashboard-light");
+    }
+    return () => {
+      document.body.classList.remove("dashboard-light");
+    };
+  }, [theme]);
 
   return (
     <div
@@ -81,6 +92,8 @@ function DashboardLayoutContent() {
           </div>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-3">
+            <NotificationBell />
+
             {/* White / Dark Theme Switcher Button */}
             <button
               type="button"
@@ -95,8 +108,6 @@ function DashboardLayoutContent() {
                 <Sun className="h-4 w-4 text-amber-300 hover:text-amber-200" />
               )}
             </button>
-
-            <NotificationBell />
 
             <NavLink
               to="/dashboard/profile"
