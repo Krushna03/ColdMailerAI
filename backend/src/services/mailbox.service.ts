@@ -459,8 +459,12 @@ export async function testMailboxConnectionService({
       message: "Connection test succeeded",
     };
   } catch (error: any) {
-    await mailbox.recordSendFailure(error.message);
-    throw new ApiError(502, `Connection test failed: ${error.message}`);
+    const cleanMessage =
+      error.message?.replace(/^Connection test failed:\s*/i, "") ||
+      "Connection verification failed";
+    await mailbox.recordSendFailure(cleanMessage);
+    const statusCode = error.statusCode === 401 ? 400 : (error.statusCode || 502);
+    throw new ApiError(statusCode, `Connection test failed: ${cleanMessage}`);
   }
 }
 

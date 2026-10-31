@@ -210,6 +210,16 @@ export default function Sequences() {
     updateStatusMutation.mutate({ id: seq._id, status: nextStatus });
   };
 
+  const handleDeleteConfirm = () => {
+    if (!sequenceToDelete) return;
+    deleteMutation.mutate(sequenceToDelete._id, {
+      onSettled: () => {
+        setDeleteModalOpen(false);
+        setSequenceToDelete(null);
+      },
+    });
+  };
+
   return (
     <div className="space-y-5 text-white">
       <Seo
@@ -218,12 +228,12 @@ export default function Sequences() {
       />
 
       {/* Header */}
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-xl font-semibold tracking-tight text-white sm:text-[23px]">
             Sales Sequences & Cadences
           </h1>
-          <p className="mt-1 max-w-xl text-sm text-gray-400">
+          <p className="mt-1 max-w-xl text-[13px] text-gray-400">
             Design multi-step email pipelines & AI workflows that automatically stop on reply.
           </p>
         </div>
@@ -239,7 +249,7 @@ export default function Sequences() {
             <RefreshCw
               className={`h-3 w-3 ${triggerRunMutation.isPending ? "animate-spin" : ""}`}
             />
-            Run Engine Now
+            Run Engine
           </Button>
 
           <Button
@@ -254,9 +264,8 @@ export default function Sequences() {
       </section>
 
       {/* Overview Stat Cards matching Dashboard & Mailboxes */}
-      <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-        {/* Total Sequences */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+      {/* <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Total Sequences
@@ -266,7 +275,7 @@ export default function Sequences() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-xl sm:text-base font-semibold text-white tracking-tight font-mono">
               {totalSequences}
             </p>
             {activeSequences > 0 && (
@@ -280,8 +289,7 @@ export default function Sequences() {
           </p>
         </article>
 
-        {/* Active Workflows */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Active Workflows
@@ -291,7 +299,7 @@ export default function Sequences() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-xl sm:text-base font-semibold text-white tracking-tight font-mono">
               {activeSequences}
             </p>
             <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
@@ -303,8 +311,7 @@ export default function Sequences() {
           </p>
         </article>
 
-        {/* Leads Enrolled */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Leads Enrolled
@@ -314,7 +321,7 @@ export default function Sequences() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-xl sm:text-base font-semibold text-white tracking-tight font-mono">
               {totalEnrolled}
             </p>
             {totalReplied > 0 && (
@@ -328,8 +335,7 @@ export default function Sequences() {
           </p>
         </article>
 
-        {/* Overall Reply Rate */}
-        <article className="rounded-lg border border-white/10 bg-surface-900 p-4">
+        <article className="rounded-lg border border-white/10 bg-surface-900 p-4 py-2">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
               Overall Reply Rate
@@ -339,7 +345,7 @@ export default function Sequences() {
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="text-xl sm:text-xl font-semibold text-white tracking-tight font-mono">
+            <p className="text-xl sm:text-base font-semibold text-white tracking-tight font-mono">
               {replyRate}%
             </p>
             <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
@@ -350,18 +356,18 @@ export default function Sequences() {
             Halts cadence when prospect responds
           </p>
         </article>
-      </section>
+      </section> */}
 
       {/* Sequences Header & Filters */}
-      <section className="space-y-4 pt-3">
+      <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             {["all", "active", "draft", "paused"].map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setStatusFilter(tab)}
-                className={`h-8 px-3 rounded-md text-xs font-medium capitalize transition-colors ${
+                className={`h-8 px-4 rounded-md text-xs font-medium capitalize transition-colors ${
                   statusFilter === tab
                     ? "bg-brand text-white font-medium shadow-none"
                     : "border border-white/15 bg-surface-900 text-gray-400 hover:text-white hover:bg-white/5"
@@ -372,7 +378,7 @@ export default function Sequences() {
             ))}
           </div>
 
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
             <Input
               value={search}
@@ -398,7 +404,7 @@ export default function Sequences() {
             <h3 className="mt-3 text-base sm:text-lg font-semibold text-white tracking-tight">
               No Sequences Found
             </h3>
-            <p className="mx-auto mt-1 max-w-lg text-xs sm:text-sm text-gray-400">
+            <p className="mx-auto mt-1 max-w-md text-xs sm:text-sm text-gray-400">
               Create multi-step sales cadences with automated follow-ups and reply-stopping rules.
             </p>
             <Button
@@ -407,7 +413,7 @@ export default function Sequences() {
               className="mt-4 h-9 px-3.5 text-xs sm:text-[13px] rounded-md bg-brand text-white hover:bg-brand-400 font-medium shadow-none transition-colors inline-flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
-              Create Your First Sequence
+              Create Sequence
             </Button>
           </div>
         ) : (
@@ -459,9 +465,9 @@ export default function Sequences() {
                           className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
                         >
                           {isActive ? (
-                            <Pause className="h-3.5 w-3.5 text-amber-400" />
+                            <Pause className="h-3.5 w-3.5" />
                           ) : (
-                            <Play className="h-3.5 w-3.5 text-emerald-400" />
+                            <Play className="h-3.5 w-3.5" />
                           )}
                         </button>
                         <button
@@ -498,7 +504,7 @@ export default function Sequences() {
                         {seq.stepsCount || 0} Steps
                       </span>
                       {seq.settings?.stopOnReply && (
-                        <span className="flex items-center gap-1 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20 text-purple-300">
+                        <span className="flex items-center gap-1 bg-purple-500/5 px-2 py-0.5 rounded-md border border-purple-500/10 text-purple-200">
                           <CheckCircle className="h-3 w-3" />
                           Stop on Reply
                         </span>
@@ -520,11 +526,11 @@ export default function Sequences() {
                         <span className="text-[10px] text-gray-400 uppercase tracking-wider block mt-0.5">Enrolled</span>
                       </div>
                       <div className="bg-surface-950 p-2 rounded-md border border-white/5">
-                        <div className="text-emerald-400 font-mono font-medium text-xs sm:text-sm">{seq.stats?.activeCount || 0}</div>
+                        <div className="font-mono font-medium text-xs sm:text-sm">{seq.stats?.activeCount || 0}</div>
                         <span className="text-[10px] text-gray-400 uppercase tracking-wider block mt-0.5">Active</span>
                       </div>
                       <div className="bg-surface-950 p-2 rounded-md border border-white/5">
-                        <div className="text-purple-400 font-mono font-medium text-xs sm:text-sm">{seq.stats?.repliedCount || 0}</div>
+                        <div className="font-mono font-medium text-xs sm:text-sm">{seq.stats?.repliedCount || 0}</div>
                         <span className="text-[10px] text-gray-400 uppercase tracking-wider block mt-0.5">Replied</span>
                       </div>
                     </div>
@@ -715,15 +721,16 @@ export default function Sequences() {
       {/* Delete Sequence Dialog */}
       <ConfirmDeleteDialog
         open={deleteModalOpen}
-        onOpenChange={setDeleteModalOpen}
-        title="Delete Sequence"
-        description={`Are you sure you want to delete "${sequenceToDelete?.name}"? All workflow steps and active lead enrollments will be permanently removed.`}
-        onConfirm={() => {
-          if (sequenceToDelete) {
-            deleteMutation.mutate(sequenceToDelete._id);
+        onOpenChange={(open) => {
+          setDeleteModalOpen(open);
+          if (!open) {
             setSequenceToDelete(null);
           }
         }}
+        title="Delete Sequence"
+        description={`Are you sure you want to delete "${sequenceToDelete?.name || "this sequence"}"? All workflow steps and active lead enrollments will be permanently removed.`}
+        isDeleting={deleteMutation.isPending}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );

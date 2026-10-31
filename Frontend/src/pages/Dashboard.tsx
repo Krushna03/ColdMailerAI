@@ -91,7 +91,7 @@ export default function Dashboard() {
 
       <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
             Outreach Overview
           </h1>
           <p className="mt-1 max-w-xl text-sm text-gray-400">

@@ -33,8 +33,9 @@ api.interceptors.response.use(
   (error) => {
     const requestUrl = error.config?.url || "";
     const isAuthFree = AUTH_FREE_PATHS.some((path) => requestUrl.includes(path));
+    const isMailboxEndpoint = requestUrl.includes("/mailboxes");
 
-    if (error.response?.status === 401 && !isAuthFree) {
+    if (error.response?.status === 401 && !isAuthFree && !isMailboxEndpoint) {
       removeToken();
       window.location.href = "/sign-in";
     }

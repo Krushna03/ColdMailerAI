@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,6 @@ export default function CreateSegmentDialog({ open, onOpenChange, onSegmentCreat
   const [tags, setTags] = useState("");
   const [daysAgo, setDaysAgo] = useState("");
   const [color, setColor] = useState("purple");
-  const [previewResult, setPreviewResult] = useState<{ totalMatching: number } | null>(null);
 
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) =>
@@ -105,25 +104,6 @@ export default function CreateSegmentDialog({ open, onOpenChange, onSegmentCreat
     return filters;
   };
 
-  const handlePreview = async () => {
-    try {
-      const filters = buildFiltersPayload();
-      const res = await previewSegment.mutateAsync({ filters, limit: 5 });
-      setPreviewResult(res as any);
-    } catch (err: any) {
-      toast({
-        title: "Preview failed",
-        description: err.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Auto-reset preview on filter change
-  useEffect(() => {
-    setPreviewResult(null);
-  }, [jobTitles, industry, selectedStatuses, tags, daysAgo]);
-
   const resetForm = () => {
     setName("");
     setDescription("");
@@ -133,7 +113,6 @@ export default function CreateSegmentDialog({ open, onOpenChange, onSegmentCreat
     setTags("");
     setDaysAgo("");
     setColor("purple");
-    setPreviewResult(null);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -176,298 +155,269 @@ export default function CreateSegmentDialog({ open, onOpenChange, onSegmentCreat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl bg-surface-900 border border-white/15 text-white p-0 gap-0 shadow-2xl rounded-2xl overflow-hidden font-sans">
+      <DialogContent className="flex max-h-[90vh] sm:max-w-3xl flex-col overflow-hidden bg-surface-900 border border-white/15 text-white p-0 gap-0 shadow-2xl rounded-2xl font-sans">
         {/* Header with glowing icon & gradient accent */}
-        <div className="relative px-6 py-5 border-b border-white/10">
+        <div className="relative px-6 py-4 border-b border-white/10 shrink-0">
           <div className="flex items-start gap-3.5">
             <div className="pr-6">
-              <DialogTitle className="text-lg sm:text-xl font-bold text-white tracking-tight">
+              <DialogTitle className="text-lg sm:text-[19px] font-bold text-white tracking-tight">
                 Create Dynamic Segment
               </DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm text-gray-400 mt-1 leading-normal">
+              <DialogDescription className="text-xs sm:text-xs text-gray-400 mt-1 leading-normal">
                 Define rules to automatically group matching leads. Saved queries run dynamically in real time.
               </DialogDescription>
             </div>
           </div>
         </div>
 
-        {/* Scrollable Form Body with custom subtle scrollbar */}
+        {/* Form Container */}
         <form
           onSubmit={handleSave}
-          className="max-h-[75vh] sm:max-h-[70vh] overflow-y-auto px-6 py-5 space-y-5 text-left [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+          className="flex flex-col flex-1 min-h-0 overflow-hidden text-left"
         >
-          {/* Segment Identity Row */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
-              <div className="sm:col-span-8">
-                <label className="text-xs font-semibold text-gray-200 block mb-1.5">
-                  Segment Name <span className="text-brand-400">*</span>
-                </label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Uncontacted SaaS CEOs"
-                  className="h-10 bg-surface-950/80 border-white/15 text-sm placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:border-brand-400"
-                  required
-                />
-              </div>
-
-              {/* Color Picker */}
-              <div className="sm:col-span-4">
-                <label className="text-xs font-semibold text-gray-200 block mb-1.5">
-                  Color Tag
-                </label>
-                <div className="flex items-center gap-1.5 h-10 px-2.5 rounded-md border border-white/10 bg-surface-950/50">
-                  {COLOR_OPTIONS.map((c) => (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => setColor(c.value)}
-                      title={c.name}
-                      className={`h-5 w-5 rounded-full ${c.bg} flex items-center justify-center transition-all ${
-                        color === c.value
-                          ? "ring-2 ring-white ring-offset-2 ring-offset-surface-900 scale-110 shadow-sm"
-                          : "opacity-60 hover:opacity-100"
-                      }`}
-                    >
-                      {color === c.value && <Check className="h-3 w-3 text-white stroke-[3]" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Description (Optional) */}
-            <div>
-              <label className="text-xs font-medium text-gray-300 block mb-1">
-                Description <span className="text-gray-500 font-normal">(optional)</span>
-              </label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief summary of who this audience targets..."
-                className="bg-surface-950/80 border-white/15 text-sm md:text-[14px] text-gray-200 placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:border-brand-400 resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Dynamic Criteria Card */}
-          <div className="rounded-xl border border-white/10 bg-surface-950/60 p-4 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase text-brand-300">
-                <Sliders className="h-3.5 w-3.5" />
-                <span>Filter Criteria</span>
-              </div>
-              <span className="text-[11px] text-gray-400">All rules combined via dynamic query</span>
-            </div>
-
-            {/* Job Titles & Industry Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-                    <Briefcase className="h-3.5 w-3.5 text-gray-400" />
-                    <span>Job Titles</span>
+          {/* Scrollable Middle Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+            {/* Segment Identity Row */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+                <div className="sm:col-span-8">
+                  <label className="text-xs font-semibold text-gray-200 block mb-1.5">
+                    Segment Name <span className="text-brand-400">*</span>
                   </label>
-                  <span className="text-[10px] text-gray-500">Comma-separated</span>
-                </div>
-                <Input
-                  value={jobTitles}
-                  onChange={(e) => setJobTitles(e.target.value)}
-                  placeholder="e.g. CEO, Founder, VP Sales"
-                  className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 focus-visible:ring-brand-400/40 sm:text-sm md:text-[12px]"
-                />
-                {/* Suggestions */}
-                <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                  {SUGGESTED_ROLES.map((role) => (
-                    <button
-                      key={role}
-                      type="button"
-                      onClick={() => appendSuggestion(jobTitles, setJobTitles, role)}
-                      className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 transition-colors"
-                    >
-                      + {role}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 text-gray-400" />
-                    <span>Industry</span>
-                  </label>
-                  <span className="text-[10px] text-gray-500">Comma-separated</span>
-                </div>
-                <Input
-                  value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
-                  placeholder="e.g. SaaS, Fintech, AI"
-                  className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 focus-visible:ring-brand-400/40 sm:text-sm md:text-[12px]"
-                />
-                {/* Suggestions */}
-                <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                  {SUGGESTED_INDUSTRIES.map((ind) => (
-                    <button
-                      key={ind}
-                      type="button"
-                      onClick={() => appendSuggestion(industry, setIndustry, ind)}
-                      className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 transition-colors"
-                    >
-                      + {ind}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Tags & Inactivity Period Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-                    <Tag className="h-3.5 w-3.5 text-gray-400" />
-                    <span>Required Tags</span>
-                  </label>
-                  <span className="text-[10px] text-gray-500">Comma-separated</span>
-                </div>
-                <Input
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g. Enterprise, Series B"
-                  className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 focus-visible:ring-brand-400/40 sm:text-sm md:text-[13px]"
-                />
-                {/* Suggestions */}
-                <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                  {availableSuggestedTags.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => appendSuggestion(tags, setTags, t)}
-                      className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 transition-colors"
-                    >
-                      + {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-gray-400" />
-                    <span>Inactivity Period</span>
-                  </label>
-                  <span className="text-[10px] text-gray-500">Not contacted in</span>
-                </div>
-                <div className="relative">
                   <Input
-                    type="number"
-                    min={0}
-                    value={daysAgo}
-                    onChange={(e) => setDaysAgo(e.target.value)}
-                    placeholder="e.g. 7"
-                    className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 pr-12 focus-visible:ring-brand-400/40 sm:text-sm md:text-[12px]"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Uncontacted SaaS CEOs"
+                    className="h-9 bg-surface-950/80 border-white/15 text-sm placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:border-brand-400"
+                    required
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 pointer-events-none">
-                    days
-                  </span>
                 </div>
-                {/* Quick Days Selector */}
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="text-[10px] text-gray-500">Quick set:</span>
-                  {QUICK_DAYS.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setDaysAgo(daysAgo === String(d) ? "" : String(d))}
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono border transition-all ${
-                        daysAgo === String(d)
-                          ? "bg-brand/20 border-brand text-brand-300 font-semibold"
-                          : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                      }`}
-                    >
-                      {d}d
-                    </button>
-                  ))}
+
+                {/* Color Picker */}
+                <div className="sm:col-span-4">
+                  <label className="text-xs font-semibold text-gray-200 block mb-1.5">
+                    Color Tag
+                  </label>
+                  <div className="flex items-center gap-1.5 h-9 px-2.5 rounded-md border border-white/10 bg-surface-950/50">
+                    {COLOR_OPTIONS.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setColor(c.value)}
+                        title={c.name}
+                        className={`h-5 w-5 rounded-full ${c.bg} flex items-center justify-center transition-all ${
+                          color === c.value
+                            ? "ring-1 ring-white ring-offset-1 ring-offset-surface-900 scale-105 shadow-sm"
+                            : "opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        {color === c.value && <Check className="h-3 w-3 text-white stroke-[3]" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+              </div>
+
+              {/* Description (Optional) */}
+              <div>
+                <label className="text-xs font-medium text-gray-300 block mb-1">
+                  Description <span className="text-gray-500 font-normal">(optional)</span>
+                </label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Brief summary of who this audience targets..."
+                  className="bg-surface-950/80 border-white/15 text-sm md:text-[14px] text-gray-200 placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:border-brand-400 resize-none"
+                />
               </div>
             </div>
 
-            {/* Lead Status Multi-select */}
-            <div className="pt-2 border-t border-white/5">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-gray-400" />
-                  <span>Lead Statuses</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={handleSelectAllStatuses}
-                  className="text-[11px] text-brand-300 hover:text-brand-200 transition-colors"
-                >
-                  {selectedStatuses.length === LEAD_STATUS_OPTIONS.length ? "Deselect All" : "Select All"}
-                </button>
+            {/* Dynamic Criteria Card */}
+            <div className="rounded-xl border border-white/10 bg-surface-950/60 p-4 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase text-brand-300">
+                  <Sliders className="h-3.5 w-3.5" />
+                  <span>Filter Criteria</span>
+                </div>
+                <span className="text-[11px] text-gray-400">All rules combined via dynamic query</span>
               </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {LEAD_STATUS_OPTIONS.map((opt) => {
-                  const active = selectedStatuses.includes(opt.value);
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => toggleStatus(opt.value)}
-                      className={`h-8 px-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 border ${
-                        active
-                          ? "bg-brand/20 border-brand text-white shadow-sm ring-1 ring-brand/40"
-                          : "bg-surface-900 border-white/10 text-gray-400 hover:text-gray-200 hover:bg-white/5"
-                      }`}
-                    >
-                      {active && <Check className="h-3 w-3 text-brand-400 shrink-0" />}
-                      <span>{opt.label}</span>
-                    </button>
-                  );
-                })}
+              {/* Job Titles & Industry Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                      <Briefcase className="h-3.5 w-3.5 text-gray-400" />
+                      <span>Job Titles</span>
+                    </label>
+                    <span className="text-[10px] text-gray-500">Comma-separated</span>
+                  </div>
+                  <Input
+                    value={jobTitles}
+                    onChange={(e) => setJobTitles(e.target.value)}
+                    placeholder="e.g. CEO, Founder, VP Sales"
+                    className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 focus-visible:ring-brand-400/40 sm:text-sm md:text-[12px]"
+                  />
+                  {/* Suggestions */}
+                  <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                    {SUGGESTED_ROLES.map((role) => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => appendSuggestion(jobTitles, setJobTitles, role)}
+                        className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 transition-colors"
+                      >
+                        + {role}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                      <span>Industry</span>
+                    </label>
+                    <span className="text-[10px] text-gray-500">Comma-separated</span>
+                  </div>
+                  <Input
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    placeholder="e.g. SaaS, Fintech, AI"
+                    className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 focus-visible:ring-brand-400/40 sm:text-sm md:text-[12px]"
+                  />
+                  {/* Suggestions */}
+                  <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                    {SUGGESTED_INDUSTRIES.map((ind) => (
+                      <button
+                        key={ind}
+                        type="button"
+                        onClick={() => appendSuggestion(industry, setIndustry, ind)}
+                        className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 transition-colors"
+                      >
+                        + {ind}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags & Inactivity Period Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5 text-gray-400" />
+                      <span>Required Tags</span>
+                    </label>
+                    <span className="text-[10px] text-gray-500">Comma-separated</span>
+                  </div>
+                  <Input
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    placeholder="e.g. Enterprise, Series B"
+                    className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 focus-visible:ring-brand-400/40 sm:text-sm md:text-[13px]"
+                  />
+                  {/* Suggestions */}
+                  <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                    {availableSuggestedTags.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => appendSuggestion(tags, setTags, t)}
+                        className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 transition-colors"
+                      >
+                        + {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-gray-400" />
+                      <span>Inactivity Period</span>
+                    </label>
+                    <span className="text-[10px] text-gray-500">Not contacted in</span>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min={0}
+                      value={daysAgo}
+                      onChange={(e) => setDaysAgo(e.target.value)}
+                      placeholder="e.g. 7"
+                      className="h-9 bg-surface-900 border-white/15 text-xs placeholder:text-gray-500 pr-12 focus-visible:ring-brand-400/40 sm:text-sm md:text-[12px]"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 pointer-events-none">
+                      days
+                    </span>
+                  </div>
+                  {/* Quick Days Selector */}
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[10px] text-gray-500">Quick set:</span>
+                    {QUICK_DAYS.map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDaysAgo(daysAgo === String(d) ? "" : String(d))}
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono border transition-all ${
+                          daysAgo === String(d)
+                            ? "bg-brand/20 border-brand text-brand-300 font-semibold"
+                            : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        {d}d
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lead Status Multi-select */}
+              <div className="pt-2 border-t border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-gray-400" />
+                    <span>Lead Statuses</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllStatuses}
+                    className="text-[11px] text-brand-300 hover:text-brand-200 transition-colors"
+                  >
+                    {selectedStatuses.length === LEAD_STATUS_OPTIONS.length ? "Deselect All" : "Select All"}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {LEAD_STATUS_OPTIONS.map((opt) => {
+                    const active = selectedStatuses.includes(opt.value);
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => toggleStatus(opt.value)}
+                        className={`h-7 px-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-center gap-1.5 border ${
+                          active
+                            ? "bg-brand/20 border-brand text-white shadow-sm ring-1 ring-brand/40"
+                            : "bg-surface-900 border-white/10 text-gray-400 hover:text-gray-200 hover:bg-white/5"
+                        }`}
+                      >
+                        {active && <Check className="h-3 w-3 text-brand-400 shrink-0" />}
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Live Preview Banner */}
-          {previewResult !== null && (
-            <div className="rounded-xl border border-brand/30 bg-gradient-to-r from-brand/15 via-purple-500/10 to-transparent p-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div>
-                  <p className="text-xs font-semibold text-white">
-                    {previewResult.totalMatching}{" "}
-                    {previewResult.totalMatching === 1 ? "lead matches" : "leads match"} this segment
-                  </p>
-                  <p className="text-[11px] text-gray-400">
-                    Query criteria tested against your live workspace leads.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Modal Footer */}
-          <div className="pt-2 border-t border-white/10 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-            {/* Live Preview Button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handlePreview}
-              disabled={previewSegment.isPending}
-              className="border-white/15 bg-white/5 hover:bg-white/10 text-xs text-gray-200 hover:text-gray-100 h-9 px-3 gap-1.5 justify-center sm:justify-start"
-            >
-              {previewSegment.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-400" />
-              ) : null}
-              <span>{previewSegment.isPending ? "Evaluating Query..." : "Preview Matching Leads"}</span>
-            </Button>
-
+          {/* Sticky Modal Footer */}
+          <div className="shrink-0 border-t border-white/10 bg-surface-900 px-6 py-3.5 flex sm:items-center sm:justify-end gap-3">
             {/* Action Buttons */}
             <div className="flex items-center gap-2 justify-end">
               <Button
@@ -475,7 +425,7 @@ export default function CreateSegmentDialog({ open, onOpenChange, onSegmentCreat
                 variant="ghost"
                 size="sm"
                 onClick={() => onOpenChange(false)}
-                className="text-gray-400 hover:text-white h-9 px-4 text-xs"
+                className="border border-white/10 text-gray-300 hover:text-white h-9 px-4 text-xs"
               >
                 Cancel
               </Button>

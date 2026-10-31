@@ -119,7 +119,7 @@ function DashboardLayoutContent() {
           </div>
         </header>
 
-        <main className="relative mx-auto w-full min-w-0 max-w-7xl px-4 pb-8 pt-3 sm:px-6 lg:px-8">
+        <main className="relative mx-auto w-full min-w-0 max-w-7xl px-4 pb-8 pt-3 sm:px-6 lg:px-6">
           <Outlet />
         </main>
       </div>

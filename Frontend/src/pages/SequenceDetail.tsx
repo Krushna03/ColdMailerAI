@@ -381,19 +381,14 @@ export default function SequenceDetail() {
       {/* Sticky Top Header & Tabs Wrapper */}
       <div className="sticky top-14 z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-6 bg-surface-950/95 backdrop-blur-md border-b border-white/10 pt-2 pb-0">
         {/* Top Navigation & Status Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="h-6 w-8 p-0 rounded-md border border-white/15 bg-surface-900 text-gray-300 hover:text-white hover:bg-white/5 shrink-0"
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mt-1">
+          <div className="flex items-center gap-2 ml-1.5 min-w-0">
+            <Link
+              to="/dashboard/sequences"
+              className="inline-flex items-center gap-2 text-sm text-gray-200 transition hover:text-white"
             >
-              <Link to="/dashboard/sequences">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-lg sm:text-xl font-semibold text-white tracking-tight truncate">
@@ -520,9 +515,11 @@ export default function SequenceDetail() {
         </div>
       </div>
 
-      {/* TAB 1: WORKFLOW PIPELINE BUILDER */}
-      {activeTab === "steps" && (
-        <div className="space-y-6 pt-0">
+      {/* Tab Panels: Middle Content Area */}
+      <div className="">
+        {/* TAB 1: WORKFLOW PIPELINE BUILDER */}
+        {activeTab === "steps" && (
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm sm:text-base font-semibold text-white">Execution Sequence Pipeline</h3>
@@ -616,7 +613,7 @@ export default function SequenceDetail() {
 
       {/* TAB 2: ENROLLED LEADS */}
       {activeTab === "leads" && (
-        <div className="space-y-4 pt-0">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-white">Enrolled Cadence Leads</h3>
@@ -1249,7 +1246,8 @@ export default function SequenceDetail() {
       {activeTab === "queue" && (
         <SequenceQueueTab sequenceId={sequence._id} />
       )}
-
+      </div>
+      
       {/* Step Editor Modal */}
       <StepEditorModal
         open={stepModalOpen}

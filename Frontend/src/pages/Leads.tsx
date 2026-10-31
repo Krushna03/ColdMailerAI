@@ -328,7 +328,7 @@ export default function Leads() {
       <Seo title="Leads" path="/dashboard/leads" noIndex />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2 -mt-[2px]">
         <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight sm:text-3xl">Leads</h1>
+          <h1 className="text-xl font-semibold text-white tracking-tight sm:text-2xl">Leads</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-400">
             Manage lead contacts, filter category & status, and launch tailored cold email batches.
           </p>
@@ -368,13 +368,6 @@ export default function Leads() {
             </>
           ) : (
             <>
-              <CsvUploadButton
-                onImport={handleBulkImport}
-                isImporting={bulkCreate.isPending}
-                categories={categories}
-                existingLeads={leads}
-                onAddCategory={() => setCategoryOpen(true)}
-              />
               <Button
                 type="button"
                 onClick={() => setAddOpen(true)}
@@ -383,6 +376,13 @@ export default function Leads() {
                 <Plus className="h-4 w-4" />
                 Add lead
               </Button>
+              <CsvUploadButton
+                onImport={handleBulkImport}
+                isImporting={bulkCreate.isPending}
+                categories={categories}
+                existingLeads={leads}
+                onAddCategory={() => setCategoryOpen(true)}
+              />
             </>
           )}
         </div>

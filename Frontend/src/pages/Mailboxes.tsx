@@ -19,8 +19,11 @@ import {
   ChevronUp,
   Copy,
   Check,
+  AlertTriangle,
+  KeyRound,
 } from "lucide-react";
 import Seo from "../components/common/Seo";
+import { parseMailboxError } from "../utils/mailboxErrors";
 import {
   useMailboxes,
   useConnectSmtpMailbox,
@@ -310,6 +313,41 @@ export default function Mailboxes() {
     });
   };
 
+  // 1-Click reconnect for mailboxes in error/expired state
+  const handleReconnectMailbox = (mailbox: any) => {
+    if (mailbox.provider === "gmail") {
+      handleConnectGmail();
+    } else if (mailbox.provider === "outlook") {
+      handleConnectOutlook();
+    } else if (mailbox.provider === "smtp") {
+      setSmtpForm({
+        email: mailbox.email || "",
+        name: mailbox.name || "",
+        smtpHost: mailbox.smtpConfig?.host || "",
+        smtpPort: String(mailbox.smtpConfig?.port || 587),
+        smtpSecure: Boolean(mailbox.smtpConfig?.secure),
+        smtpUser: mailbox.smtpConfig?.username || mailbox.email || "",
+        smtpPass: "",
+        dailyLimit: String(mailbox.dailyLimit || 50),
+      });
+      setSmtpModalOpen(true);
+    }
+  };
+
+  const handleActionByType = (actionType: string, mailbox: any) => {
+    if (actionType === "reconnect_google") {
+      handleConnectGmail();
+    } else if (actionType === "reconnect_outlook") {
+      handleConnectOutlook();
+    } else if (actionType === "configure_smtp") {
+      handleReconnectMailbox(mailbox);
+    } else if (actionType === "edit_settings") {
+      openSettings(mailbox);
+    } else {
+      testConnectionMutation.mutate(mailbox._id);
+    }
+  };
+
   // Aggregated stats
   const totalMailboxes = mailboxes.length;
   const activeCount = mailboxes.filter((m) => m.status === "active").length;
@@ -330,7 +368,7 @@ export default function Mailboxes() {
       {/* Standard Header Section matching Leads and Dashboard */}
       <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2">
         <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight sm:text-3xl">
+          <h1 className="text-xl font-semibold text-white tracking-tight sm:text-2xl">
             Mailbox
           </h1>
           <p className="mt-1 max-w-xl text-sm text-gray-400">
@@ -678,16 +716,79 @@ export default function Mailboxes() {
                       </span>
                     </div>
 
-                    {mailbox.health?.lastError && (
-                      <p className="text-[11px] text-red-400 bg-red-500/10 p-2 rounded-md border border-red-500/20">
-                        Error: {mailbox.health.lastError}
-                      </p>
-                    )}
+                    {mailbox.health?.lastError && (() => {
+                      const errorDetails = parseMailboxError(mailbox.health.lastError, mailbox.provider);
+                      return (
+                        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 sm:p-3.5 space-y-2">
+                          <div className="flex items-start gap-2.5">
+                            <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                            <div className="space-y-0.5 min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <p className="text-xs font-semibold text-red-300">
+                                  {errorDetails.title}
+                                </p>
+                                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-medium">
+                                  Action Required
+                                </span>
+                              </div>
+                              <p className="text-xs text-red-200/90 leading-relaxed">
+                                {errorDetails.message}
+                              </p>
+                              <p className="text-[11px] text-gray-300 leading-relaxed">
+                                {errorDetails.actionDescription}
+                              </p>
+                              <div className="pt-1">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => handleActionByType(errorDetails.actionType, mailbox)}
+                                  className="h-7 px-3 text-xs font-semibold rounded-md bg-brand text-white hover:bg-brand-400 shadow-none inline-flex items-center gap-1.5 transition"
+                                >
+                                  {mailbox.provider === "gmail" ? (
+                                    <GoogleIcon className="h-3 w-3" />
+                                  ) : mailbox.provider === "outlook" ? (
+                                    <OutlookIcon className="h-3 w-3" />
+                                  ) : errorDetails.actionType === "configure_smtp" ? (
+                                    <KeyRound className="h-3 w-3" />
+                                  ) : (
+                                    <RefreshCw className="h-3 w-3" />
+                                  )}
+                                  {errorDetails.actionLabel}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Actions Bar */}
                   <div className="mt-4 flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {(mailbox.status === "error" || mailbox.health?.lastError) && (() => {
+                        const errorDetails = parseMailboxError(mailbox.health?.lastError, mailbox.provider);
+                        return (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleActionByType(errorDetails.actionType, mailbox)}
+                            className="h-8 gap-1.5 rounded-md bg-brand px-3 text-xs font-semibold text-white hover:bg-brand-400 shadow-none transition"
+                          >
+                            {mailbox.provider === "gmail" ? (
+                              <GoogleIcon className="h-3.5 w-3.5" />
+                            ) : mailbox.provider === "outlook" ? (
+                              <OutlookIcon className="h-3.5 w-3.5" />
+                            ) : errorDetails.actionType === "configure_smtp" ? (
+                              <KeyRound className="h-3.5 w-3.5" />
+                            ) : (
+                              <RefreshCw className="h-3.5 w-3.5" />
+                            )}
+                            {errorDetails.actionLabel}
+                          </Button>
+                        );
+                      })()}
+
                       <Button
                         type="button"
                         size="sm"

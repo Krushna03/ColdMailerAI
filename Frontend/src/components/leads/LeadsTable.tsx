@@ -55,9 +55,9 @@ export default function LeadsTable({
 
   if (!isLoading && leads.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-white/15 bg-surface-900 px-6 py-12 text-center">
+      <div className="rounded-lg border border-dashed border-white/15 bg-surface-900 px-6 py-16 text-center">
         <p className="text-base font-semibold text-white">No leads found</p>
-        <p className="mt-1 text-xs text-gray-400 max-w-md mx-auto">
+        <p className="mt-1 text-xs text-gray-400 max-w-sm mx-auto">
           There are currently no leads matching your search or filters. Try adjusting your filters or adding a new lead.
         </p>
       </div>

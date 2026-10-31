@@ -7,6 +7,7 @@ import {
   ConnectSmtpPayload,
   UpdateMailboxPayload,
 } from "../types/mailbox";
+import { parseMailboxError } from "../utils/mailboxErrors";
 
 /**
  * Fetch all mailboxes for the current workspace.
@@ -210,9 +211,11 @@ export function useTestMailboxConnection() {
     },
     onError: (err: any) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.mailboxes });
+      const rawMessage = err.response?.data?.message || err.message || "";
+      const parsed = parseMailboxError(rawMessage);
       toast({
-        title: "Connection Issue",
-        description: err.response?.data?.message || "Mailbox connection test failed.",
+        title: parsed.title,
+        description: `${parsed.message} ${parsed.actionDescription}`,
         variant: "destructive",
       });
     },

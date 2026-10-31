@@ -223,7 +223,7 @@ export default function Profile() {
       {/* 1. Header Section */}
       <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
             Account & Settings
           </h1>
           <p className="mt-1 max-w-xl text-sm text-gray-400">

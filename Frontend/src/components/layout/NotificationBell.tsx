@@ -95,7 +95,8 @@ export function NotificationBell() {
     }
 
     if (item.leadId && item.leadId._id) {
-      navigate(`/leads/${item.leadId._id}`);
+      // navigate(`/leads/${item.leadId._id}`);
+      navigate(`/dashboard/inbox`);
     } else if (item.inboundEmailId) {
       navigate("/dashboard/inbox");
     }
@@ -110,7 +111,7 @@ export function NotificationBell() {
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-orange-600 to-rose-500 text-[10px] font-bold text-white shadow-lg shadow-orange-500/40 animate-pulse">
+            <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-tr from-orange-600 to-rose-500 text-[9px] font-bold text-white shadow-lg shadow-orange-500/40">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -119,7 +120,7 @@ export function NotificationBell() {
 
       <DropdownMenuContent
         align="end"
-        className="w-[360px] sm:w-[420px] rounded-xl border border-white/10 bg-surface-900/95 p-0 text-white shadow-2xl backdrop-blur-2xl"
+        className="w-[360px] sm:w-[380px] rounded-xl border border-white/10 bg-surface-900/95 p-0 text-white shadow-2xl backdrop-blur-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -169,7 +170,7 @@ export function NotificationBell() {
           </button>
           <button
             onClick={() => setFilter("hot")}
-            className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
               filter === "hot"
                 ? "bg-orange-500/20 text-orange-300 border border-orange-500/30"
                 : "text-gray-400 hover:text-orange-300"
@@ -203,7 +204,7 @@ export function NotificationBell() {
                 <div
                   key={item._id}
                   onClick={() => handleNotificationClick(item)}
-                  className={`group relative flex items-start gap-3 p-3.5 cursor-pointer transition-colors ${
+                  className={`group relative flex items-start gap-3 p-3 cursor-pointer transition-colors ${
                     item.isRead ? "hover:bg-white/[0.03]" : "bg-white/[0.04] hover:bg-white/[0.07]"
                   }`}
                 >
@@ -213,7 +214,7 @@ export function NotificationBell() {
                   )}
 
                   {/* Icon Avatar */}
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-800 border border-white/10 mt-0.5">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-800 border border-white/10 mt-0.5">
                     {config.icon}
                   </div>
 
@@ -239,13 +240,6 @@ export function NotificationBell() {
                     <p className="text-[11px] text-gray-400 line-clamp-2 mt-0.5">
                       {item.message}
                     </p>
-
-                    {item.suggestedAction && (
-                      <div className="mt-1.5 flex items-center gap-1 text-[10px] text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20 w-fit">
-                        <Sparkles className="h-2.5 w-2.5 shrink-0" />
-                        <span className="truncate">{item.suggestedAction}</span>
-                      </div>
-                    )}
 
                     <span className="text-[10px] text-gray-500 mt-1 block">
                       {new Date(item.createdAt).toLocaleTimeString([], {
