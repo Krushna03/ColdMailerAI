@@ -59,62 +59,62 @@ const CATEGORY_CONFIG: Record<
     label: string;
     badgeClass: string;
     bgGlow: string;
-    // icon: React.ReactNode;
+    icon: React.ReactNode;
   }
 > = {
   interested: {
     label: "Interested",
     badgeClass: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     bgGlow: "bg-emerald-500/10",
-    // icon: <ThumbsUp className="h-3 w-3 text-emerald-400" />,
+    icon: <ThumbsUp className="h-3 w-3 text-emerald-400 shrink-0" />,
   },
   meeting_request: {
     label: "Meeting Request",
     badgeClass: "bg-purple-500/15 text-purple-300 border-purple-500/30",
     bgGlow: "bg-purple-500/10",
-    // icon: <Calendar className="h-3 w-3 text-purple-300" />,
+    icon: <Calendar className="h-3 w-3 text-purple-300 shrink-0" />,
   },
   objection: {
     label: "Objection",
     badgeClass: "bg-amber-500/15 text-amber-300 border-amber-500/30",
     bgGlow: "bg-amber-500/10",
-    // icon: <AlertTriangle className="h-3 w-3 text-amber-300" />,
+    icon: <AlertTriangle className="h-3 w-3 text-amber-300 shrink-0" />,
   },
   out_of_office: {
     label: "Out of Office",
     badgeClass: "bg-blue-500/15 text-blue-300 border-blue-500/30",
     bgGlow: "bg-blue-500/10",
-    // icon: <Clock className="h-3 w-3 text-blue-300" />,
+    icon: <Clock className="h-3 w-3 text-blue-300 shrink-0" />,
   },
   wrong_person: {
     label: "Wrong Person",
     badgeClass: "bg-orange-500/15 text-orange-300 border-orange-500/30",
     bgGlow: "bg-orange-500/10",
-    // icon: <UserX className="h-3 w-3 text-orange-300" />,
+    icon: <UserX className="h-3 w-3 text-orange-300 shrink-0" />,
   },
   not_interested: {
     label: "Not Interested",
     badgeClass: "bg-red-500/15 text-red-300 border-red-500/30",
     bgGlow: "bg-red-500/10",
-    // icon: <XCircle className="h-3 w-3 text-red-300" />,
+    icon: <XCircle className="h-3 w-3 text-red-300 shrink-0" />,
   },
   unsubscribe: {
     label: "Unsubscribe",
     badgeClass: "bg-rose-500/20 text-rose-300 border-rose-500/40",
     bgGlow: "bg-rose-500/10",
-    // icon: <ShieldAlert className="h-3 w-3 text-rose-300" />,
+    icon: <ShieldAlert className="h-3 w-3 text-rose-300 shrink-0" />,
   },
   neutral: {
     label: "General Inquiry",
     badgeClass: "bg-slate-500/20 text-gray-200 border-slate-500/30",
     bgGlow: "bg-slate-500/10",
-    // icon: <MessageSquare className="h-3 w-3 text-gray-300" />,
+    icon: <MessageSquare className="h-3 w-3 text-gray-300 shrink-0" />,
   },
   unknown: {
     label: "Unclassified",
     badgeClass: "bg-slate-500/15 text-gray-300 border-white/10",
     bgGlow: "bg-white/5",
-    // icon: <Bot className="h-3 w-3 text-gray-400" />,
+    icon: <Bot className="h-3 w-3 text-gray-400 shrink-0" />,
   },
 };
 
@@ -218,37 +218,34 @@ export default function InboxReplies() {
       />
 
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div>
-              <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-white flex items-center gap-2">
-                <span>Inbound Replies & Smart Inbox</span>
-                {stats?.unreadCount ? (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand text-white">
-                    {stats.unreadCount} new
-                  </span>
-                ) : null}
-              </h1>
-              <p className="text-xs sm:text-[13px] text-gray-400">
-                AI classifies incoming prospect intent, auto-stops sequence cadences, and suggests high-conversion replies.
-              </p>
-            </div>
-          </div>
+          <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl flex items-center gap-2.5">
+            <span>Inbound Replies & Smart Inbox</span>
+            {Boolean(stats?.unreadCount) && (
+              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-brand text-white font-mono tabular-nums">
+                {stats?.unreadCount} new
+              </span>
+            )}
+          </h1>
+          <p className="mt-0.5 text-sm text-gray-400">
+            Track prospect replies, classify intent, and draft AI responses.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleRefresh}
             disabled={isEmailsFetching}
-            className="h-8 text-xs font-medium border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors shadow-none"
+            className="h-8 px-3 text-xs sm:text-[13px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors shadow-none inline-flex items-center gap-1.5"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 text-gray-400 ${isEmailsFetching ? "animate-spin text-brand" : ""
-                }`}
+              className={`h-3.5 w-3.5 text-gray-400 ${
+                isEmailsFetching ? "animate-spin text-brand" : ""
+              }`}
             />
             Refresh
           </Button>
@@ -258,11 +255,12 @@ export default function InboxReplies() {
             size="sm"
             onClick={() => syncRepliesMutation.mutate()}
             disabled={syncRepliesMutation.isPending}
-            className="h-8 text-xs font-medium border border-brand/30 bg-brand/10 text-brand-300 hover:bg-brand/20 transition-colors shadow-none"
+            className="h-8 px-3 text-xs sm:text-[13px] font-medium rounded-md border border-brand/30 bg-brand/10 text-brand-300 hover:bg-brand/20 transition-colors shadow-none inline-flex items-center gap-1.5"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 text-brand-300 ${syncRepliesMutation.isPending ? "animate-spin" : ""
-                }`}
+              className={`h-3.5 w-3.5 text-brand-300 ${
+                syncRepliesMutation.isPending ? "animate-spin" : ""
+              }`}
             />
             {syncRepliesMutation.isPending ? "Syncing..." : "Sync Mailbox"}
           </Button>
@@ -271,16 +269,16 @@ export default function InboxReplies() {
             type="button"
             size="sm"
             onClick={() => setSimulateModalOpen(true)}
-            className="h-8 px-3 text-xs font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none"
+            className="h-8 px-3.5 text-xs sm:text-[13px] font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none"
           >
             Simulate Reply
           </Button>
         </div>
-      </div>
+      </section>
 
       {/* Gmail Read Scope Notice if Re-auth is required */}
       {syncRepliesMutation.data?.reauthRequired?.length > 0 && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
           <div className="flex items-start sm:items-center gap-2.5">
             <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
             <div>
@@ -291,79 +289,12 @@ export default function InboxReplies() {
           <Button
             asChild
             size="sm"
-            className="bg-amber-500 hover:bg-amber-600 text-white font-medium h-7 text-xs shrink-0"
+            className="bg-amber-500 hover:bg-amber-600 text-white font-medium h-7 text-xs shrink-0 rounded-md shadow-none"
           >
             <Link to="/dashboard/mailboxes">Reconnect Mailbox</Link>
           </Button>
         </div>
       )}
-
-      {/* Metric Cards Banner */}
-      {/* <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-surface-900 border border-white/10 rounded-lg p-3.5 shadow-none">
-          <div className="flex items-center justify-between text-gray-400 mb-1">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total</span>
-            <Inbox className="h-3.5 w-3.5 text-gray-400" />
-          </div>
-          <div className="text-xl font-semibold text-white font-mono">{stats?.total ?? 0}</div>
-          <div className="text-[11px] text-gray-400 mt-0.5">Across all mailboxes</div>
-        </div>
-
-        <div className="bg-surface-900 border border-white/10 rounded-lg p-3.5 shadow-none">
-          <div className="flex items-center justify-between text-gray-400 mb-1">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Interested</span>
-            <ThumbsUp className="h-3.5 w-3.5 text-gray-400" />
-          </div>
-          <div className="text-xl font-semibold text-white font-mono">
-            {stats?.categories?.interested ?? 0}
-          </div>
-          <div className="text-[11px] text-gray-400 mt-0.5">High buying intent</div>
-        </div>
-
-        <div className="bg-surface-900 border border-white/10 rounded-lg p-3.5 shadow-none">
-          <div className="flex items-center justify-between text-gray-400 mb-1">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Meetings</span>
-            <Calendar className="h-3.5 w-3.5 text-gray-400" />
-          </div>
-          <div className="text-xl font-semibold text-white font-mono">
-            {stats?.categories?.meeting_request ?? 0}
-          </div>
-          <div className="text-[11px] text-gray-400 mt-0.5">Call requests</div>
-        </div>
-
-        <div className="bg-surface-900 border border-white/10 rounded-lg p-3.5 shadow-none">
-          <div className="flex items-center justify-between text-gray-400 mb-1">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Objections</span>
-            <AlertTriangle className="h-3.5 w-3.5 text-gray-400" />
-          </div>
-          <div className="text-xl font-semibold text-white font-mono">
-            {stats?.categories?.objection ?? 0}
-          </div>
-          <div className="text-[11px] text-gray-400 mt-0.5">Price / vendor</div>
-        </div>
-
-        <div className="bg-surface-900 border border-white/10 rounded-lg p-3.5 shadow-none">
-          <div className="flex items-center justify-between text-gray-400 mb-1">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">OOO</span>
-            <Clock className="h-3.5 w-3.5 text-gray-400" />
-          </div>
-          <div className="text-xl font-semibold text-white font-mono">
-            {stats?.categories?.out_of_office ?? 0}
-          </div>
-          <div className="text-[11px] text-gray-400 mt-0.5">Vacation replies</div>
-        </div>
-
-        <div className="bg-surface-900 border border-white/10 rounded-lg p-3.5 shadow-none">
-          <div className="flex items-center justify-between text-gray-400 mb-1">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Opt-Out</span>
-            <ShieldAlert className="h-3.5 w-3.5 text-gray-400" />
-          </div>
-          <div className="text-xl font-semibold text-white font-mono">
-            {stats?.categories?.unsubscribe ?? 0}
-          </div>
-          <div className="text-[11px] text-gray-400 mt-0.5">Unsubscribed</div>
-        </div>
-      </div> */}
 
       {/* Filter Chips Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -392,7 +323,7 @@ export default function InboxReplies() {
           ))}
         </div>
 
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-72">
           <Search className="h-3.5 w-3.5 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
           <Input
             type="text"
@@ -405,7 +336,7 @@ export default function InboxReplies() {
       </div>
 
       {/* Two-Pane Inbox View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-[calc(100vh-190px)] min-h-[500px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-auto lg:h-[calc(100dvh-290px)] min-h-[520px]">
         {/* Left Pane: Email List (4 cols) */}
         <div className="lg:col-span-4 rounded-lg border border-white/10 bg-surface-900 flex flex-col overflow-hidden shadow-none h-full min-h-0">
           <div className="p-3.5 border-b border-white/10 flex items-center justify-between bg-surface-950 shrink-0">
@@ -417,15 +348,24 @@ export default function InboxReplies() {
 
           <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-white/5 custom-scroll">
             {isEmailsLoading ? (
-              <div className="py-24 text-center text-xs text-gray-400">
-                <Loader2 className="h-6 w-6 animate-spin text-brand mx-auto mb-2" />
-                Loading inbound replies...
+              <div className="p-4 space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="animate-pulse space-y-2 p-3 rounded-md bg-white/[0.02]">
+                    <div className="flex items-center justify-between">
+                      <div className="h-3 w-28 bg-white/10 rounded" />
+                      <div className="h-2.5 w-12 bg-white/10 rounded" />
+                    </div>
+                    <div className="h-3.5 w-40 bg-white/10 rounded" />
+                    <div className="h-2.5 w-full bg-white/5 rounded" />
+                    <div className="h-4 w-20 bg-white/10 rounded-full mt-2" />
+                  </div>
+                ))}
               </div>
             ) : inboundEmails.length === 0 ? (
               <div className="p-10 text-center text-gray-400">
                 <Inbox className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-xs font-medium text-white">No replies found</p>
-                <p className="text-[11px] text-gray-400 mt-1 max-w-xs mx-auto">
+                <p className="text-[11px] text-gray-400 mt-1 max-w-xs mx-auto text-pretty">
                   When prospects respond to your cold email sequences, their replies appear here with AI classification.
                 </p>
                 <Button
@@ -477,7 +417,7 @@ export default function InboxReplies() {
                               {email.from.name || email.from.email}
                             </span>
                           </div>
-                          <span className="text-[10px] text-gray-400 whitespace-nowrap font-mono shrink-0">
+                          <span className="text-[10px] text-gray-400 whitespace-nowrap font-mono tabular-nums shrink-0">
                             {new Date(email.receivedAt).toLocaleDateString([], {
                               month: "short",
                               day: "numeric",
@@ -502,10 +442,10 @@ export default function InboxReplies() {
 
                         <div className="mt-2 flex items-center gap-1.5 flex-wrap">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${config.badgeClass}`}
+                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border ${config.badgeClass}`}
                           >
-                            {/* {config.icon} */}
-                            {config.label}
+                            {config.icon}
+                            <span>{config.label}</span>
                           </span>
 
                           {email.sequenceId && (
@@ -568,7 +508,7 @@ export default function InboxReplies() {
                     type="button"
                     size="sm"
                     onClick={() => setAiReplyModalOpen(true)}
-                    className="h-7 px-2 text-[11px] font-semibold rounded-base bg-brand text-white hover:bg-brand-400 transition shadow-none inline-flex items-center gap-1.5"
+                    className="h-7 px-2.5 text-[11px] font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none inline-flex items-center gap-1.5"
                   >
                     <Sparkles className="h-3 w-3" />
                     AI Reply
@@ -609,17 +549,18 @@ export default function InboxReplies() {
                 {/* Row 1: AI Intent classification & Re-classify button */}
                 <div className="flex flex-wrap items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-semibold text-gray-300 uppercase tracking-wider whitespace-nowrap">
+                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                       AI Intent:
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-[0.5px] rounded-lg text-[10px] font-semibold border ${CATEGORY_CONFIG[activeEmail.classification?.category]?.badgeClass || ""
-                        }`}
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                        CATEGORY_CONFIG[activeEmail.classification?.category]?.badgeClass || ""
+                      }`}
                     >
-                      {/* {CATEGORY_CONFIG[activeEmail.classification?.category]?.icon} */}
-                      {CATEGORY_CONFIG[activeEmail.classification?.category]?.label}
+                      {CATEGORY_CONFIG[activeEmail.classification?.category]?.icon}
+                      <span>{CATEGORY_CONFIG[activeEmail.classification?.category]?.label}</span>
                     </span>
-                    <span className="text-[11px] text-gray-300 font-mono whitespace-nowrap">
+                    <span className="text-[11px] text-gray-400 font-mono tabular-nums whitespace-nowrap">
                       ({Math.round((activeEmail.classification?.confidence || 0.85) * 100)}% match)
                     </span>
                   </div>
@@ -631,10 +572,10 @@ export default function InboxReplies() {
                     onClick={() => reclassifyMutation.mutate(activeEmail._id)}
                     disabled={reclassifyMutation.isPending}
                     title="Re-run AI classifier"
-                    className="h-6 px-2 text-[11px] font-medium border border-white/15 bg-surface-900 text-gray-300 hover:text-white hover:bg-white/5 transition-colors shadow-none shrink-0 inline-flex items-center"
+                    className="h-6 px-2 text-[11px] font-medium border border-white/15 bg-surface-900 text-gray-300 hover:text-white hover:bg-white/5 transition-colors shadow-none shrink-0 inline-flex items-center gap-1.5"
                   >
                     <RefreshCw
-                      className={`h-2 w-2 ${reclassifyMutation.isPending ? "animate-spin" : ""}`}
+                      className={`h-3 w-3 ${reclassifyMutation.isPending ? "animate-spin text-brand" : ""}`}
                     />
                     Re-classify
                   </Button>
@@ -699,7 +640,7 @@ export default function InboxReplies() {
                   const { mainText, quotedText } = splitEmailThread(activeEmail.bodyText || "");
                   return (
                     <div className="space-y-3">
-                      <div className="text-xs sm:text-[13px] text-gray-100 leading-relaxed font-sans whitespace-pre-wrap">
+                      <div className="text-xs sm:text-[13px] text-gray-100 leading-relaxed font-sans whitespace-pre-wrap text-pretty">
                         {mainText || activeEmail.bodyText || "No text content available."}
                       </div>
 
@@ -707,6 +648,8 @@ export default function InboxReplies() {
                         <div className="pt-1">
                           <button
                             type="button"
+                            aria-expanded={showQuotedThread}
+                            aria-label={showQuotedThread ? "Hide quoted history" : "Show quoted history"}
                             onClick={() => setShowQuotedThread(!showQuotedThread)}
                             className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
                           >
@@ -714,7 +657,7 @@ export default function InboxReplies() {
                             <span>{showQuotedThread ? "Hide quoted history" : "Show quoted history"}</span>
                           </button>
                           {showQuotedThread && (
-                            <div className="mt-2.5 pl-3.5 border-l-2 border-brand/35 text-xs text-gray-400 font-sans leading-relaxed whitespace-pre-wrap bg-white/[0.01] py-1.5 rounded-r">
+                            <div className="mt-2.5 pl-3.5 border-l-2 border-brand/35 text-xs text-gray-400 font-sans leading-relaxed whitespace-pre-wrap bg-white/[0.01] py-1.5 rounded-r text-pretty">
                               {quotedText}
                             </div>
                           )}
@@ -755,24 +698,24 @@ export default function InboxReplies() {
 
       {/* Reply Simulation Dialog */}
       <Dialog open={simulateModalOpen} onOpenChange={setSimulateModalOpen}>
-        <DialogContent className="bg-surface-950 border-white/15 text-white sm:max-w-lg">
+        <DialogContent className="bg-surface-950 border border-white/15 text-white sm:max-w-lg shadow-none">
           <form onSubmit={handleSimulateSubmit} className="space-y-4">
             <DialogHeader>
-              <DialogTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <DialogTitle className="text-base sm:text-lg font-semibold text-white flex items-center gap-2 text-balance">
                 Simulate Inbound Lead Reply
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-400">
+              <DialogDescription className="text-xs text-gray-400 text-pretty">
                 Simulates an incoming prospect reply to test automated sequence pausing, cancellation of follow-up jobs, and AI reply classification.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-3 pt-2">
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1">
+                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">
                   Target CRM Lead
                 </label>
                 <Select value={simLeadId} onValueChange={setSimLeadId}>
-                  <SelectTrigger className="bg-surface-900 border-white/10 text-xs text-white h-9 rounded-lg">
+                  <SelectTrigger className="bg-surface-900 border-white/15 text-xs text-white h-9 rounded-md">
                     <SelectValue placeholder="Select a lead to reply as..." />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-950 border-white/15 text-white max-h-56">
@@ -786,19 +729,19 @@ export default function InboxReplies() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1">
+                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">
                   Reply Email Subject
                 </label>
                 <Input
                   value={simSubject}
                   onChange={(e) => setSimSubject(e.target.value)}
                   placeholder="Re: Following up"
-                  className="bg-surface-900 border-white/10 text-xs text-white h-9 rounded-lg"
+                  className="bg-surface-900 border-white/15 text-xs text-white h-9 rounded-md"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-300 block mb-1">
+                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">
                   Inbound Reply Message Body
                 </label>
                 <Textarea
@@ -806,13 +749,13 @@ export default function InboxReplies() {
                   value={simBody}
                   onChange={(e) => setSimBody(e.target.value)}
                   placeholder="Type simulated prospect email..."
-                  className="bg-surface-900 border-white/10 md:text-[13px] text-white rounded-lg resize-none"
+                  className="bg-surface-900 border-white/15 md:text-[13px] text-white rounded-md resize-none"
                 />
               </div>
 
               {/* Sample Intent Buttons */}
               <div>
-                <span className="text-[11px] font-medium text-gray-400 block mb-1">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">
                   Quick Intent Templates:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -823,7 +766,7 @@ export default function InboxReplies() {
                         "This looks great! Could you send over pricing and a quick product overview deck?"
                       )
                     }
-                    className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px] text-gray-300 border border-white/10"
+                    className="px-2.5 py-1 rounded-md bg-surface-900 hover:bg-white/5 text-[11px] text-gray-300 hover:text-white border border-white/10 transition-colors"
                   >
                     Interested
                   </button>
@@ -835,7 +778,7 @@ export default function InboxReplies() {
                         "Let's jump on a quick call next Tuesday at 2pm. Here is my calendar: calendly.com/prospect"
                       )
                     }
-                    className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px] text-gray-300 border border-white/10"
+                    className="px-2.5 py-1 rounded-md bg-surface-900 hover:bg-white/5 text-[11px] text-gray-300 hover:text-white border border-white/10 transition-colors"
                   >
                     Book Meeting
                   </button>
@@ -847,7 +790,7 @@ export default function InboxReplies() {
                         "We already use Competitor X and have no budget this quarter. Check back in next year."
                       )
                     }
-                    className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px] text-gray-300 border border-white/10"
+                    className="px-2.5 py-1 rounded-md bg-surface-900 hover:bg-white/5 text-[11px] text-gray-300 hover:text-white border border-white/10 transition-colors"
                   >
                     Objection
                   </button>
@@ -859,7 +802,7 @@ export default function InboxReplies() {
                         "I am out of the office on annual leave until October 25th with limited email access."
                       )
                     }
-                    className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px] text-gray-300 border border-white/10"
+                    className="px-2.5 py-1 rounded-md bg-surface-900 hover:bg-white/5 text-[11px] text-gray-300 hover:text-white border border-white/10 transition-colors"
                   >
                     Out of Office
                   </button>
@@ -869,7 +812,7 @@ export default function InboxReplies() {
                     onClick={() =>
                       setSimBody("Please unsubscribe me and remove my email from your database.")
                     }
-                    className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px] text-gray-300 border border-white/10"
+                    className="px-2.5 py-1 rounded-md bg-surface-900 hover:bg-white/5 text-[11px] text-gray-300 hover:text-white border border-white/10 transition-colors"
                   >
                     Unsubscribe
                   </button>
@@ -889,7 +832,7 @@ export default function InboxReplies() {
               <Button
                 type="submit"
                 disabled={simulateMutation.isPending || !simLeadId}
-                className="h-8 text-xs bg-brand text-white hover:bg-brand-400 font-medium"
+                className="h-8 px-4 text-xs bg-brand text-white hover:bg-brand-400 font-semibold rounded-md shadow-none"
               >
                 {simulateMutation.isPending ? "Processing..." : "Ingest & Classify Reply"}
               </Button>
@@ -901,7 +844,30 @@ export default function InboxReplies() {
       <ContextualAIGeneratorModal
         open={aiReplyModalOpen}
         onOpenChange={setAiReplyModalOpen}
-        initialLeadId={activeEmail?.leadId?._id}
+        initialLeadId={
+          typeof activeEmail?.leadId === "string"
+            ? activeEmail.leadId
+            : activeEmail?.leadId?._id
+        }
+        replyContext={
+          activeEmail
+            ? {
+                subject: activeEmail.subject,
+                fromName: activeEmail.from?.name || activeEmail.from?.email?.split("@")[0],
+                fromEmail: activeEmail.from?.email,
+                companyName:
+                  typeof activeEmail.leadId?.company === "object"
+                    ? activeEmail.leadId?.company?.name
+                    : typeof activeEmail.leadId?.company === "string"
+                      ? activeEmail.leadId?.company
+                      : undefined,
+                summary: activeEmail.classification?.summary,
+                suggestedAction: activeEmail.classification?.suggestedAction,
+                bodySnippet: activeEmail.bodyText?.slice(0, 300),
+                intent: activeEmail.classification?.intent,
+              }
+            : undefined
+        }
       />
     </div>
   );

@@ -27,7 +27,6 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
 import {
   Select,
   SelectContent,
@@ -44,11 +43,21 @@ import {
 import { useMailboxes, useSendGeneratedEmail } from "../../hooks/useMailboxes";
 import { useToast } from "../../hooks/use-toast";
 
-interface ContextualAIGeneratorModalProps {
+export interface ContextualAIGeneratorModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialLeadId?: string;
   onSelectGeneratedEmail?: (email: { subject: string; body: string }) => void;
+  replyContext?: {
+    subject?: string;
+    fromName?: string;
+    fromEmail?: string;
+    companyName?: string;
+    summary?: string;
+    suggestedAction?: string;
+    bodySnippet?: string;
+    intent?: string;
+  };
 }
 
 const TONE_OPTIONS = [
@@ -72,6 +81,7 @@ export function ContextualAIGeneratorModal({
   onOpenChange,
   initialLeadId,
   onSelectGeneratedEmail,
+  replyContext,
 }: ContextualAIGeneratorModalProps) {
   const { toast } = useToast();
   const [selectedLeadId, setSelectedLeadId] = useState<string>(initialLeadId || "");
@@ -79,7 +89,7 @@ export function ContextualAIGeneratorModal({
   const [copiedBody, setCopiedBody] = useState(false);
   const [activeTab, setActiveTab] = useState<"form" | "result">("form");
 
-  // Form State for 7 Pillars
+  // Form State for AI Context
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [leadRole, setLeadRole] = useState("");
@@ -102,7 +112,7 @@ export function ContextualAIGeneratorModal({
   const { data: leadsData } = useLeads({});
   const leads = leadsData?.pages?.flatMap((p: any) => p.leads) || [];
 
-  // Fetch 7-pillar context from DB when lead is selected
+  // Fetch contextual intelligence from DB when lead is selected
   const { data: contextData, isFetching: isContextFetching } = useLeadAIContext(selectedLeadId, {
     stepOrder,
   });
@@ -112,6 +122,25 @@ export function ContextualAIGeneratorModal({
       setSelectedLeadId(initialLeadId);
     }
   }, [initialLeadId]);
+
+  // When replyContext is provided (e.g. from Inbox Replies), pre-populate reply state
+  useEffect(() => {
+    if (replyContext) {
+      if (replyContext.fromName) setLeadName((prev) => prev || replyContext.fromName || "");
+      if (replyContext.fromEmail) setLeadEmail((prev) => prev || replyContext.fromEmail || "");
+      if (replyContext.companyName) setCompanyName((prev) => prev || replyContext.companyName || "");
+      if (replyContext.suggestedAction) {
+        setCampaignGoal(replyContext.suggestedAction);
+      } else if (replyContext.summary) {
+        setCampaignGoal(`Address: ${replyContext.summary}`);
+      }
+      if (replyContext.summary) {
+        setSpecialInstructions((prev) => prev || `Replying to prospect inquiry: "${replyContext.summary}"`);
+      }
+      setStepType("follow_up");
+      setStepOrder(2);
+    }
+  }, [replyContext]);
 
   // When context data loads, prefill the fields
   useEffect(() => {
@@ -168,7 +197,7 @@ export function ContextualAIGeneratorModal({
     if (!leadEmail) {
       toast({
         title: "Missing Recipient Email",
-        description: "Please specify the prospect's email address in Pillar 1.",
+        description: "Please specify the prospect's recipient email address.",
         variant: "destructive",
       });
       return;
@@ -195,10 +224,10 @@ export function ContextualAIGeneratorModal({
   };
 
   const handleGenerate = async () => {
-    if (!leadName || !companyName) {
+    if (!leadName) {
       toast({
         title: "Missing Information",
-        description: "Please specify at least the prospect's name and company.",
+        description: "Please specify at least the prospect's name.",
         variant: "destructive",
       });
       return;
@@ -231,7 +260,7 @@ export function ContextualAIGeneratorModal({
             jobTitle: leadRole,
           },
           company: {
-            name: companyName,
+            name: companyName || "Prospect Company",
             domain: companyDomain,
             industry: companyIndustry,
           },
@@ -243,7 +272,7 @@ export function ContextualAIGeneratorModal({
       setActiveTab("result");
       toast({
         title: "Generated Successfully",
-        description: "AI synthesized all 7 context pillars.",
+        description: "Personalized draft created successfully.",
         variant: "success",
       });
     } catch (err: any) {
@@ -268,35 +297,40 @@ export function ContextualAIGeneratorModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-surface-900 border border-white/10 text-white p-0 rounded-lg sm:rounded-xl shadow-xl">
+      <DialogContent className="max-w-4xl max-h-[90dvh] overflow-hidden flex flex-col bg-surface-900 border border-white/10 text-white p-0 rounded-lg shadow-none">
         {/* Header */}
         <DialogHeader className="border-b border-white/10 px-6 py-4 bg-surface-950/60">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div>
-                <DialogTitle className="text-lg font-semibold text-white flex items-center gap-2">
-                  7-Pillar AI Email Intelligence
+                <DialogTitle className="text-lg font-semibold text-white flex items-center gap-2 text-balance">
+                  <Sparkles className="h-4 w-4 text-brand-300" />
+                  <span>{replyContext ? "AI Reply Assistant" : "AI Email Generator"}</span>
                 </DialogTitle>
-                <DialogDescription className="text-xs text-gray-400 mt-0.5">
-                  Generates personalized cold outreach from Lead + Company + Objective + Tone + Sender + History + Sequence.
+                <DialogDescription className="text-xs text-gray-400 mt-0.5 text-pretty">
+                  {replyContext
+                    ? "Draft a personalized response to the incoming prospect message."
+                    : "Generate personalized cold outreach using prospect details, goals, and cadence context."}
                 </DialogDescription>
               </div>
             </div>
 
             {generatedResult && (
-              <div className="flex items-center gap-1 bg-surface-950 p-1 rounded-md border border-white/10 text-xs">
+              <div className="flex items-center gap-1 bg-surface-950 p-1 rounded-md border border-white/10 text-xs mr-3">
                 <button
+                  type="button"
                   onClick={() => setActiveTab("form")}
                   className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                    activeTab === "form" ? "bg-brand text-white" : "text-gray-400 hover:text-white"
+                    activeTab === "form" ? "bg-brand text-white shadow-none" : "text-gray-400 hover:text-white"
                   }`}
                 >
                   Context Input
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveTab("result")}
                   className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                    activeTab === "result" ? "bg-brand text-white" : "text-gray-400 hover:text-white"
+                    activeTab === "result" ? "bg-brand text-white shadow-none" : "text-gray-400 hover:text-white"
                   }`}
                 >
                   Generated Copy
@@ -307,15 +341,34 @@ export function ContextualAIGeneratorModal({
         </DialogHeader>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 py-0 custom-scroll">
+        <div className="flex-1 overflow-y-auto px-6 py-1 custom-scroll">
           {activeTab === "form" ? (
-            <div className="space-y-6">
-              {/* Pillar 1 & 2: Lead Data & Company */}
-              <div className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-4">
+            <div className="space-y-4">
+              {/* Optional Reply Context Banner */}
+              {replyContext && (
+                <div className="rounded-lg border border-brand/20 bg-brand/5 p-3 flex items-start gap-2.5 text-xs">
+                  <Sparkles className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-white truncate">
+                      Replying to: <span className="text-gray-300 font-normal">{replyContext.subject || "Incoming Message"}</span>
+                    </p>
+                    {replyContext.summary && (
+                      <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-2">
+                        <span className="text-brand-300 font-medium">Prospect Message: </span>
+                        {replyContext.summary}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Prospect & Company Information */}
+              <div className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-brand-400" />
                     <h3 className="text-sm font-semibold text-white">
-                      Pillars 1 & 2: Lead & Company Information
+                      Prospect & Company Information
                     </h3>
                   </div>
 
@@ -354,77 +407,78 @@ export function ContextualAIGeneratorModal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Lead Name *</label>
+                    <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead Name *</label>
                     <Input
                       value={leadName}
                       onChange={(e) => setLeadName(e.target.value)}
                       placeholder="e.g. Jane Doe"
-                      className="h-9 bg-surface-900 border-white/10 text-white text-xs"
+                      className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Lead Role / Title</label>
+                    <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead Role / Title</label>
                     <Input
                       value={leadRole}
                       onChange={(e) => setLeadRole(e.target.value)}
                       placeholder="e.g. VP of Sales"
-                      className="h-9 bg-surface-900 border-white/10 text-white text-xs"
+                      className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Lead Email</label>
+                    <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead Email</label>
                     <Input
                       value={leadEmail}
                       onChange={(e) => setLeadEmail(e.target.value)}
                       placeholder="e.g. jane@acmecorp.com"
-                      className="h-9 bg-surface-900 border-white/10 text-white text-xs"
+                      className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md font-mono focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Company Name *</label>
+                    <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Company Name</label>
                     <Input
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="e.g. Acme Corp"
-                      className="h-9 bg-surface-900 border-white/10 text-white text-xs"
+                      className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Company Domain</label>
+                    <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Company Domain</label>
                     <Input
                       value={companyDomain}
                       onChange={(e) => setCompanyDomain(e.target.value)}
                       placeholder="e.g. acmecorp.com"
-                      className="h-9 bg-surface-900 border-white/10 text-white text-xs"
+                      className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md font-mono focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Industry</label>
+                    <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Industry</label>
                     <Input
                       value={companyIndustry}
                       onChange={(e) => setCompanyIndustry(e.target.value)}
                       placeholder="e.g. B2B SaaS"
-                      className="h-9 bg-surface-900 border-white/10 text-white text-xs"
+                      className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Pillar 3 & 4: Campaign Objective & Tone */}
-              <div className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-4">
+              {/* Outreach Objective & Tone */}
+              <div className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-3.5">
                 <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-brand-400" />
                   <h3 className="text-sm font-semibold text-white">
-                    Pillars 3 & 4: Campaign Objective & Tone
+                    Outreach Objective & Tone
                   </h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                      Campaign Objective / Goal *
+                      Objective / Goal *
                     </label>
                     <Input
                       value={campaignGoal}
@@ -463,11 +517,12 @@ export function ContextualAIGeneratorModal({
                 </div>
               </div>
 
-              {/* Pillar 5: Sender Profile */}
-              <div className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-4">
+              {/* Sender Profile & Cadence Context */}
+              <div className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-3.5">
                 <div className="flex items-center gap-2">
+                  <Send className="h-4 w-4 text-brand-400" />
                   <h3 className="text-sm font-semibold text-white">
-                    Pillar 5: Sender Profile
+                    Sender Profile & Cadence Settings
                   </h3>
                 </div>
 
@@ -500,15 +555,6 @@ export function ContextualAIGeneratorModal({
                     placeholder="What unique value do you deliver?"
                     className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                   />
-                </div>
-              </div>
-
-              {/* Pillar 6 & 7: Conversation History & Sequence Cadence */}
-              <div className="rounded-lg border border-white/10 bg-surface-950 p-4 space-y-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-white">
-                    Pillars 6 & 7: Conversation History & Sequence Cadence
-                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -544,7 +590,7 @@ export function ContextualAIGeneratorModal({
                     <Input
                       value={specialInstructions}
                       onChange={(e) => setSpecialInstructions(e.target.value)}
-                      placeholder="e.g. Reference their recent funding or product launch"
+                      placeholder="e.g. Reference their recent reply, pricing inquiry, or objection"
                       className="h-9 bg-surface-900 border-white/15 text-white text-xs rounded-md focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20"
                     />
                   </div>
@@ -573,13 +619,12 @@ export function ContextualAIGeneratorModal({
           ) : (
             /* Results View */
             generatedResult && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Insights Banner */}
                 <div className="rounded-lg border border-brand/30 bg-brand/10 p-4 flex items-start gap-3 text-xs text-brand-300">
-                  <Sparkles className="h-4 w-4 text-brand shrink-0 mt-0.5" />
                   <div>
                     <span className="font-semibold text-white block mb-0.5">
-                      AI 7-Pillar Synthesis:
+                      AI Personalization Strategy:
                     </span>
                     <span className="text-gray-300">{generatedResult.personalizationInsights}</span>
                   </div>
@@ -622,8 +667,10 @@ export function ContextualAIGeneratorModal({
                           >
                             <span>{sub}</span>
                             <button
+                              type="button"
+                              aria-label={`Copy alternative subject line: ${sub}`}
                               onClick={() => copyToClipboard(sub, "subject")}
-                              className="text-gray-400 hover:text-white text-[10px] ml-2 font-mono"
+                              className="text-gray-400 hover:text-white text-[10px] ml-2 font-mono transition-colors"
                             >
                               Copy
                             </button>
@@ -650,6 +697,7 @@ export function ContextualAIGeneratorModal({
                       Generated Email Body
                     </span>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => copyToClipboard(generatedResult.body, "body")}
@@ -663,7 +711,7 @@ export function ContextualAIGeneratorModal({
                       {copiedBody ? "Copied" : "Copy Body"}
                     </Button>
                   </div>
-                  <div className="rounded-md bg-surface-900 border border-white/10 p-4 text-sm text-white whitespace-pre-wrap leading-relaxed font-sans">
+                  <div className="rounded-md bg-surface-900 border border-white/10 p-4 text-sm text-white whitespace-pre-wrap leading-relaxed font-sans text-pretty">
                     {generatedResult.body}
                   </div>
                 </div>
@@ -672,13 +720,10 @@ export function ContextualAIGeneratorModal({
                 <div className="rounded-lg border border-brand/30 bg-surface-950 p-4 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-md bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shrink-0">
-                        <Send className="h-4 w-4" />
-                      </div>
                       <div>
                         <h4 className="text-xs font-bold text-white">Direct Mailbox Dispatch</h4>
                         <p className="text-[11px] text-gray-400">
-                          Send this AI outreach to <strong className="text-white">{leadEmail || "prospect"}</strong> via connected mailbox.
+                          Send email to <strong className="text-white">{leadEmail || "prospect"}</strong> via connected mailbox.
                         </p>
                       </div>
                     </div>
@@ -689,7 +734,7 @@ export function ContextualAIGeneratorModal({
                           value={selectedMailboxId || mailboxes[0]?._id}
                           onValueChange={setSelectedMailboxId}
                         >
-                          <SelectTrigger className="h-8 w-44 bg-surface-900 border-white/15 text-xs text-white rounded-md">
+                          <SelectTrigger className="h-8 w-60 bg-surface-900 border-white/15 text-xs text-white rounded-md">
                             <SelectValue placeholder="Select mailbox..." />
                           </SelectTrigger>
                           <SelectContent className="bg-surface-900 border-white/15 text-white max-h-56">
@@ -725,18 +770,6 @@ export function ContextualAIGeneratorModal({
                     </div>
                   </div>
                 </div>
-
-                {/* Call To Action & Delay Footer */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400 px-1">
-                  <div className="flex items-center gap-1.5">
-                    <Target className="h-3.5 w-3.5 text-brand" />
-                    <span>Single CTA: <strong className="text-white">{generatedResult.callToAction}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-cyan-400" />
-                    <span>Suggested Next Cadence Delay: <strong className="text-white font-mono">{generatedResult.suggestedDelayDays} days</strong></span>
-                  </div>
-                </div>
               </div>
             )
           )}
@@ -745,9 +778,10 @@ export function ContextualAIGeneratorModal({
         {/* Footer Actions */}
         <div className="border-t border-white/10 px-6 py-3.5 bg-surface-950/80 flex items-center justify-end gap-2">
           <Button
-            variant="ghost"
+            type="button"
+            variant="outline"
             onClick={() => onOpenChange(false)}
-            className="text-xs text-gray-400 hover:text-white h-9 px-3 border"
+            className="h-9 px-3 text-xs font-medium border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors rounded-md shadow-none"
           >
             Close
           </Button>
@@ -777,11 +811,11 @@ export function ContextualAIGeneratorModal({
               {generateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Synthesizing 7 Pillars...
+                  Generating Email...
                 </>
               ) : (
                 <>
-                  {activeTab === "result" ? "Regenerate" : "Generate"}
+                  {activeTab === "result" ? "Regenerate Email" : "Generate Email"}
                 </>
               )}
             </Button>

@@ -14,6 +14,7 @@ export type ReplySentiment = "positive" | "negative" | "neutral";
 export type InboundSource = "webhook" | "imap" | "simulation" | "manual";
 
 export interface ReplyClassification {
+  intent: string;
   category: ReplyCategory;
   sentiment: ReplySentiment;
   confidence: number;

@@ -2,3 +2,7 @@
 
 2. Each module is seperate & not connected & there is no sense for having these much things. I mean they should be connected.
 
+Only 
+1. Sequences, 
+2. Inbox & Replies
+Has issues
