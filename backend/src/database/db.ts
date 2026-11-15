@@ -7,7 +7,15 @@ const connectDB = async (): Promise<void> => {
       return;
     }
 
-    const connectionInstance = await mongoose.connect(`${process.env.MONGODB_URI}/coldmailer`);
+    const connectionInstance = await mongoose.connect(
+      `${process.env.MONGODB_URI}/coldmailer`,
+      {
+        maxPoolSize: 20,
+        minPoolSize: 2,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      }
+    );
 
     console.log(`MongoDB connected: ${connectionInstance.connection.host}`);
   } catch (error) {

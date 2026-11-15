@@ -446,7 +446,8 @@ export async function listInboundEmailsService({
       .populate("sequenceId", "name status")
       .sort({ receivedAt: -1 })
       .skip(skip)
-      .limit(l),
+      .limit(l)
+      .lean(),
     InboundEmail.countDocuments(query),
   ]);
 
@@ -475,7 +476,8 @@ export async function getInboundEmailByIdService(
     .populate("leadId", "name email company jobTitle status phone tags linkedinUrl")
     .populate("mailboxId", "email provider name")
     .populate("sequenceId", "name status")
-    .populate("enrollmentId", "status currentStepOrder stepHistory");
+    .populate("enrollmentId", "status currentStepOrder stepHistory")
+    .lean();
 
   if (!inboundEmail) {
     throw new ApiError(404, "Inbound email not found");
@@ -576,13 +578,12 @@ export async function reclassifyInboundEmailService(
 export async function getInboundStatsService(workspaceId: string | Types.ObjectId) {
   const wsId = new Types.ObjectId(String(workspaceId));
 
-  const [categoryStats, unreadCount, total] = await Promise.all([
+  const [categoryStats, unreadCount] = await Promise.all([
     InboundEmail.aggregate([
       { $match: { workspaceId: wsId } },
       { $group: { _id: "$classification.category", count: { $sum: 1 } } },
     ]),
     InboundEmail.countDocuments({ workspaceId: wsId, isRead: false }),
-    InboundEmail.countDocuments({ workspaceId: wsId }),
   ]);
 
   const categories: Record<string, number> = {
@@ -597,9 +598,11 @@ export async function getInboundStatsService(workspaceId: string | Types.ObjectI
     unknown: 0,
   };
 
+  let total = 0;
   for (const s of categoryStats) {
     if (s._id) {
       categories[s._id] = s.count;
+      total += s.count;
     }
   }
 
