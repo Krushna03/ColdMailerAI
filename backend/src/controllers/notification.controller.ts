@@ -1,5 +1,9 @@
-import { Response } from "express";
-import { AuthenticatedRequest } from "../types/express.js";
+import { Request, Response } from "express";
+
+interface AuthenticatedRequest extends Request {
+  user: any;
+  workspace?: any;
+}
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {
@@ -56,7 +60,7 @@ export const getUnreadCount = asyncHandler(
 export const markNotificationRead = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user._id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const data = await markNotificationReadService(id, userId);
 
@@ -85,7 +89,7 @@ export const markAllNotificationsRead = asyncHandler(
 export const deleteNotification = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user._id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const data = await deleteNotificationService(id, userId);
 

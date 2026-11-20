@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import {
   currentUser,
   getUserCount,
@@ -15,9 +16,21 @@ import {
 
 const router = express.Router();
 
-router.route("/register").post(validateRegister, register);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "test",
+  message: {
+    success: false,
+    message: "Too many authentication attempts from this IP, please try again after 15 minutes.",
+  },
+});
 
-router.route("/login").post(validateLogin, login);
+router.route("/register").post(authLimiter, validateRegister, register);
+
+router.route("/login").post(authLimiter, validateLogin, login);
 
 router.route("/getCurrentUser").get(verifyJWT, currentUser);
 

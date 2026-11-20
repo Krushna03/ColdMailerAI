@@ -16,6 +16,7 @@ import { logActivity } from "./activity.service.js";
 import { recalculateSequenceStatsService } from "./sequence.service.js";
 import { generateAIContent } from "./ai.service.js";
 import { generateContextualEmailService } from "./aiIntelligence.service.js";
+import { safeFetchWebhook } from "../utils/ssrfValidator.js";
 import { ApiError } from "../utils/ApiError.js";
 
 
@@ -486,7 +487,7 @@ export async function executeEnrollmentStep(
                 : step.webhookConfig.headers)
             : {};
 
-          await fetch(step.webhookConfig.url, {
+          await safeFetchWebhook(step.webhookConfig.url, {
             method: step.webhookConfig.method || "POST",
             headers: {
               "Content-Type": "application/json",
@@ -499,6 +500,7 @@ export async function executeEnrollmentStep(
               stepOrder: step.order,
               timestamp: new Date().toISOString(),
             }),
+            timeoutMs: 10000,
           });
         } catch (whErr: any) {
           console.error("[Sequence Webhook error]", whErr);

@@ -248,7 +248,7 @@ export async function processSendJob(job: ISendJobDocument): Promise<{
   }
 
   const isUnsubscribed = lead.tags?.includes("unsubscribed");
-  const isBounced = lead.status === "bounced";
+  const isBounced = (lead.status as string) === "bounced" || lead.tags?.includes("bounced");
   const isLeadDisallowed = ["replied", "meeting", "closed", "archived"].includes(lead.status);
   const isEnrollmentHalted = enrollment && enrollment.status !== "active";
 

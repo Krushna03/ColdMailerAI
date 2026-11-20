@@ -508,7 +508,7 @@ const getLeadAIContext = asyncHandler(async (req: Request, res: Response) => {
   const mailboxId = req.query.mailboxId as string | undefined;
 
   const context = await assembleLeadContextService({
-    leadId,
+    leadId: Array.isArray(leadId) ? leadId[0] : (leadId as string),
     workspaceId,
     userId,
     sequenceId,

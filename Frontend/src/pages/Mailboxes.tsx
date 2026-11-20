@@ -719,7 +719,7 @@ export default function Mailboxes() {
                     {mailbox.health?.lastError && (() => {
                       const errorDetails = parseMailboxError(mailbox.health.lastError, mailbox.provider);
                       return (
-                        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 sm:p-3.5 space-y-2">
+                        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 sm:p-3 space-y-2">
                           <div className="flex items-start gap-2.5">
                             <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                             <div className="space-y-0.5 min-w-0 flex-1">
@@ -737,25 +737,6 @@ export default function Mailboxes() {
                               <p className="text-[11px] text-gray-300 leading-relaxed">
                                 {errorDetails.actionDescription}
                               </p>
-                              <div className="pt-1">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  onClick={() => handleActionByType(errorDetails.actionType, mailbox)}
-                                  className="h-7 px-3 text-xs font-semibold rounded-md bg-brand text-white hover:bg-brand-400 shadow-none inline-flex items-center gap-1.5 transition"
-                                >
-                                  {mailbox.provider === "gmail" ? (
-                                    <GoogleIcon className="h-3 w-3" />
-                                  ) : mailbox.provider === "outlook" ? (
-                                    <OutlookIcon className="h-3 w-3" />
-                                  ) : errorDetails.actionType === "configure_smtp" ? (
-                                    <KeyRound className="h-3 w-3" />
-                                  ) : (
-                                    <RefreshCw className="h-3 w-3" />
-                                  )}
-                                  {errorDetails.actionLabel}
-                                </Button>
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -773,7 +754,7 @@ export default function Mailboxes() {
                             type="button"
                             size="sm"
                             onClick={() => handleActionByType(errorDetails.actionType, mailbox)}
-                            className="h-8 gap-1.5 rounded-md bg-brand px-3 text-xs font-semibold text-white hover:bg-brand-400 shadow-none transition"
+                            className="h-8 gap-1.5 rounded-md bg-brand-600 px-3 text-xs font-semibold text-white hover:bg-brand-400 shadow-none transition"
                           >
                             {mailbox.provider === "gmail" ? (
                               <GoogleIcon className="h-3.5 w-3.5" />
@@ -828,10 +809,10 @@ export default function Mailboxes() {
                         size="sm"
                         variant="outline"
                         onClick={() => openSettings(mailbox)}
-                        className="h-8 w-8 p-0 rounded-md border border-white/15 bg-surface-900 text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                        className="h-7 w-7 p-0 rounded-md border border-white/15 bg-surface-900 text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                         title="Edit Settings"
                       >
-                        <Settings className="h-3.5 w-3.5" />
+                        <Settings className="h-3 w-3" />
                       </Button>
 
                       <Button
@@ -839,10 +820,10 @@ export default function Mailboxes() {
                         size="sm"
                         variant="outline"
                         onClick={() => promptDelete(mailbox)}
-                        className="h-8 w-8 p-0 rounded-md border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                        className="h-7 w-7 p-0 rounded-md border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
                         title="Disconnect Mailbox"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
