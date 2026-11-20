@@ -22,6 +22,10 @@ import {
   Building2,
   ThumbsUp,
   ArrowRight,
+  Lightbulb,
+  CornerUpLeft,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import Seo from "../components/common/Seo";
 import { Button } from "../components/ui/button";
@@ -165,6 +169,7 @@ export default function InboxReplies() {
   const [simulateModalOpen, setSimulateModalOpen] = useState(false);
   const [aiReplyModalOpen, setAiReplyModalOpen] = useState(false);
   const [showQuotedThread, setShowQuotedThread] = useState(false);
+  const [showSummaryCard, setShowSummaryCard] = useState(true);
   const [copiedBody, setCopiedBody] = useState(false);
 
   // Simulation form state
@@ -220,6 +225,7 @@ export default function InboxReplies() {
   const handleSelectEmail = (email: InboundEmail) => {
     setSelectedEmailId(email._id);
     setShowQuotedThread(false);
+    setShowSummaryCard(true);
     setCopiedBody(false);
     if (!email.isRead) {
       markReadMutation.mutate({ id: email._id, isRead: true });
@@ -558,41 +564,37 @@ export default function InboxReplies() {
             <>
               {/* Thread Header Toolbar */}
               <div className="px-4 py-3 border-b border-white/10 bg-surface-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs sm:text-[14px] font-semibold text-white truncate">
-                        {activeEmail.from.name || activeEmail.from.email}
-                      </span>
-                      {activeEmail.leadId?.status && (
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 uppercase font-sans">
-                          {activeEmail.leadId.status}
-                        </span>
-                      )}
-                      <span
-                      className={`inline-flex items-center gap-1 px-2 py-0 rounded-full text-[10px] font-medium border ${
-                        CATEGORY_CONFIG[activeEmail.classification?.category]?.badgeClass || ""
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs sm:text-[13px] font-semibold text-white truncate">
+                      {activeEmail.from.name || activeEmail.from.email}
+                    </span>
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-semibold bg-brand/20 text-brand-300 border border-brand/30 uppercase tracking-wide">
+                      REPLIED
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                        CATEGORY_CONFIG[activeEmail.classification?.category]?.badgeClass || "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                       }`}
                     >
-                      <span>{CATEGORY_CONFIG[activeEmail.classification?.category]?.label}</span>
+                      <span>{CATEGORY_CONFIG[activeEmail.classification?.category]?.label || "Interested"}</span>
                     </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px] text-gray-400 truncate mt-0.5">
-                      <span className="font-mono">{activeEmail.from.email}</span>
-                      {(typeof activeEmail.leadId?.company === "object"
-                        ? activeEmail.leadId.company?.name
-                        : activeEmail.leadId?.company) && (
-                        <>
-                          <span className="text-gray-600">·</span>
-                          <span className="text-gray-300 truncate text-[11px] flex items-center gap-1">
-                            <Building2 className="h-3 w-3 text-gray-400 shrink-0" />
-                            {typeof activeEmail.leadId?.company === "object"
-                              ? activeEmail.leadId.company?.name
-                              : activeEmail.leadId?.company}
-                          </span>
-                        </>
-                      )}
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-400 truncate mt-0.5">
+                    <span className="font-mono">{activeEmail.from.email}</span>
+                    {(typeof activeEmail.leadId?.company === "object"
+                      ? activeEmail.leadId.company?.name
+                      : activeEmail.leadId?.company) && (
+                      <>
+                        <span className="text-gray-600">·</span>
+                        <span className="text-gray-300 truncate text-[11px] flex items-center gap-1 font-medium">
+                          <Building2 className="h-3 w-3 text-gray-400 shrink-0" />
+                          {typeof activeEmail.leadId?.company === "object"
+                            ? activeEmail.leadId.company?.name
+                            : activeEmail.leadId?.company}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -603,6 +605,7 @@ export default function InboxReplies() {
                     onClick={() => setAiReplyModalOpen(true)}
                     className="h-7 px-2.5 text-[11px] font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none inline-flex items-center gap-1.5"
                   >
+                    <Sparkles className="h-3 w-3" />
                     Draft AI Reply
                   </Button>
 
@@ -613,7 +616,7 @@ export default function InboxReplies() {
                     onClick={() => reclassifyMutation.mutate(activeEmail._id)}
                     disabled={reclassifyMutation.isPending}
                     title="Re-run AI intent classifier"
-                    className="h-7 px-2 text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors shadow-none inline-flex items-center gap-1.5"
+                    className="h-7 px-2 text-[11px] font-medium rounded-md border border-white/15 bg-surface-900/60 text-white hover:bg-white/5 transition-colors shadow-none inline-flex items-center gap-1.5"
                   >
                     <RefreshCw
                       className={`h-3 w-3 text-gray-400 ${
@@ -628,7 +631,7 @@ export default function InboxReplies() {
                       asChild
                       variant="outline"
                       size="sm"
-                      className="h-7 px-2 text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors shadow-none inline-flex items-center gap-1.5"
+                      className="h-7 px-2 text-[11px] font-medium rounded-md border border-white/15 bg-surface-900/60 text-white hover:bg-white/5 transition-colors shadow-none inline-flex items-center gap-1.5"
                     >
                       <Link to={`/dashboard/leads/${activeEmail.leadId._id}`}>
                         <User className="h-3 w-3 text-gray-400" />
@@ -642,10 +645,10 @@ export default function InboxReplies() {
                       asChild
                       variant="outline"
                       size="sm"
-                      className="h-7 px-2 text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors shadow-none inline-flex items-center gap-1"
+                      className="h-7 px-2 text-[11px] font-medium rounded-md border border-white/15 bg-surface-900/60 text-white hover:bg-white/5 transition-colors shadow-none inline-flex items-center gap-1"
                     >
                       <Link to={`/dashboard/sequences/${activeEmail.sequenceId._id}`}>
-                        <ExternalLink className="h-2 w-2 text-gray-400" />
+                        <ExternalLink className="h-2.5 w-2.5 text-gray-400" />
                         Sequence
                       </Link>
                     </Button>
@@ -653,94 +656,123 @@ export default function InboxReplies() {
                 </div>
               </div>
 
-              {/* Executive Intelligence Brief */}
-              <div className="border-b border-white/10 bg-surface-950/80 px-4 py-2.5 space-y-2 shrink-0">
-                {/* 1-Sentence Synthesis */}
-                {activeEmail.classification?.summary && (
-                  <div className="text-[11px] text-gray-300 leading-relaxed font-sans flex items-start gap-1">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider shrink-0 pt-0.5">
-                      Summary:
-                    </span>
-                    <p className="text-gray-200">{activeEmail.classification.summary}</p>
-                  </div>
-                )}
-
-                {/* Recommended Action Row */}
-                {activeEmail.classification?.suggestedAction && (
-                  <div className="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-surface-900 px-2 py-0.5">
-                    <div className="flex items-start sm:items-center gap-1 min-w-0">
-                      <span className="text-[10px] font-semibold text-brand-300 uppercase tracking-wider shrink-0">
-                        Next Action:
-                      </span>
-                      <span className="text-[11px] text-gray-200 font-medium truncate">
-                        {activeEmail.classification.suggestedAction}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Message Reading Surface */}
-              <div className="flex-1 min-h-0 p-4 overflow-y-auto space-y-3.5 custom-scroll">
-                <div className="space-y-1.5 pb-3 border-b border-white/5">
-                  <h2 className="text-xs sm:text-[13px] font-semibold text-white tracking-tight text-balance">
-                    {activeEmail.subject || "(No Subject)"}
-                  </h2>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-400">
-                    <div>
-                      <span className="text-gray-400">From: </span>
-                      <span className="text-gray-200 font-medium">
-                        {activeEmail.from.name
-                          ? `${activeEmail.from.name} <${activeEmail.from.email}>`
-                          : activeEmail.from.email}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">To: </span>
-                      <span className="text-gray-200 font-medium">{activeEmail.to}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Received: </span>
-                      <span className="text-gray-300 font-mono">
-                        {new Date(activeEmail.receivedAt).toLocaleString([], {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {(() => {
-                  const { mainText, quotedText } = splitEmailThread(activeEmail.bodyText || "");
-                  return (
-                    <div className="space-y-3">
-                      <div className="text-xs text-gray-200 leading-relaxed font-sans whitespace-pre-wrap text-pretty">
-                        {mainText || activeEmail.bodyText || "No text content available."}
+              {/* Scrollable Content: Summary Card + Message Card */}
+              <div className="flex-1 min-h-0 p-2 space-y-3 overflow-y-auto custom-scroll">
+                {/* Summary Card with special dark-purple glow/background */}
+                {showSummaryCard && activeEmail.classification?.summary && (
+                  <div className="rounded-md border border-purple-500/30 bg-[#16122d] p-3 text-white shadow-sm space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                        <h3 className="text-xs font-semibold text-white tracking-tight">Summary</h3>
                       </div>
-
-                      {quotedText && (
-                        <div className="pt-1">
-                          <button
-                            type="button"
-                            aria-expanded={showQuotedThread}
-                            aria-label={showQuotedThread ? "Hide quoted message history" : "Show quoted message history"}
-                            onClick={() => setShowQuotedThread(!showQuotedThread)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
-                          >
-                            <span className="font-mono text-gray-300">···</span>
-                            <span>{showQuotedThread ? "Hide quoted history" : "Show quoted history"}</span>
-                          </button>
-                          {showQuotedThread && (
-                            <div className="mt-2 pl-3 border-l-2 border-white/20 text-[11px] text-gray-400 font-sans leading-relaxed whitespace-pre-wrap bg-white/[0.02] py-1.5 rounded-r text-pretty">
-                              {quotedText}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowSummaryCard(false)}
+                        className="text-gray-400 hover:text-white transition-colors p-0.5 rounded"
+                        title="Dismiss summary"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
                     </div>
-                  );
-                })()}
+
+                    <p className="text-[11px] text-gray-300 leading-relaxed font-sans">
+                      {activeEmail.classification.summary}
+                    </p>
+
+                    {activeEmail.classification?.suggestedAction && (
+                      <div className="flex items-center gap-2 rounded-lg bg-black/30 border border-purple-500/20 px-2 py-1.5 text-[11px]">
+                        <Lightbulb className="h-3 w-3 text-amber-400 shrink-0" />
+                        <div className="flex items-center gap-1.5 min-w-0 truncate">
+                          <span className="font-semibold text-white shrink-0 text-[10px]">
+                            Next <span className="text-brand-300 font-semibold">Action:</span>
+                          </span>
+                          <span className="text-gray-300 truncate text-[11px]">
+                            {activeEmail.classification.suggestedAction}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Message Reading Card */}
+                <div className="rounded-xl border border-white/10 bg-surface-950/60 p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-white/10">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="min-w-0">
+                        <h2 className="text-xs sm:text-[13px] font-semibold text-white tracking-tight truncate">
+                          {activeEmail.subject || "(No Subject)"}
+                        </h2>
+                        <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-0.5 truncate flex-wrap">
+                          <span className="truncate">
+                            From:{" "}
+                            <span className="text-gray-300 font-normal">
+                              {activeEmail.from.name
+                                ? `${activeEmail.from.name} <${activeEmail.from.email}>`
+                                : activeEmail.from.email}
+                            </span>
+                          </span>
+                          <span className="text-gray-600">|</span>
+                          <span className="truncate">
+                            To: <span className="text-gray-300 font-normal">{activeEmail.to}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-1.5 text-right shrink-0">
+                      <Calendar className="h-3.5 w-3.5 text-gray-400 mt-0.5 shrink-0" />
+                      <div className="text-left">
+                        <div className="text-[10px] text-gray-400 leading-tight">Received:</div>
+                        <div className="text-[11px] text-white font-mono leading-tight">
+                          {new Date(activeEmail.receivedAt).toLocaleString([], {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const { mainText, quotedText } = splitEmailThread(activeEmail.bodyText || "");
+                    return (
+                      <div className="space-y-3 pt-0.5">
+                        <div className="text-xs text-gray-200 leading-relaxed font-sans whitespace-pre-wrap text-pretty">
+                          {mainText || activeEmail.bodyText || "No text content available."}
+                        </div>
+
+                        {quotedText && (
+                          <div className="pt-0.5">
+                            <button
+                              type="button"
+                              aria-expanded={showQuotedThread}
+                              aria-label={showQuotedThread ? "Hide quoted message history" : "Show quoted message history"}
+                              onClick={() => setShowQuotedThread(!showQuotedThread)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                            >
+                              <ChevronDown
+                                className={`h-3 w-3 transition-transform ${
+                                  showQuotedThread ? "rotate-180" : ""
+                                }`}
+                              />
+                              <span>{showQuotedThread ? "Hide quoted history" : "Show quoted history"}</span>
+                            </button>
+                            {showQuotedThread && (
+                              <div className="mt-2 pl-3 border-l-2 border-white/20 text-[11px] text-gray-400 font-sans leading-relaxed whitespace-pre-wrap bg-white/[0.02] py-1.5 rounded-r text-pretty">
+                                {quotedText}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
 
               {/* Docked Follow-Up Bar */}
