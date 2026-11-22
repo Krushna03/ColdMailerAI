@@ -402,7 +402,7 @@ export default function Leads() {
             placeholder="Search name, email, company, role..."
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
-            className="h-9 pl-9 pr-7 text-xs sm:text-sm border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:ring-offset-surface-900 rounded-md w-full"
+            className="h-8 pl-9 pr-7 text-xs sm:text-sm border-white/15 bg-surface-900 text-white placeholder:text-gray-500 focus-visible:ring-brand-400/40 focus-visible:ring-offset-surface-900 rounded-md w-full"
           />
           {searchVal && (
             <button

@@ -119,8 +119,8 @@ export default function LeadsTable({
                     aria-label={`Select ${lead.name}`}
                   />
                 </TableCell>
-                <TableCell className="px-3.5 py-2.5 font-medium text-white">
-                  <span className="hover:underline underline-offset-2 block">
+                <TableCell className="px-3.5 py-2 font-medium text-white">
+                  <span className="hover:underline underline-offset-2 block text-[14px]">
                     {lead.name}
                   </span>
                   {getLeadJobTitle(lead) && (
@@ -129,12 +129,12 @@ export default function LeadsTable({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="px-3.5 py-2.5 text-gray-300">
+                <TableCell className="px-3.5 py-2.5 text-gray-300 text-[13px]">
                   {getCategoryName(lead.categoryId)}
                 </TableCell>
                 <TableCell className="px-3.5 py-2.5 text-gray-300">
                   <div>
-                    <span>{getLeadCompanyName(lead.company) || "—"}</span>
+                    <span className="text-[13px]">{getLeadCompanyName(lead.company) || "—"}</span>
                     {Array.isArray(lead.tags) && lead.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {lead.tags.slice(0, 2).map((t: string) => (
@@ -168,9 +168,7 @@ export default function LeadsTable({
                 <TableCell className="px-3.5 py-2.5">
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset ${verificationBadgeClass(
-                        verStatus
-                      )}`}
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset ${verificationBadgeClass(verStatus)}`}
                       title={ver.reason || verStatus}
                     >
                       {verificationLabel(verStatus)}
@@ -189,7 +187,7 @@ export default function LeadsTable({
                   {lead.emailsSentCount ?? 0}
                 </TableCell>
                 <TableCell
-                  className={`px-3.5 py-2.5 text-xs ${
+                  className={`px-3.5 py-2.5 text-xs text-center ${
                     overdue ? "font-medium text-red-400" : "text-gray-300"
                   }`}
                 >
