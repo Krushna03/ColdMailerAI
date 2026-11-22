@@ -16,8 +16,18 @@ import {
   RefreshCw,
   Loader2,
   AlertCircle,
+  LayoutGrid,
+  Table as TableIcon,
 } from "lucide-react";
 import Seo from "../components/common/Seo";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import {
   useSequences,
   useCreateSequence,
@@ -51,6 +61,7 @@ export default function Sequences() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [sequenceToDelete, setSequenceToDelete] = useState<Sequence | null>(null);
@@ -361,13 +372,14 @@ export default function Sequences() {
       {/* Sequences Header & Filters */}
       <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-2 flex-wrap">
             {["all", "active", "draft", "paused"].map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setStatusFilter(tab)}
-                className={`h-8 px-4 rounded-md text-xs font-medium capitalize transition-colors ${
+                className={`h-8 px-3.5 rounded-md text-xs font-medium capitalize transition-colors ${
                   statusFilter === tab
                     ? "bg-brand text-white font-medium shadow-none"
                     : "border border-white/15 bg-surface-900 text-gray-400 hover:text-white hover:bg-white/5"
@@ -378,18 +390,51 @@ export default function Sequences() {
             ))}
           </div>
 
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search sequences..."
-              className="pl-9 h-8 text-xs bg-surface-900 border-white/15 text-white rounded-md placeholder:text-gray-500"
-            />
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {/* Search Input */}
+            <div className="relative flex-1 sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search sequences..."
+                className="pl-9 h-8 text-xs bg-surface-900 border-white/15 text-white rounded-md placeholder:text-gray-500"
+              />
+            </div>
+
+            {/* View Mode Switcher: Table (default) vs Grid */}
+            <div className="flex items-center rounded-md border border-white/15 bg-surface-900 p-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                aria-label="Table view"
+                title="Table view"
+                className={`p-1.5 rounded text-xs transition-colors ${
+                  viewMode === "table"
+                    ? "bg-brand text-white shadow-none"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <TableIcon className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                aria-label="Grid view"
+                title="Grid view"
+                className={`p-1.5 rounded text-xs transition-colors ${
+                  viewMode === "grid"
+                    ? "bg-brand text-white shadow-none"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Sequences Grid */}
+        {/* Sequences Content: Table View (default) or Grid View */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
             <Loader2 className="h-5 w-5 animate-spin mr-2 text-brand-300" />
@@ -416,7 +461,167 @@ export default function Sequences() {
               Create Sequence
             </Button>
           </div>
+        ) : viewMode === "table" ? (
+          /* Table View (Default - matching LeadsTable typography and density) */
+          <div className="overflow-hidden rounded-lg border border-white/10 bg-surface-900 shadow-none">
+            <Table className="min-w-full table-fixed text-left text-xs sm:text-sm text-gray-200">
+              <TableHeader className="border-b border-white/10 bg-surface-950 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="h-9 px-3.5 py-2 font-medium w-[32%]">Sequence</TableHead>
+                  <TableHead className="h-9 px-3.5 py-2 font-medium w-[11%]">Status</TableHead>
+                  <TableHead className="h-9 px-3.5 py-2 font-medium w-[11%]">Cadence</TableHead>
+                  <TableHead className="h-9 px-3.5 py-2 font-medium w-[11%]">Mailbox</TableHead>
+                  <TableHead className="h-9 px-3.5 py-2 font-medium text-center w-[9%]">Enrolled</TableHead>
+                  <TableHead className="h-9 px-3.5 py-2 font-medium text-center w-[9%]">Active</TableHead>
+                  <TableHead className="h-9 px-3.5 py-2 font-medium text-center w-[9%]">Replies</TableHead>
+                  <TableHead className="h-9 px-3.5 py-2 font-medium text-right w-[8%]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-white/5">
+                {sequences.map((seq) => {
+                  const isActive = seq.status === "active";
+                  const isPaused = seq.status === "paused";
+                  const mailboxEmail =
+                    typeof seq.settings?.mailboxId === "object" && seq.settings?.mailboxId?.email
+                      ? seq.settings.mailboxId.email
+                      : null;
+                  const totalEnr = seq.stats?.totalEnrolled || 0;
+                  const repliedCnt = seq.stats?.repliedCount || 0;
+                  const replyPct = totalEnr > 0 ? Math.round((repliedCnt / totalEnr) * 100) : 0;
+
+                  return (
+                    <TableRow
+                      key={seq._id}
+                      role="link"
+                      tabIndex={0}
+                      className="cursor-pointer border-b border-white/5 hover:bg-white/5 focus-visible:bg-white/5 focus-visible:outline-none transition-colors group"
+                      onClick={() => navigate(`/dashboard/sequences/${seq._id}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          navigate(`/dashboard/sequences/${seq._id}`);
+                        }
+                      }}
+                    >
+                      <TableCell className="px-3.5 py-2.5 font-medium text-white w-[32%]">
+                        <span className="hover:underline underline-offset-2 block text-xs sm:text-sm font-medium text-white truncate">
+                          {seq.name}
+                        </span>
+                        <div className="flex items-center gap-2 mt-0.5 min-w-0">
+                          <span className="text-[11px] text-gray-400 font-normal truncate max-w-[200px] sm:max-w-[260px]">
+                            {seq.description || "Automated outreach cadence"}
+                          </span>
+                          {seq.settings?.stopOnReply && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-purple-300 bg-purple-500/10 px-1.5 py-0.2 rounded border border-purple-500/20 shrink-0">
+                              Stop on reply
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="px-3.5 py-2.5 whitespace-nowrap w-[11%]">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset font-sans ${
+                            isActive
+                              ? "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30"
+                              : isPaused
+                              ? "bg-amber-500/15 text-amber-300 ring-amber-500/30"
+                              : "bg-white/5 text-gray-300 ring-white/10"
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              isActive
+                                ? "bg-emerald-400 animate-pulse"
+                                : isPaused
+                                ? "bg-amber-400"
+                                : "bg-gray-400"
+                            }`}
+                          />
+                          {seq.status.toUpperCase()}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="px-3.5 py-2.5 whitespace-nowrap w-[11%]">
+                        <span className="inline-flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded text-[11px] font-mono text-gray-300 border border-white/5">
+                          <Layers className="h-3 w-3 text-brand-300" />
+                          {seq.stepsCount || 0} steps
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="px-3.5 py-2.5 text-gray-300 whitespace-nowrap w-[11%]">
+                        {mailboxEmail ? (
+                          <span
+                            className="inline-flex items-center gap-1 text-[11px] font-mono text-gray-300 truncate max-w-[140px]"
+                            title={mailboxEmail}
+                          >
+                            <Mail className="h-3 w-3 text-gray-400 shrink-0" />
+                            <span className="truncate">{mailboxEmail}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-gray-500 italic">No mailbox linked</span>
+                        )}
+                      </TableCell>
+
+                      <TableCell className="px-3.5 py-2.5 text-center text-gray-300 font-mono text-xs whitespace-nowrap w-[9%]">
+                        <span className="text-white">
+                          {seq.stats?.totalEnrolled || 0}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="px-3.5 py-2.5 text-center text-gray-300 font-mono text-xs whitespace-nowrap w-[9%]">
+                        <span>
+                          {seq.stats?.activeCount || 0}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="px-3.5 py-2.5 text-center whitespace-nowrap font-mono text-xs w-[9%]">
+                        <span className="font-semibold text-brand-300">
+                          {seq.stats?.repliedCount || 0}
+                        </span>
+                        {totalEnr > 0 && (
+                          <span className="text-[11px] text-gray-400 ml-1 font-normal font-sans">
+                            ({replyPct}%)
+                          </span>
+                        )}
+                      </TableCell>
+
+                      <TableCell className="px-3.5 py-2.5 text-right whitespace-nowrap w-[8%]">
+                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(seq)}
+                            title={isActive ? "Pause Sequence" : "Activate Sequence"}
+                            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+                          >
+                            {isActive ? (
+                              <Pause className="h-3.5 w-3.5" />
+                            ) : (
+                              <Play className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSequenceToDelete(seq);
+                              setDeleteModalOpen(true);
+                            }}
+                            title="Delete Sequence"
+                            className="p-1.5 rounded-md text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
+          /* Grid View */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sequences.map((seq) => {
               const isActive = seq.status === "active";
