@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useMemo, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Inbox,
   Sparkles,
@@ -162,15 +162,24 @@ const splitEmailThread = (body: string) => {
 type FilterTab = "all" | "unread" | "opportunities" | "objections";
 
 export default function InboxReplies() {
+  const [searchParams] = useSearchParams();
+  const urlEmailId = searchParams.get("emailId");
+
   const [selectedFilterTab, setSelectedFilterTab] = useState<FilterTab>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(urlEmailId);
   const [simulateModalOpen, setSimulateModalOpen] = useState(false);
   const [aiReplyModalOpen, setAiReplyModalOpen] = useState(false);
   const [showQuotedThread, setShowQuotedThread] = useState(false);
   const [showSummaryCard, setShowSummaryCard] = useState(true);
   const [copiedBody, setCopiedBody] = useState(false);
+
+  useEffect(() => {
+    if (urlEmailId) {
+      setSelectedEmailId(urlEmailId);
+    }
+  }, [urlEmailId]);
 
   // Simulation form state
   const [simLeadId, setSimLeadId] = useState("");

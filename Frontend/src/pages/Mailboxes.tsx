@@ -637,11 +637,11 @@ export default function Mailboxes() {
               return (
                 <div
                   key={mailbox._id}
-                  className="rounded-lg border border-white/10 bg-surface-900 p-5 transition hover:border-white/20"
+                  className="rounded-lg border border-white/10 bg-surface-900 p-3 transition hover:border-white/20"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-white/10 bg-surface-950">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-surface-950">
                         {mailbox.provider === "gmail" ? (
                           <GoogleIcon className="h-4 w-4" />
                         ) : mailbox.provider === "outlook" ? (
@@ -653,7 +653,7 @@ export default function Mailboxes() {
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="truncate text-sm font-semibold text-white">
+                          <p className="truncate text-[13px] font-semibold text-white">
                             {mailbox.email}
                           </p>
                           {mailbox.isDefault && (
@@ -684,7 +684,7 @@ export default function Mailboxes() {
                   </div>
 
                   {/* Quota & Health Section */}
-                  <div className="mt-4 space-y-3 rounded-md border border-white/5 bg-surface-950 p-4">
+                  <div className="mt-3 space-y-3 rounded-md border border-white/5 bg-surface-950 p-4">
                     <div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-gray-400">Daily Send Quota</span>
@@ -699,21 +699,6 @@ export default function Mailboxes() {
                           style={{ width: `${quotaPercent}%` }}
                         />
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1 text-xs border-t border-white/5">
-                      <div className="flex items-center gap-1.5 text-gray-400">
-                        <Activity className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Health: {mailbox.health?.score ?? 100}%</span>
-                        <span className="text-[10px] text-gray-500 font-medium">
-                          ({mailbox.health?.status || "optimal"})
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {mailbox.health?.lastTestedAt
-                          ? `Tested ${new Date(mailbox.health.lastTestedAt).toLocaleDateString()}`
-                          : "Untested"}
-                      </span>
                     </div>
 
                     {mailbox.health?.lastError && (() => {
@@ -745,7 +730,7 @@ export default function Mailboxes() {
                   </div>
 
                   {/* Actions Bar */}
-                  <div className="mt-4 flex items-center justify-between pt-1">
+                  <div className="mt-2 flex items-center justify-between pt-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       {(mailbox.status === "error" || mailbox.health?.lastError) && (() => {
                         const errorDetails = parseMailboxError(mailbox.health?.lastError, mailbox.provider);
