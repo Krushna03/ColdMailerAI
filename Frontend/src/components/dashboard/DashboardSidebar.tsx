@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  CreditCard,
   LayoutDashboard,
   LogOut,
   UserRound,
@@ -57,8 +56,7 @@ const navSections: NavSection[] = [
   {
     title: "WORKSPACE",
     items: [
-      { label: "Pricing & Billing", to: "/dashboard/pricing", icon: CreditCard },
-      { label: "Profile", to: "/dashboard/profile", icon: UserRound },
+      { label: "Profile & Settings", to: "/dashboard/profile", icon: UserRound },
     ],
   },
 ];

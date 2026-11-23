@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { NavLink, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -22,12 +22,13 @@ import {
   AlertTriangle,
   Sun,
   Moon,
+  BellRing,
 } from "lucide-react";
 import Seo from "../components/common/Seo";
 import { useCurrentUser } from "../hooks/useUser";
 import { usePlanUsage } from "../hooks/usePlanUsage";
 import { usePaymentHistory } from "../hooks/usePayment";
-import { formatDate } from "../components/payment/utils";
+import { formatDate, formatDaysLabel, getDaysUntil } from "../components/payment/utils";
 import { getUserData, getToken } from "../utils";
 import { User } from "../types/user";
 import { Button } from "../components/ui/button";
@@ -35,6 +36,7 @@ import { useToast } from "../hooks/use-toast";
 import { useLogout } from "../helpers/tokenValidation";
 import { login } from "../context/authSlice";
 import { useTheme } from "../context/ThemeContext";
+import { useUpgradeModal } from "../context/UpgradeModalContext";
 
 const GoogleIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
@@ -92,7 +94,30 @@ export default function Profile() {
   const user = reduxUser || storedUser;
 
   const { planUsage, usageLoading } = usePlanUsage();
+  const { openUpgradeModal } = useUpgradeModal();
+
   const { data: paymentHistory } = usePaymentHistory(Boolean(token && user));
+
+  const { planExpiryDate, daysUntilExpiry } = useMemo(() => {
+    const expiryRaw = user?.planExpiresAt || paymentHistory?.planExpiresAt || null;
+    const expiryDate = expiryRaw ? new Date(expiryRaw) : null;
+    let computedDays =
+      typeof paymentHistory?.daysUntilExpiry === "number"
+        ? paymentHistory.daysUntilExpiry
+        : getDaysUntil(expiryDate);
+    if (Number.isNaN(computedDays)) computedDays = null;
+    return {
+      planExpiryDate: expiryDate,
+      daysUntilExpiry: typeof computedDays === "number" ? computedDays : null,
+    };
+  }, [paymentHistory, user]);
+
+  const shouldShowRenewalReminder = Boolean(
+    user?.isPaidUser &&
+    typeof daysUntilExpiry === "number" &&
+    daysUntilExpiry > 0 &&
+    daysUntilExpiry <= 2
+  );
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -115,6 +140,12 @@ export default function Profile() {
       setDisplayName(user.username);
     }
   }, [user?.username]);
+
+  useEffect(() => {
+    if (activeTab === "billing" && searchParams.get("action") === "upgrade") {
+      openUpgradeModal();
+    }
+  }, [activeTab, searchParams, openUpgradeModal]);
 
   const handleTabChange = (tab: SettingsTab) => {
     setActiveTab(tab);
@@ -217,17 +248,17 @@ export default function Profile() {
   const effectivePaymentInfo = user?.paymentInfo || paymentHistory?.paymentInfo;
 
   return (
-    <div className="min-w-0 max-w-full space-y-6 font-sans">
+    <div className="min-w-0 max-w-full space-y-4 font-sans">
       <Seo title="Profile & Settings" path="/dashboard/profile" noIndex />
 
       {/* 1. Header Section */}
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+          <h1 className="text-xl font-semibold tracking-tight text-white sm:text-[24px]">
             Account & Settings
           </h1>
-          <p className="mt-1 max-w-xl text-sm text-gray-400">
-            Manage your personal profile, outreach preferences, security standing, and plan subscription.
+          <p className="mt-1 max-w-xl text-[13px] text-gray-400">
+            Manage your personal profile, outreach preferences, security and plan subscription.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -235,15 +266,15 @@ export default function Profile() {
             type="button"
             variant="outline"
             onClick={handleLogout}
-            className="h-9 px-3 text-xs sm:text-[13px] font-medium rounded-md border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors shadow-none"
+            className="h-8 px-3 text-xs sm:text-[12px] font-medium rounded-md border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors shadow-none"
           >
-            <LogOut className="h-3.5 w-3.5 mr-1.5" />
+            <LogOut className="h-3 w-3" />
             Sign Out
           </Button>
 
           <NavLink
             to="/dashboard/pricing"
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-400 shadow-none"
+            className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-brand px-3 text-[13px] font-semibold text-white transition hover:bg-brand-400 shadow-none"
           >
             <CreditCard className="h-4 w-4" />
             Manage Plan
@@ -256,12 +287,12 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("profile")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "profile"
-              ? "text-white font-semibold"
-              : "text-gray-400 hover:text-gray-200"
+          className={`flex items-center gap-1 pb-2 text-[13px] font-medium transition-colors relative whitespace-nowrap ${activeTab === "profile"
+            ? "text-white font-semibold"
+            : "text-gray-400 hover:text-gray-200"
             }`}
         >
-          <UserRound className="h-4 w-4" />
+          <UserRound className="h-3.5 w-3.5" />
           Profile & Identity
           {activeTab === "profile" && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
@@ -271,12 +302,12 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("preferences")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "preferences"
-              ? "text-white font-semibold"
-              : "text-gray-400 hover:text-gray-200"
+          className={`flex items-center gap-1 pb-2 text-[13px] font-medium transition-colors relative whitespace-nowrap ${activeTab === "preferences"
+            ? "text-white font-semibold"
+            : "text-gray-400 hover:text-gray-200"
             }`}
         >
-          <Sliders className="h-4 w-4" />
+          <Sliders className="h-3.5 w-3.5" />
           Outreach & AI Preferences
           {activeTab === "preferences" && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
@@ -286,12 +317,12 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("security")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "security"
-              ? "text-white font-semibold"
-              : "text-gray-400 hover:text-gray-200"
+          className={`flex items-center gap-2 pb-2 text-[13px] font-medium transition-colors relative whitespace-nowrap ${activeTab === "security"
+            ? "text-white font-semibold"
+            : "text-gray-400 hover:text-gray-200"
             }`}
         >
-          <Shield className="h-4 w-4" />
+          <Shield className="h-3.5 w-3.5" />
           Security & Access
           {activeTab === "security" && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
@@ -301,12 +332,12 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => handleTabChange("billing")}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === "billing"
-              ? "text-white font-semibold"
-              : "text-gray-400 hover:text-gray-200"
+          className={`flex items-center gap-2 pb-2 text-[13px] font-medium transition-colors relative whitespace-nowrap ${activeTab === "billing"
+            ? "text-white font-semibold"
+            : "text-gray-400 hover:text-gray-200"
             }`}
         >
-          <CreditCard className="h-4 w-4" />
+          <CreditCard className="h-3.5 w-3.5" />
           Subscription & Quota
           {activeTab === "billing" && (
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
@@ -314,28 +345,26 @@ export default function Profile() {
         </button>
       </div>
 
-      {/* 3. TAB CONTENT */}
-
       {/* TAB 1: Profile & Identity */}
       {activeTab === "profile" && (
         <div className="space-y-5">
           {/* User Identity Banner Card */}
           <article className="overflow-hidden rounded-lg border border-white/10 bg-surface-900">
-            <div className="flex flex-col gap-4 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between bg-surface-950">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xl font-semibold text-white font-mono">
+            <div className="flex flex-col gap-4 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between bg-surface-950">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xl font-semibold text-white font-mono">
                   {initial}
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="truncate text-base sm:text-lg font-semibold text-white">
+                    <h2 className="truncate text-sm sm:text-base font-semibold text-white">
                       {user?.username || "ColdMailer User"}
                     </h2>
-                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white ring-1 ring-inset ring-white/20 font-sans">
                       {user?.planName || paymentHistory?.currentPlan || "Free"}
                     </span>
                     {user?.isPaidUser ? (
-                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20 font-sans">
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20 font-sans">
                         Paid Subscriber
                       </span>
                     ) : (
@@ -344,7 +373,7 @@ export default function Profile() {
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 truncate text-xs sm:text-sm text-gray-400 font-mono">
+                  <p className="mt-0.5 truncate text-[10px] sm:text-xs text-gray-400 font-mono">
                     {user?.email || "—"}
                   </p>
                 </div>
@@ -355,16 +384,16 @@ export default function Profile() {
                   <Button
                     type="button"
                     onClick={() => copyToClipboard(user.email, "email", "Email")}
-                    className="h-8 px-3 text-xs sm:text-[13px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors"
+                    className="h-7 px-2 text-xs sm:text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors"
                   >
                     {copiedKey === "email" ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        <Check className="h-2 w-2 text-emerald-400" />
                         Copied Email
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3.5 w-3.5 text-gray-400" />
+                        <Copy className="h-2 w-2 text-gray-400" />
                         Copy Email
                       </>
                     )}
@@ -375,7 +404,7 @@ export default function Profile() {
                   <Button
                     type="button"
                     onClick={() => copyToClipboard(user._id, "id", "Account ID")}
-                    className="h-8 px-3 text-xs sm:text-[13px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors"
+                    className="h-7 px-2 text-xs sm:text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors"
                   >
                     {copiedKey === "id" ? (
                       <>
@@ -588,8 +617,8 @@ export default function Profile() {
                     type="button"
                     onClick={() => setTheme("light")}
                     className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "light"
-                        ? "border-brand bg-brand/10 text-white"
-                        : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
+                      ? "border-brand bg-brand/10 text-white"
+                      : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
                       }`}
                   >
                     <div className="rounded-md bg-white/5 p-2 text-gray-300 border border-white/5 shrink-0">
@@ -612,8 +641,8 @@ export default function Profile() {
                     type="button"
                     onClick={() => setTheme("dark")}
                     className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "dark"
-                        ? "border-brand bg-brand/10 text-white"
-                        : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
+                      ? "border-brand bg-brand/10 text-white"
+                      : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
                       }`}
                   >
                     <div className="rounded-md bg-white/5 p-2 text-gray-300 border border-white/5 shrink-0">
@@ -646,8 +675,8 @@ export default function Profile() {
                       type="button"
                       onClick={() => setPreferences({ ...preferences, defaultTone: t.id })}
                       className={`text-left rounded-lg p-3.5 border transition-all ${preferences.defaultTone === t.id
-                          ? "border-brand bg-brand/10 text-white"
-                          : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
+                        ? "border-brand bg-brand/10 text-white"
+                        : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
                         }`}
                     >
                       <p className="text-xs font-semibold">{t.title}</p>
@@ -863,7 +892,28 @@ export default function Profile() {
 
       {/* TAB 4: Subscription & Quota */}
       {activeTab === "billing" && (
-        <div className="space-y-5">
+        <div className="space-y-6">
+          {/* Renewal Reminder Banner (if near expiry) */}
+          {shouldShowRenewalReminder && planExpiryDate && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between font-sans">
+              <div className="flex items-center gap-3">
+                <BellRing className="h-4 w-4 text-amber-400 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-white">Plan renewal approaching</p>
+                  <p className="text-xs text-amber-200/80">
+                    Your plan expires on {formatDate(planExpiryDate)} ({formatDaysLabel(daysUntilExpiry)} remaining).
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={openUpgradeModal}
+                className="bg-brand text-white hover:bg-brand-400 h-8 px-3 text-xs font-semibold rounded-md shrink-0 shadow-none cursor-pointer"
+              >
+                Renew plan
+              </Button>
+            </div>
+          )}
+
           {/* AI Generation Quota & Consumption Panel */}
           <article className="overflow-hidden rounded-lg border border-white/10 bg-surface-900">
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
@@ -875,12 +925,13 @@ export default function Profile() {
                   Calculated against your monthly subscription tier allowance
                 </p>
               </div>
-              <NavLink
-                to="/dashboard/pricing"
-                className="text-xs sm:text-sm font-medium text-brand-300 hover:text-white"
+              <button
+                type="button"
+                onClick={openUpgradeModal}
+                className="text-xs sm:text-sm font-medium text-brand-300 hover:text-white cursor-pointer"
               >
                 Upgrade plan
-              </NavLink>
+              </button>
             </div>
 
             <div className="p-5 space-y-4">
@@ -958,12 +1009,13 @@ export default function Profile() {
                 <h2 className="text-sm sm:text-base font-semibold text-white">
                   Subscription Standing
                 </h2>
-                <NavLink
-                  to="/dashboard/pricing"
-                  className="text-xs sm:text-sm font-medium text-brand-300 hover:text-white"
+                <button
+                  type="button"
+                  onClick={openUpgradeModal}
+                  className="text-xs sm:text-sm font-medium text-brand-300 hover:text-white cursor-pointer"
                 >
                   Manage tiers
-                </NavLink>
+                </button>
               </div>
 
               <div className="divide-y divide-white/5">
@@ -984,8 +1036,8 @@ export default function Profile() {
                   </div>
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${user?.isPaidUser
-                        ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20"
-                        : "bg-white/10 text-white ring-1 ring-inset ring-white/20"
+                      ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20"
+                      : "bg-white/10 text-white ring-1 ring-inset ring-white/20"
                       }`}
                   >
                     {user?.isPaidUser ? "Active Subscription" : "Free Starter"}
@@ -1069,17 +1121,19 @@ export default function Profile() {
                     <p className="text-xs sm:text-sm text-gray-400">
                       No payment transactions recorded yet on this account.
                     </p>
-                    <NavLink
-                      to="/dashboard/pricing"
-                      className="mt-3 inline-flex text-xs font-semibold text-brand-300 hover:text-white"
+                    <button
+                      type="button"
+                      onClick={openUpgradeModal}
+                      className="mt-3 inline-flex items-center text-xs font-semibold text-brand-300 hover:text-white cursor-pointer"
                     >
-                      Browse upgrade tiers <ArrowRight className="h-3 w-3 ml-1 inline" />
-                    </NavLink>
+                      Browse upgrade tiers <ArrowRight className="h-3 w-3 ml-1" />
+                    </button>
                   </div>
                 )}
               </div>
             </article>
           </section>
+
         </div>
       )}
     </div>

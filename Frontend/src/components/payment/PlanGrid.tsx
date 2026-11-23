@@ -59,13 +59,6 @@ const PlanGrid: React.FC<PlanGridProps> = ({ plans, plansLoading, user, onSelect
 
   return (
     <section className="space-y-6 font-sans">
-      <div className="flex items-center justify-center text-center">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Plans</p>
-          <h2 className="text-lg font-semibold text-white mt-0.5">Choose what fits your workflow</h2>
-        </div>
-      </div>
-
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => {
           const isCurrentPlan =

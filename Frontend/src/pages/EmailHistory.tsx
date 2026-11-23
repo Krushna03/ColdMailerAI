@@ -175,7 +175,7 @@ export default function EmailHistory() {
 
   const handleUpgrade = useCallback(() => {
     setShowLimitModal(false)
-    navigate("/dashboard/pricing")
+    navigate("/dashboard/profile?tab=billing")
   }, [navigate])
 
   const [iterations, setIterations] = useState<IterationItem[]>([])

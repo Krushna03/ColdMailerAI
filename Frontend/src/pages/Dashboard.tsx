@@ -20,9 +20,9 @@ const quickActions = [
     to: "/generate-email",
   },
   {
-    title: "View pricing",
-    description: "Review your plan, usage, billing, and upgrades.",
-    to: "/dashboard/pricing",
+    title: "Subscription & Plans",
+    description: "Review your plan, usage, quotas, and upgrades.",
+    to: "/dashboard/profile?tab=billing",
   },
 ];
 

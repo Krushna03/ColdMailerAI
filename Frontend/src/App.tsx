@@ -11,7 +11,6 @@ const NotFound = lazy(() => import("./components/common/NotFound"));
 const GenerateEmail = lazy(() => import("./pages/GenerateEmail"));
 const EmailOutputPage = lazy(() => import("./pages/EmailOutputPage"));
 const EmailHistory = lazy(() => import("./pages/EmailHistory"));
-const PaymentComponent = lazy(() => import("./components/payment/Payment"));
 const Community = lazy(() => import("./pages/Community"));
 const Leads = lazy(() => import("./pages/Leads"));
 const LeadDetail = lazy(() => import("./pages/LeadDetail"));
@@ -80,7 +79,7 @@ export default function App() {
         },
         {
           path: "pricing",
-          element: withSuspense(<PaymentComponent />),
+          element: <Navigate to="/dashboard/profile?tab=billing" replace />,
         },
         {
           path: "profile",
@@ -114,7 +113,7 @@ export default function App() {
     },
     {
       path: "/payment",
-      element: <Navigate to="/dashboard/pricing" replace />,
+      element: <Navigate to="/dashboard/profile?tab=billing" replace />,
     },
     {
       path: "/email/:id",

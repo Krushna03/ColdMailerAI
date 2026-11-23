@@ -289,7 +289,7 @@ export function EmailOutput({
                 Create New Email
               </Button>
               <Button
-                onClick={() => navigate("/dashboard/pricing")}
+                onClick={() => navigate("/dashboard/profile?tab=billing")}
                 className="mt-4 bg-brand-deep text-white hover:bg-brand-deep/90"
               >
                 Upgrade Plan

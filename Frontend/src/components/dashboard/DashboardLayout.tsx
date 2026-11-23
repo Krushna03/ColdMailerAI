@@ -8,6 +8,7 @@ import { Toaster } from "../ui/toaster";
 import { RootState } from "../../context/store";
 import NotificationBell from "../layout/NotificationBell";
 import { ThemeProvider, useTheme } from "../../context/ThemeContext";
+import { UpgradeModalProvider } from "../../context/UpgradeModalContext";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -130,7 +131,9 @@ function DashboardLayoutContent() {
 export default function DashboardLayout() {
   return (
     <ThemeProvider>
-      <DashboardLayoutContent />
+      <UpgradeModalProvider>
+        <DashboardLayoutContent />
+      </UpgradeModalProvider>
     </ThemeProvider>
   );
 }

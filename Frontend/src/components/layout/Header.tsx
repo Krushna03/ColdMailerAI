@@ -101,7 +101,7 @@ export function Header() {
                     <PlanUsageNotice
                       usage={planUsage}
                       loading={usageLoading}
-                      onUpgrade={() => navigate("/dashboard/pricing")}
+                      onUpgrade={() => navigate("/dashboard/profile?tab=billing")}
                       className="w-full"
                     />
                   </div>
