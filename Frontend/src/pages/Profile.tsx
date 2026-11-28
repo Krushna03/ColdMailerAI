@@ -266,7 +266,7 @@ export default function Profile() {
             type="button"
             variant="outline"
             onClick={handleLogout}
-            className="h-8 px-3 text-xs sm:text-[12px] font-medium rounded-md border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors shadow-none"
+            className="h-8 px-2 text-xs sm:text-[12px] font-medium rounded-md border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors shadow-none"
           >
             <LogOut className="h-3 w-3" />
             Sign Out
@@ -347,12 +347,12 @@ export default function Profile() {
 
       {/* TAB 1: Profile & Identity */}
       {activeTab === "profile" && (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* User Identity Banner Card */}
           <article className="overflow-hidden rounded-lg border border-white/10 bg-surface-900">
             <div className="flex flex-col gap-4 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between bg-surface-950">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xl font-semibold text-white font-mono">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xl font-semibold text-white font-mono">
                   {initial}
                 </div>
                 <div className="min-w-0">
@@ -381,43 +381,43 @@ export default function Profile() {
 
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 {user?.email && (
-                  <Button
+                  <button
                     type="button"
                     onClick={() => copyToClipboard(user.email, "email", "Email")}
-                    className="h-7 px-2 text-xs sm:text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors"
+                    className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs sm:text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors cursor-pointer"
                   >
                     {copiedKey === "email" ? (
                       <>
-                        <Check className="h-2 w-2 text-emerald-400" />
-                        Copied Email
+                        <Check className="h-3 w-3 text-emerald-400 shrink-0" />
+                        <span>Copied Email</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="h-2 w-2 text-gray-400" />
-                        Copy Email
+                        <Copy className="h-3 w-3 text-gray-400 shrink-0" />
+                        <span>Copy Email</span>
                       </>
                     )}
-                  </Button>
+                  </button>
                 )}
 
                 {user?._id && (
-                  <Button
+                  <button
                     type="button"
                     onClick={() => copyToClipboard(user._id, "id", "Account ID")}
-                    className="h-7 px-2 text-xs sm:text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors"
+                    className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs sm:text-[11px] font-medium rounded-md border border-white/15 bg-surface-900 text-white hover:bg-white/5 transition-colors cursor-pointer"
                   >
                     {copiedKey === "id" ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-emerald-400" />
-                        Copied ID
+                        <Check className="h-3 w-3 text-emerald-400 shrink-0" />
+                        <span>Copied ID</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3.5 w-3.5 text-gray-400" />
-                        Copy Account ID
+                        <Copy className="h-3 w-3 text-gray-400 shrink-0" />
+                        <span>Copy Account ID</span>
                       </>
                     )}
-                  </Button>
+                  </button>
                 )}
               </div>
             </div>
@@ -465,15 +465,12 @@ export default function Profile() {
             {/* Edit Profile Form */}
             <article className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-surface-900">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-                <h2 className="text-sm sm:text-base font-semibold text-white">
+                <h2 className="text-sm sm:text-[15px] font-semibold text-white">
                   Personal Information
                 </h2>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Editable
-                </span>
               </div>
 
-              <form onSubmit={handleSaveDisplayName} className="p-5 space-y-4">
+              <form onSubmit={handleSaveDisplayName} className="p-5 space-y-5">
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
                     Display Name
@@ -483,11 +480,8 @@ export default function Profile() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Enter your username"
-                    className="h-9 w-full rounded-md border border-white/15 bg-surface-950 px-3 py-1.5 text-sm text-white placeholder:text-gray-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand font-sans transition-colors"
+                    className="h-9 w-full rounded-md border border-white/15 bg-surface-950 px-3 py-1.5 text-[13px] -ml-1 text-white placeholder:text-gray-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand font-sans transition-colors"
                   />
-                  <p className="mt-1 text-xs text-gray-400">
-                    Your name displayed in sequence headers and email templates.
-                  </p>
                 </div>
 
                 <div>
@@ -498,20 +492,17 @@ export default function Profile() {
                     type="email"
                     value={user?.email || ""}
                     disabled
-                    className="h-9 w-full rounded-md border border-white/10 bg-surface-950/60 px-3 py-1.5 text-sm text-gray-400 font-mono cursor-not-allowed"
+                    className="h-9 w-full rounded-md border border-white/10 bg-surface-950/60 px-3 py-1.5 text-[13px] -ml-1 text-gray-400 font-mono cursor-not-allowed"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Primary login email. To update, please re-authenticate.
-                  </p>
                 </div>
 
                 <div className="pt-2 flex justify-end">
                   <Button
                     type="submit"
                     disabled={isSavingName}
-                    className="h-8 px-4 text-xs sm:text-[13px] font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none"
+                    className="h-8 px-3 text-xs sm:text-[13px] font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none"
                   >
-                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                    <Save className="h-3.5 w-3.5" />
                     Save Name
                   </Button>
                 </div>
@@ -521,12 +512,9 @@ export default function Profile() {
             {/* Read-Only Identity Attributes */}
             <article className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-surface-900">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-                <h2 className="text-sm sm:text-base font-semibold text-white">
+                <h2 className="text-sm sm:text-[15px] font-semibold text-white">
                   System Credentials
                 </h2>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Metadata
-                </span>
               </div>
 
               <div className="divide-y divide-white/5">
@@ -590,33 +578,19 @@ export default function Profile() {
 
       {/* TAB 2: Outreach & AI Preferences */}
       {activeTab === "preferences" && (
-        <div className="space-y-5">
+        <div className="space-y-4">
           <article className="overflow-hidden rounded-lg border border-white/10 bg-surface-900">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-              <div>
-                <h2 className="text-sm sm:text-base font-semibold text-white">
-                  AI Email Studio & Writing Preferences
-                </h2>
-                <p className="text-xs text-gray-400">
-                  Default presets applied when launching email generation workflows
-                </p>
-              </div>
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Customization
-              </span>
-            </div>
-
-            <div className="p-5 space-y-6">
+            <div className="p-4 space-y-5">
               {/* Appearance & Interface Theme */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                   Appearance & Theme (Dashboard Workspace)
                 </label>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => setTheme("light")}
-                    className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "light"
+                    className={`flex items-start gap-3 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "light"
                       ? "border-brand bg-brand/10 text-white"
                       : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
                       }`}
@@ -626,12 +600,12 @@ export default function Profile() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold">White Theme</p>
+                        <p className="text-[13px] font-semibold">White Theme</p>
                         <span className="inline-flex items-center rounded-full px-2 py-0.2 text-[10px] font-medium bg-brand/20 text-brand-300 font-sans">
                           Default
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-0.5 text-[11px] text-gray-400">
                         Clean, high-contrast, modern white aesthetic for all workspace views.
                       </p>
                     </div>
@@ -640,7 +614,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setTheme("dark")}
-                    className={`flex items-start gap-3.5 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "dark"
+                    className={`flex items-start gap-3 rounded-lg p-4 border text-left transition-all cursor-pointer ${theme === "dark"
                       ? "border-brand bg-brand/10 text-white"
                       : "border-white/10 bg-surface-950 text-gray-300 hover:border-white/20 hover:bg-white/5"
                       }`}
@@ -649,8 +623,8 @@ export default function Profile() {
                       <Moon className="h-4 w-4 text-purple-300" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Obsidian Dark Theme</p>
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="text-[13px] font-semibold">Obsidian Dark Theme</p>
+                      <p className="mt-0.5 text-[11px] text-gray-400">
                         Deep obsidian background with purple brand highlights and hairline borders.
                       </p>
                     </div>
@@ -660,10 +634,10 @@ export default function Profile() {
 
               {/* Default Tone Setting */}
               <div className="pt-4 border-t border-white/5">
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
                   Default AI Writing Tone
                 </label>
-                <div className="grid gap-3 sm:grid-cols-4">
+                <div className="grid gap-2 sm:grid-cols-4">
                   {[
                     { id: "professional", title: "Professional", desc: "Balanced, authoritative & formal" },
                     { id: "casual", title: "Casual", desc: "Warm, conversational & approachable" },
@@ -680,7 +654,7 @@ export default function Profile() {
                         }`}
                     >
                       <p className="text-xs font-semibold">{t.title}</p>
-                      <p className="mt-1 text-[11px] text-gray-400">{t.desc}</p>
+                      <p className="mt-0.5 text-[11px] text-gray-400">{t.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -688,15 +662,15 @@ export default function Profile() {
 
               {/* Outreach Safeguards & Behavior Toggles */}
               <div className="space-y-3 pt-4 border-t border-white/5">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   Outreach Automation Safeguards
                 </h3>
 
                 <div className="divide-y divide-white/5 rounded-lg border border-white/10 bg-surface-950">
                   <div className="flex items-center justify-between p-4">
                     <div>
-                      <p className="text-sm font-medium text-white">Stop Sequence on Reply</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-[14px] font-medium text-white">Stop Sequence on Reply</p>
+                      <p className="text-[11px] text-gray-400">
                         Automatically cancel subsequent sequence steps once a recipient responds.
                       </p>
                     </div>
@@ -712,8 +686,8 @@ export default function Profile() {
 
                   <div className="flex items-center justify-between p-4">
                     <div>
-                      <p className="text-sm font-medium text-white">Deliverability Verification Warning</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-[14px] font-medium text-white">Deliverability Verification Warning</p>
+                      <p className="text-[11px] text-gray-400">
                         Warn when queueing emails to leads with unverified MX or deliverability records.
                       </p>
                     </div>
@@ -729,8 +703,8 @@ export default function Profile() {
 
                   <div className="flex items-center justify-between p-4">
                     <div>
-                      <p className="text-sm font-medium text-white">Open & Reply Engagement Tracking</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-[14px] font-medium text-white">Open & Reply Engagement Tracking</p>
+                      <p className="text-[11px] text-gray-400">
                         Inject lightweight tracking headers to calculate sequence reply rates.
                       </p>
                     </div>
@@ -746,14 +720,14 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2">
+              <div className="flex justify-end pt-1">
                 <Button
                   type="button"
                   onClick={handleSavePreferences}
                   disabled={isSavingPrefs}
-                  className="h-9 px-4 text-xs sm:text-[13px] font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none"
+                  className="h-9 px-3 text-xs sm:text-[13px] font-semibold rounded-md bg-brand text-white hover:bg-brand-400 transition shadow-none"
                 >
-                  <Save className="h-3.5 w-3.5 mr-1.5" />
+                  <Save className="h-3.5 w-3.5" />
                   Save Outreach Preferences
                 </Button>
               </div>
@@ -768,17 +742,14 @@ export default function Profile() {
           <section className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">
             {/* Auth Gateway Status */}
             <article className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-surface-900">
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-                <h2 className="text-sm sm:text-base font-semibold text-white">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 bg-surface-950">
+                <h2 className="text-sm sm:text-[14px] font-semibold text-white">
                   Authentication & Login Provider
                 </h2>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Security
-                </span>
               </div>
 
-              <div className="p-5 space-y-4">
-                <div className="flex items-center gap-3.5 rounded-lg border border-white/10 bg-surface-950 p-4">
+              <div className="p-3 space-y-4">
+                <div className="flex items-center gap-3.5 rounded-lg border border-white/10 bg-surface-950 p-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5">
                     {isGoogle ? <GoogleIcon className="h-5 w-5" /> : <Lock className="h-5 w-5 text-gray-400" />}
                   </div>
@@ -792,7 +763,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2 pt-1 px-2">
                   <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
                     <span className="text-gray-400">Session Security</span>
                     <span className="text-emerald-400 font-medium flex items-center gap-1">
@@ -813,17 +784,14 @@ export default function Profile() {
 
             {/* Active Session & Device Standing */}
             <article className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-surface-900">
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-                <h2 className="text-sm sm:text-base font-semibold text-white">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 bg-surface-950">
+                <h2 className="text-sm sm:text-[14px] font-semibold text-white">
                   Active Web Session
                 </h2>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Device
-                </span>
               </div>
 
-              <div className="p-5 space-y-4">
-                <div className="flex items-start gap-3.5 rounded-lg border border-white/10 bg-surface-950 p-4">
+              <div className="p-3 space-y-4">
+                <div className="flex items-start gap-3.5 rounded-lg border border-white/10 bg-surface-950 p-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-gray-300">
                     <Laptop className="h-5 w-5" />
                   </div>
@@ -840,7 +808,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2 px-2 pt-2">
                   <div className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
                     <span className="text-gray-400">IP Protection</span>
                     <span className="text-gray-300 font-mono">TLS 1.3 Encrypted</span>
@@ -858,19 +826,16 @@ export default function Profile() {
 
           {/* Danger Zone */}
           <article className="overflow-hidden rounded-lg border border-red-500/20 bg-surface-900">
-            <div className="flex items-center justify-between border-b border-red-500/20 px-5 py-3.5 bg-red-500/5">
+            <div className="flex items-center justify-between border-b border-red-500/20 px-4 py-3 bg-red-500/5">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-red-400" />
-                <h2 className="text-sm sm:text-base font-semibold text-red-300">
+                <h2 className="text-sm sm:text-[14px] font-semibold text-red-300">
                   Session & Account Termination
                 </h2>
               </div>
-              <span className="text-[11px] font-semibold text-red-400 uppercase tracking-wider">
-                Danger Zone
-              </span>
             </div>
 
-            <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-white">Log Out of All Active Sessions</p>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -880,9 +845,9 @@ export default function Profile() {
               <Button
                 type="button"
                 onClick={handleLogout}
-                className="h-9 px-4 text-xs sm:text-[13px] font-semibold rounded-md border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition shadow-none shrink-0"
+                className="h-8 px-3 text-xs sm:text-[13px] font-semibold rounded-md border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition shadow-none shrink-0"
               >
-                <LogOut className="h-3.5 w-3.5 mr-1.5" />
+                <LogOut className="h-3.5 w-3.5" />
                 End Session
               </Button>
             </div>
@@ -892,22 +857,22 @@ export default function Profile() {
 
       {/* TAB 4: Subscription & Quota */}
       {activeTab === "billing" && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Renewal Reminder Banner (if near expiry) */}
           {shouldShowRenewalReminder && planExpiryDate && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between font-sans">
               <div className="flex items-center gap-3">
                 <BellRing className="h-4 w-4 text-amber-400 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold text-white">Plan renewal approaching</p>
-                  <p className="text-xs text-amber-200/80">
+                  <p className="text-xs sm:text-[13px] font-semibold text-white">Plan renewal approaching</p>
+                  <p className="text-[11px] sm:text-xs text-amber-200/80">
                     Your plan expires on {formatDate(planExpiryDate)} ({formatDaysLabel(daysUntilExpiry)} remaining).
                   </p>
                 </div>
               </div>
               <Button
                 onClick={openUpgradeModal}
-                className="bg-brand text-white hover:bg-brand-400 h-8 px-3 text-xs font-semibold rounded-md shrink-0 shadow-none cursor-pointer"
+                className="bg-brand text-white hover:bg-brand-400 h-8 px-3 text-xs sm:text-[13px] font-semibold rounded-md shrink-0 shadow-none cursor-pointer"
               >
                 Renew plan
               </Button>
@@ -916,31 +881,13 @@ export default function Profile() {
 
           {/* AI Generation Quota & Consumption Panel */}
           <article className="overflow-hidden rounded-lg border border-white/10 bg-surface-900">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-              <div>
-                <h2 className="text-sm sm:text-base font-semibold text-white">
-                  Monthly AI Email Generation Quota
-                </h2>
-                <p className="text-xs text-gray-400">
-                  Calculated against your monthly subscription tier allowance
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={openUpgradeModal}
-                className="text-xs sm:text-sm font-medium text-brand-300 hover:text-white cursor-pointer"
-              >
-                Upgrade plan
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
+            <div className="p-4 px-5 space-y-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                     Generation Allowance
                   </p>
-                  <p className="mt-1 text-base font-semibold text-white tracking-tight font-mono">
+                  <p className="mt-0.5 text-sm sm:text-[14px] font-semibold text-white">
                     {usageLoading
                       ? "Loading quota..."
                       : typeof limit === "number"
@@ -949,7 +896,7 @@ export default function Profile() {
                   </p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <span className="text-xs text-gray-400 font-mono">
+                  <span className="text-[11px] sm:text-xs text-gray-400 font-mono">
                     {typeof limit === "number" ? `${remaining} remaining` : "No limit"} · {resetLabel}
                   </span>
                 </div>
@@ -964,7 +911,7 @@ export default function Profile() {
                       style={{ width: `${percentUsed}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-[11px] text-gray-500 font-mono">
+                  <div className="flex justify-between text-[10px] sm:text-[11px] text-gray-500 font-mono">
                     <span>0%</span>
                     <span>{percentUsed}% capacity used</span>
                     <span>100%</span>
@@ -977,7 +924,7 @@ export default function Profile() {
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                     Batch Engine
                   </p>
-                  <p className="mt-1 text-xs text-gray-300">
+                  <p className="mt-1 text-[11px] sm:text-xs text-gray-300">
                     High-volume multi-lead AI generation
                   </p>
                 </div>
@@ -985,7 +932,7 @@ export default function Profile() {
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                     Deliverability Check
                   </p>
-                  <p className="mt-1 text-xs text-gray-300">
+                  <p className="mt-1 text-[11px] sm:text-xs text-gray-300">
                     Zero-bounce MX & deliverability verification
                   </p>
                 </div>
@@ -993,7 +940,7 @@ export default function Profile() {
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                     Sequence Automations
                   </p>
-                  <p className="mt-1 text-xs text-gray-300">
+                  <p className="mt-1 text-[11px] sm:text-xs text-gray-300">
                     Branching cadences that stop on reply
                   </p>
                 </div>
@@ -1006,13 +953,13 @@ export default function Profile() {
             {/* Plan Status */}
             <article className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-surface-900">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-                <h2 className="text-sm sm:text-base font-semibold text-white">
+                <h2 className="text-sm sm:text-[14px] font-semibold text-white">
                   Subscription Standing
                 </h2>
                 <button
                   type="button"
                   onClick={openUpgradeModal}
-                  className="text-xs sm:text-sm font-medium text-brand-300 hover:text-white cursor-pointer"
+                  className="text-xs sm:text-[13px] font-medium text-brand-300 hover:text-white cursor-pointer"
                 >
                   Manage tiers
                 </button>
@@ -1021,21 +968,21 @@ export default function Profile() {
               <div className="divide-y divide-white/5">
                 <div className="flex min-w-0 items-center justify-between gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
                   <div className="min-w-0">
-                    <p className="truncate text-xs sm:text-sm font-medium text-white">Active Plan</p>
-                    <p className="truncate text-xs text-gray-400">Current tier capabilities</p>
+                    <p className="truncate text-xs sm:text-[13px] font-medium text-white">Active Plan</p>
+                    <p className="truncate text-[11px] sm:text-xs text-gray-400">Current tier capabilities</p>
                   </div>
-                  <span className="min-w-0 truncate text-xs sm:text-sm text-white font-semibold">
+                  <span className="min-w-0 truncate text-xs sm:text-[13px] text-white font-semibold">
                     {user?.planName || paymentHistory?.currentPlan || "Free Plan"}
                   </span>
                 </div>
 
                 <div className="flex min-w-0 items-center justify-between gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
                   <div className="min-w-0">
-                    <p className="truncate text-xs sm:text-sm font-medium text-white">Billing Standing</p>
-                    <p className="truncate text-xs text-gray-400">Payment processor state</p>
+                    <p className="truncate text-xs sm:text-[13px] font-medium text-white">Billing Standing</p>
+                    <p className="truncate text-[11px] sm:text-xs text-gray-400">Payment processor state</p>
                   </div>
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${user?.isPaidUser
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${user?.isPaidUser
                       ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20"
                       : "bg-white/10 text-white ring-1 ring-inset ring-white/20"
                       }`}
@@ -1046,20 +993,20 @@ export default function Profile() {
 
                 <div className="flex min-w-0 items-center justify-between gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
                   <div className="min-w-0">
-                    <p className="truncate text-xs sm:text-sm font-medium text-white">Plan Activated</p>
-                    <p className="truncate text-xs text-gray-400">Last activation marker</p>
+                    <p className="truncate text-xs sm:text-[13px] font-medium text-white">Plan Activated</p>
+                    <p className="truncate text-[11px] sm:text-xs text-gray-400">Last activation marker</p>
                   </div>
-                  <span className="min-w-0 truncate text-xs sm:text-sm text-gray-400 font-mono">
+                  <span className="min-w-0 truncate text-xs sm:text-[13px] text-gray-400 font-mono">
                     {formatDate(user?.planActivatedAt)}
                   </span>
                 </div>
 
                 <div className="flex min-w-0 items-center justify-between gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
                   <div className="min-w-0">
-                    <p className="truncate text-xs sm:text-sm font-medium text-white">Expiration / Renewal</p>
-                    <p className="truncate text-xs text-gray-400">Next billing cycle</p>
+                    <p className="truncate text-xs sm:text-[13px] font-medium text-white">Expiration / Renewal</p>
+                    <p className="truncate text-[11px] sm:text-xs text-gray-400">Next billing cycle</p>
                   </div>
-                  <span className="min-w-0 truncate text-xs sm:text-sm text-gray-400 font-mono">
+                  <span className="min-w-0 truncate text-xs sm:text-[13px] text-gray-400 font-mono">
                     {user?.isPaidUser
                       ? formatDate(user?.planExpiresAt || paymentHistory?.planExpiresAt)
                       : "No scheduled expiration"}
@@ -1071,10 +1018,10 @@ export default function Profile() {
             {/* Payment Audit Record */}
             <article className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-surface-900">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5 bg-surface-950">
-                <h2 className="text-sm sm:text-base font-semibold text-white">
+                <h2 className="text-sm sm:text-[14px] font-semibold text-white">
                   Payment History & Gateway Records
                 </h2>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   Receipts
                 </span>
               </div>
@@ -1084,10 +1031,10 @@ export default function Profile() {
                   <>
                     <div className="flex min-w-0 items-center justify-between gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
                       <div className="min-w-0">
-                        <p className="truncate text-xs sm:text-sm font-medium text-white">Razorpay Payment ID</p>
-                        <p className="truncate text-xs text-gray-400">Gateway reference</p>
+                        <p className="truncate text-xs sm:text-[13px] font-medium text-white">Razorpay Payment ID</p>
+                        <p className="truncate text-[11px] sm:text-xs text-gray-400">Gateway reference</p>
                       </div>
-                      <span className="min-w-0 truncate text-xs sm:text-sm text-gray-300 font-mono">
+                      <span className="min-w-0 truncate text-xs sm:text-[13px] text-gray-300 font-mono">
                         {effectivePaymentInfo.razorpay_payment_id}
                       </span>
                     </div>
@@ -1095,10 +1042,10 @@ export default function Profile() {
                     {effectivePaymentInfo.razorpay_order_id && (
                       <div className="flex min-w-0 items-center justify-between gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
                         <div className="min-w-0">
-                          <p className="truncate text-xs sm:text-sm font-medium text-white">Razorpay Order ID</p>
-                          <p className="truncate text-xs text-gray-400">Transaction invoice record</p>
+                          <p className="truncate text-xs sm:text-[13px] font-medium text-white">Razorpay Order ID</p>
+                          <p className="truncate text-[11px] sm:text-xs text-gray-400">Transaction invoice record</p>
                         </div>
-                        <span className="min-w-0 truncate text-xs sm:text-sm text-gray-400 font-mono">
+                        <span className="min-w-0 truncate text-xs sm:text-[13px] text-gray-400 font-mono">
                           {effectivePaymentInfo.razorpay_order_id}
                         </span>
                       </div>
@@ -1107,10 +1054,10 @@ export default function Profile() {
                     {effectivePaymentInfo.paymentDate && (
                       <div className="flex min-w-0 items-center justify-between gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
                         <div className="min-w-0">
-                          <p className="truncate text-xs sm:text-sm font-medium text-white">Payment Timestamp</p>
-                          <p className="truncate text-xs text-gray-400">Processed date</p>
+                          <p className="truncate text-xs sm:text-[13px] font-medium text-white">Payment Timestamp</p>
+                          <p className="truncate text-[11px] sm:text-xs text-gray-400">Processed date</p>
                         </div>
-                        <span className="min-w-0 truncate text-xs sm:text-sm text-gray-400 font-mono">
+                        <span className="min-w-0 truncate text-xs sm:text-[13px] text-gray-400 font-mono">
                           {formatDate(effectivePaymentInfo.paymentDate)}
                         </span>
                       </div>
@@ -1118,13 +1065,13 @@ export default function Profile() {
                   </>
                 ) : (
                   <div className="p-5 text-center">
-                    <p className="text-xs sm:text-sm text-gray-400">
+                    <p className="text-xs sm:text-[13px] text-gray-400">
                       No payment transactions recorded yet on this account.
                     </p>
                     <button
                       type="button"
                       onClick={openUpgradeModal}
-                      className="mt-3 inline-flex items-center text-xs font-semibold text-brand-300 hover:text-white cursor-pointer"
+                      className="mt-3 inline-flex items-center gap-1.5 text-xs sm:text-[13px] font-medium text-brand-300 hover:text-white cursor-pointer"
                     >
                       Browse upgrade tiers <ArrowRight className="h-3 w-3 ml-1" />
                     </button>
